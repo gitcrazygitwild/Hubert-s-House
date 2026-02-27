@@ -1,0 +1,54 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Mack Calendar</title>
+
+  <!-- FullCalendar (CDN) -->
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.11/index.global.min.css">
+
+  <link rel="stylesheet" href="./styles.css" />
+</head>
+<body>
+  <div id="app">
+    <!-- Login -->
+    <section id="login" class="card">
+      <h1>Calendar</h1>
+      <p class="muted">Enter password to continue.</p>
+
+      <form id="loginForm">
+        <input id="password" type="password" placeholder="Password" autocomplete="current-password" />
+        <button type="submit">Unlock</button>
+      </form>
+
+      <p class="tiny muted">
+        Note: this is a simple client-side password gate (not real security).
+      </p>
+    </section>
+
+    <!-- Main -->
+    <section id="main" class="hidden">
+      <header class="topbar">
+        <div class="brand">
+          <strong>Mack Calendar</strong>
+          <span id="status" class="pill muted">Loading…</span>
+        </div>
+        <div class="actions">
+          <button id="logoutBtn" class="secondary">Log out</button>
+        </div>
+      </header>
+
+      <div id="calendarWrap" class="card">
+        <div id="calendar"></div>
+      </div>
+    </section>
+  </div>
+
+  <!-- FullCalendar -->
+  <script src="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.11/index.global.min.js"></script>
+
+  <!-- App -->
+  <script type="module" src="./app.js"></script>
+</body>
+</html>
