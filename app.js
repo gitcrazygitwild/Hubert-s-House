@@ -1,9 +1,7 @@
-// Mack Calendar
-// - Simple client-side password gate (NOT real security)
-// - Calendar UI via FullCalendar
-// - Storage: Firestore (recommended) OR localStorage fallback
+// Mack Calendar (Firebase sync + mobile-friendly + time + notes + his/hers/both)
+// Password gate is client-side only (not real security).
 
-// --------- Password gate ----------
+// ---------- Password gate ----------
 const PASSWORD = "Mack";
 const LS_UNLOCK = "mack_calendar_unlocked";
 
@@ -12,7 +10,66 @@ const mainEl = document.getElementById("main");
 const loginForm = document.getElementById("loginForm");
 const passwordInput = document.getElementById("password");
 const logoutBtn = document.getElementById("logoutBtn");
+const todayBtn = document.getElementById("todayBtn");
 const statusEl = document.getElementById("status");
+
+// ---------- Modal elements ----------
+const backdrop = document.getElementById("modalBackdrop");
+const modalClose = document.getElementById("modalClose");
+const eventForm = document.getElementById("eventForm");
+const modalTitle = document.getElementById("modalTitle");
+
+const evtTitle = document.getElementById("evtTitle");
+const evtStart = document.getElementById("evtStart");
+const evtEnd = document.getElementById("evtEnd");
+const evtAllDay = document.getElementById("evtAllDay");
+const evtOwner = document.getElementById("evtOwner");
+const evtNotes = document.getElementById("evtNotes");
+
+const deleteBtn = document.getElementById("deleteBtn");
+const cancelBtn = document.getElementById("cancelBtn");
+
+const fab = document.getElementById("fab");
+
+// ---------- Color mapping ----------
+const OWNER_STYLE = {
+  his:  { backgroundColor: "rgba(122,162,255,0.35)", borderColor: "rgba(122,162,255,0.85)" },
+  hers: { backgroundColor: "rgba(255,107,107,0.28)", borderColor: "rgba(255,107,107,0.85)" },
+  both: { backgroundColor: "rgba(116,217,155,0.28)", borderColor: "rgba(116,217,155,0.85)" }
+};
+
+// ---------- Firebase (required) ----------
+import { initializeApp } from "https://www.gstatic.com/firebasejs/12.9.0/firebase-app.js";
+import {
+  getFirestore,
+  collection,
+  addDoc,
+  doc,
+  updateDoc,
+  deleteDoc,
+  onSnapshot,
+  query,
+  orderBy,
+  serverTimestamp
+} from "https://www.gstatic.com/firebasejs/12.9.0/firebase-firestore.js";
+
+// Paste your Firebase config here:
+const firebaseConfig = {
+  // apiKey: "...",
+  // authDomain: "...",
+  // projectId: "...",
+  // storageBucket: "...",
+  // messagingSenderId: "...",
+  // appId: "..."
+};
+
+let db, eventsCol;
+
+// ---------- Calendar ----------
+let calendar;
+
+// For modal context (create/edit)
+let editingEventId = null;
 
 // Auto-unlock if previously unlocked on this device
 if (localStorage.getItem(LS_UNLOCK) === "1") {
@@ -37,142 +94,57 @@ logoutBtn.addEventListener("click", () => {
   location.reload();
 });
 
+todayBtn.addEventListener("click", () => {
+  if (calendar) calendar.today();
+});
+
 function showMain() {
   loginEl.classList.add("hidden");
   mainEl.classList.remove("hidden");
-  initCalendar();
+  initApp().catch((err) => {
+    console.error(err);
+    statusEl.textContent = "Error";
+    alert("Firebase connection failed. Check firebaseConfig in app.js.");
+  });
 }
 
-// --------- Storage layer ----------
-// Choose Firestore if configured; otherwise localStorage.
-const LS_EVENTS = "mack_calendar_events_v1";
-
-// Set to true after you paste Firebase config below
-const USE_FIREBASE = false;
-
-// ===== OPTIONAL FIREBASE SETUP =====
-// If you want this to sync between you + your wife:
-// 1) Create a Firebase project
-// 2) Enable Firestore Database
-// 3) Paste your firebaseConfig below
-// 4) Set USE_FIREBASE = true
-//
-// Security note: since you asked for “no complex security”, this uses a *very open* Firestore rule
-// in the README instructions. If you want, I can tighten it later.
-let firebaseApi = null;
-
-async function initFirebaseIfNeeded() {
-  if (!USE_FIREBASE) return null;
-
-  // Firebase v12 modular CDN imports
-  const { initializeApp } = await import("https://www.gstatic.com/firebasejs/12.9.0/firebase-app.js");
-  const {
-    getFirestore,
-    collection,
-    addDoc,
-    getDocs,
-    doc,
-    updateDoc,
-    deleteDoc
-  } = await import("https://www.gstatic.com/firebasejs/12.9.0/firebase-firestore.js");
-
-  const firebaseConfig = {
-    // TODO: paste yours here
-    // apiKey: "...",
-    // authDomain: "...",
-    // projectId: "...",
-    // storageBucket: "...",
-    // messagingSenderId: "...",
-    // appId: "..."
-  };
-
+// ---------- Firebase init + realtime sync ----------
+async function initApp() {
   const app = initializeApp(firebaseConfig);
-  const db = getFirestore(app);
+  db = getFirestore(app);
+  eventsCol = collection(db, "events");
 
-  firebaseApi = {
-    db,
-    collection,
-    addDoc,
-    getDocs,
-    doc,
-    updateDoc,
-    deleteDoc
-  };
+  statusEl.textContent = "Sync: connecting…";
 
-  return firebaseApi;
+  initCalendarUI();
+
+  // Realtime listener
+  const q = query(eventsCol, orderBy("start", "asc"));
+  onSnapshot(q, (snap) => {
+    const events = [];
+    snap.forEach((d) => events.push({ id: d.id, ...d.data() }));
+
+    // Replace all events (simple + reliable for shared sync)
+    calendar.removeAllEvents();
+    for (const e of events) {
+      calendar.addEvent(normalizeEventForCalendar(e));
+    }
+
+    statusEl.textContent = "Sync: live";
+  }, (err) => {
+    console.error(err);
+    statusEl.textContent = "Sync: error";
+  });
 }
 
-async function loadEvents() {
-  if (USE_FIREBASE) {
-    await initFirebaseIfNeeded();
-    const colRef = firebaseApi.collection(firebaseApi.db, "events");
-    const snap = await firebaseApi.getDocs(colRef);
-    const out = [];
-    snap.forEach((d) => out.push({ id: d.id, ...d.data() }));
-    return out;
-  }
-
-  // localStorage fallback
-  const raw = localStorage.getItem(LS_EVENTS);
-  return raw ? JSON.parse(raw) : [];
-}
-
-async function saveEvent(evt) {
-  // evt: { title, start, end, allDay }
-  if (USE_FIREBASE) {
-    const colRef = firebaseApi.collection(firebaseApi.db, "events");
-    const docRef = await firebaseApi.addDoc(colRef, evt);
-    return { id: docRef.id, ...evt };
-  }
-
-  const events = await loadEvents();
-  const id = crypto.randomUUID();
-  const full = { id, ...evt };
-  events.push(full);
-  localStorage.setItem(LS_EVENTS, JSON.stringify(events));
-  return full;
-}
-
-async function updateEvent(id, patch) {
-  if (USE_FIREBASE) {
-    const ref = firebaseApi.doc(firebaseApi.db, "events", id);
-    await firebaseApi.updateDoc(ref, patch);
-    return;
-  }
-
-  const events = await loadEvents();
-  const idx = events.findIndex(e => e.id === id);
-  if (idx >= 0) {
-    events[idx] = { ...events[idx], ...patch };
-    localStorage.setItem(LS_EVENTS, JSON.stringify(events));
-  }
-}
-
-async function deleteEvent(id) {
-  if (USE_FIREBASE) {
-    const ref = firebaseApi.doc(firebaseApi.db, "events", id);
-    await firebaseApi.deleteDoc(ref);
-    return;
-  }
-
-  const events = await loadEvents();
-  const filtered = events.filter(e => e.id !== id);
-  localStorage.setItem(LS_EVENTS, JSON.stringify(filtered));
-}
-
-// --------- Calendar ----------
-let calendar;
-
-async function initCalendar() {
-  statusEl.textContent = USE_FIREBASE ? "Sync: Firebase" : "Sync: This device only";
-
-  const events = await loadEvents();
-
+// ---------- Calendar UI ----------
+function initCalendarUI() {
   const calendarEl = document.getElementById("calendar");
+
   calendar = new FullCalendar.Calendar(calendarEl, {
     initialView: "dayGridMonth",
     headerToolbar: {
-      left: "prev,next today",
+      left: "prev,next",
       center: "title",
       right: "dayGridMonth,timeGridWeek,timeGridDay,listWeek"
     },
@@ -181,70 +153,234 @@ async function initCalendar() {
     nowIndicator: true,
     height: "auto",
 
-    events: events.map(e => normalizeEventForCalendar(e)),
-
-    select: async (info) => {
-      const title = prompt("Event title?");
-      if (!title) return;
-
-      const evt = {
-        title,
-        start: info.start.toISOString(),
-        end: info.end ? info.end.toISOString() : null,
-        allDay: info.allDay
-      };
-
-      const saved = await saveEvent(evt);
-      calendar.addEvent(normalizeEventForCalendar(saved));
+    // Create event by selecting a range
+    select: (info) => {
+      openCreateModalFromSelection(info);
     },
 
-    eventClick: async (info) => {
-      const currentTitle = info.event.title;
-      const action = prompt(
-        `Edit title, or type DELETE to remove:\n\nCurrent: ${currentTitle}`,
-        currentTitle
-      );
-
-      if (action === null) return;
-
-      if (action.trim().toUpperCase() === "DELETE") {
-        await deleteEvent(info.event.id);
-        info.event.remove();
-        return;
-      }
-
-      const newTitle = action.trim();
-      if (!newTitle) return;
-
-      await updateEvent(info.event.id, { title: newTitle });
-      info.event.setProp("title", newTitle);
+    // Click to edit + show notes in description area (we also show via modal)
+    eventClick: (info) => {
+      openEditModalFromEvent(info.event);
     },
 
+    // Drag / resize persists to Firestore
     eventDrop: async (info) => {
       await persistMovedEvent(info.event);
     },
     eventResize: async (info) => {
       await persistMovedEvent(info.event);
-    }
+    },
+
+    // Helpful on mobile: long-press to select
+    longPressDelay: 350,
+    selectLongPressDelay: 350
   });
 
   calendar.render();
+
+  // Floating Add button (mobile-friendly)
+  fab.addEventListener("click", () => {
+    const now = new Date();
+    const later = new Date(now.getTime() + 60 * 60 * 1000);
+    openModal({
+      mode: "create",
+      title: "",
+      start: now,
+      end: later,
+      allDay: false,
+      owner: "both",
+      notes: ""
+    });
+  });
+
+  // Modal close handlers
+  modalClose.addEventListener("click", closeModal);
+  cancelBtn.addEventListener("click", closeModal);
+  backdrop.addEventListener("click", (e) => {
+    if (e.target === backdrop) closeModal();
+  });
+
+  // All-day toggles datetime inputs
+  evtAllDay.addEventListener("change", () => {
+    setDateTimeInputMode(evtAllDay.checked);
+  });
+
+  // Save
+  eventForm.addEventListener("submit", async (e) => {
+    e.preventDefault();
+    await handleSave();
+  });
+
+  // Delete
+  deleteBtn.addEventListener("click", async () => {
+    if (!editingEventId) return;
+    const ok = confirm("Delete this event?");
+    if (!ok) return;
+    await deleteDoc(doc(db, "events", editingEventId));
+    closeModal();
+  });
 }
 
+function openCreateModalFromSelection(info) {
+  // FullCalendar provides start/end Date objects.
+  const start = info.start;
+  const end = info.end || null;
+
+  openModal({
+    mode: "create",
+    title: "",
+    start,
+    end,
+    allDay: info.allDay,
+    owner: "both",
+    notes: ""
+  });
+}
+
+function openEditModalFromEvent(event) {
+  const data = event.extendedProps || {};
+  openModal({
+    mode: "edit",
+    id: event.id,
+    title: event.title || "",
+    start: event.start,
+    end: event.end || null,
+    allDay: event.allDay,
+    owner: data.owner || "both",
+    notes: data.notes || ""
+  });
+}
+
+function openModal(payload) {
+  const isEdit = payload.mode === "edit";
+  editingEventId = isEdit ? payload.id : null;
+
+  modalTitle.textContent = isEdit ? "Edit event" : "New event";
+  deleteBtn.classList.toggle("hidden", !isEdit);
+
+  evtTitle.value = payload.title ?? "";
+  evtAllDay.checked = !!payload.allDay;
+
+  // Set input modes + values
+  setDateTimeInputMode(evtAllDay.checked);
+
+  evtStart.value = toInputValue(payload.start, evtAllDay.checked);
+  evtEnd.value = payload.end ? toInputValue(payload.end, evtAllDay.checked) : "";
+
+  evtOwner.value = payload.owner || "both";
+  evtNotes.value = payload.notes || "";
+
+  backdrop.classList.remove("hidden");
+  evtTitle.focus();
+}
+
+function closeModal() {
+  editingEventId = null;
+  backdrop.classList.add("hidden");
+}
+
+function setDateTimeInputMode(isAllDay) {
+  evtStart.type = isAllDay ? "date" : "datetime-local";
+  evtEnd.type = isAllDay ? "date" : "datetime-local";
+}
+
+async function handleSave() {
+  const title = evtTitle.value.trim();
+  if (!title) return;
+
+  const allDay = evtAllDay.checked;
+  const owner = evtOwner.value;
+  const notes = evtNotes.value.trim();
+
+  const start = fromInputValue(evtStart.value, allDay);
+  const end = evtEnd.value ? fromInputValue(evtEnd.value, allDay) : null;
+
+  // Basic sanity: end after start (if end provided)
+  if (end && end.getTime() < start.getTime()) {
+    alert("End must be after start.");
+    return;
+  }
+
+  const payload = {
+    title,
+    allDay,
+    owner,
+    notes,
+    start: start.toISOString(),
+    end: end ? end.toISOString() : null,
+    updatedAt: serverTimestamp()
+  };
+
+  if (editingEventId) {
+    await updateDoc(doc(db, "events", editingEventId), payload);
+  } else {
+    await addDoc(eventsCol, { ...payload, createdAt: serverTimestamp() });
+  }
+
+  closeModal();
+}
+
+async function persistMovedEvent(fcEvent) {
+  // Keep notes/owner/title unchanged; just update time fields
+  const patch = {
+    start: fcEvent.start ? fcEvent.start.toISOString() : null,
+    end: fcEvent.end ? fcEvent.end.toISOString() : null,
+    allDay: fcEvent.allDay,
+    updatedAt: serverTimestamp()
+  };
+  await updateDoc(doc(db, "events", fcEvent.id), patch);
+}
+
+// ---------- Helpers ----------
 function normalizeEventForCalendar(e) {
+  const style = OWNER_STYLE[e.owner] || OWNER_STYLE.both;
+  const notes = e.notes || "";
+
+  // Show notes in list view tooltip-ish (native title attribute)
+  const titleAttr = notes ? `${e.title}\n\nNotes: ${notes}` : e.title;
+
   return {
     id: e.id,
     title: e.title,
     start: e.start,
     end: e.end || undefined,
-    allDay: !!e.allDay
+    allDay: !!e.allDay,
+    backgroundColor: style.backgroundColor,
+    borderColor: style.borderColor,
+    textColor: "#e9ecf1",
+    extendedProps: {
+      owner: e.owner || "both",
+      notes
+    },
+    // This becomes an HTML title tooltip in many browsers
+    display: "auto",
+    titleAttr
   };
 }
 
-async function persistMovedEvent(fcEvent) {
-  await updateEvent(fcEvent.id, {
-    start: fcEvent.start ? fcEvent.start.toISOString() : null,
-    end: fcEvent.end ? fcEvent.end.toISOString() : null,
-    allDay: fcEvent.allDay
-  });
+// Convert Date -> input value in local time (no timezone suffix)
+function toInputValue(dateObj, allDay) {
+  if (!(dateObj instanceof Date)) dateObj = new Date(dateObj);
+  const pad = (n) => String(n).padStart(2, "0");
+
+  const y = dateObj.getFullYear();
+  const m = pad(dateObj.getMonth() + 1);
+  const d = pad(dateObj.getDate());
+
+  if (allDay) return `${y}-${m}-${d}`;
+
+  const hh = pad(dateObj.getHours());
+  const mm = pad(dateObj.getMinutes());
+  return `${y}-${m}-${d}T${hh}:${mm}`;
+}
+
+// Convert input value (local) -> Date
+function fromInputValue(value, allDay) {
+  if (allDay) {
+    // Interpret as local midnight
+    const [y, m, d] = value.split("-").map(Number);
+    return new Date(y, m - 1, d, 0, 0, 0, 0);
+  }
+  // datetime-local parses as local time when using new Date("YYYY-MM-DDTHH:mm")
+  return new Date(value);
 }
