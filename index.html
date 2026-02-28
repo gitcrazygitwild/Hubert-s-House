@@ -1,3 +1,12 @@
+<!-- index.html — Hubert’s House (UPDATED layout v6)
+  Updates in this version:
+  - Sync pill moved into the title row, aligned with ✨
+  - Top row is now a single flex row: cat/title/sync on left, Focus + 🎲 + Log out on right
+  - Focus mode is now a compact top-row control (keeps id="focusToggle" for your existing JS)
+  - Removed the old Focus row under “Dates” (to avoid duplicate ids)
+  - Dealers choice (visual hook): added a lightweight “sheen” layer you can style in CSS later
+-->
+
 <!doctype html>
 <html lang="en">
 <head>
@@ -5,6 +14,7 @@
   <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
   <title>Hubert’s House</title>
 
+  <!-- FullCalendar -->
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.11/index.global.min.css">
   <link rel="stylesheet" href="./styles.css?v=20260228_huberts_house_v6" />
 </head>
@@ -21,7 +31,7 @@
         <input
           id="gateInput"
           class="gate-input"
-          type="password"
+          type="text"
           inputmode="text"
           autocomplete="off"
           autocapitalize="none"
@@ -42,29 +52,40 @@
   </div>
 
   <div id="app">
+    <!-- Dealers choice hook: a subtle decorative layer (style in CSS later) -->
+    <div class="sheen" aria-hidden="true"></div>
 
     <!-- Top bar -->
     <header class="topbar">
       <div class="topbar-row">
-
+        <!-- LEFT: cat + title row (title + ✨ + Sync inline) -->
         <div class="brand">
           <a class="catlink" href="https://gitcrazygitwild.github.io/Flapurr/" target="_blank" rel="noopener">🐈‍⬛</a>
 
           <div class="brand-stack">
             <div class="brand-title-row">
               <div class="brand-title">Hubert’s House</div>
+
+              <!-- tiny badge -->
               <span id="sparkleBadge" class="sparkle-badge" title="You’re crushing it">✨</span>
-              <span id="status" class="pill" data-status="connecting">Sync: connecting…</span>
+
+              <!-- Sync pill moved INLINE with ✨ -->
+              <span id="status" class="pill">Sync: connecting…</span>
             </div>
           </div>
         </div>
 
-        <div class="actions actions-toprow">
-          <button id="focusBtn" class="btn btn-ghost btn-focus" type="button" aria-pressed="false" title="Toggle focus mode">Focus</button>
-          <button id="themeBtn" class="btn btn-ghost" type="button" title="Change theme & density">🎲</button>
+        <!-- RIGHT: Focus + Theme + Log out on the same top row -->
+        <div class="top-actions">
+          <!-- Focus mode: compact top-row control (keeps id="focusToggle" for your JS) -->
+          <label class="btn btn-ghost focus-btn" for="focusToggle" title="Toggle focus mode">
+            <input id="focusToggle" type="checkbox" style="position:absolute;opacity:0;pointer-events:none;width:1px;height:1px;" />
+            Focus
+          </label>
+
+          <button id="themeBtn" class="btn btn-ghost" type="button" title="Randomize theme">🎲</button>
           <button id="logoutBtn" class="btn btn-ghost" type="button">Log out</button>
         </div>
-
       </div>
     </header>
 
@@ -73,6 +94,7 @@
       <div class="search-row">
         <input id="searchInput" class="search" type="search" placeholder="Search events…" />
 
+        <!-- Quick add -->
         <button id="quickAddBtn" class="btn btn-ghost" type="button" title="Quick add">＋</button>
 
         <div class="search-filters-wrap">
@@ -97,13 +119,15 @@
           </div>
         </div>
       </div>
+
+      <!-- NOTE: old focus-row removed (Focus now lives in top row) -->
     </div>
 
     <!-- Calendar card -->
     <div id="calendarWrap" class="card">
+      <!-- Tools row -->
       <div class="calendar-tools">
         <div class="tools-left">
-
           <button id="todayBtn" class="btn btn-ghost" type="button">Today</button>
 
           <label class="mini-label">
@@ -126,10 +150,10 @@
               <option value="custom">Other</option>
             </select>
           </label>
-
         </div>
       </div>
 
+      <!-- Legend -->
       <div class="legend-inline">
         <div class="item"><span class="dot dot-hanry"></span>hanry</div>
         <div class="item"><span class="dot dot-karena"></span>Karena</div>
@@ -164,6 +188,7 @@
       <div id="outstandingList" class="panel-list tiny muted">Loading…</div>
     </div>
 
+    <!-- Floating add -->
     <button id="fab" class="fab" type="button" aria-label="Add event">＋</button>
   </div>
 
@@ -270,7 +295,7 @@
     </div>
   </div>
 
-  <!-- Checklist modal -->
+  <!-- Checklist-focused modal -->
   <div id="taskBackdrop" class="modal-backdrop hidden" role="dialog" aria-modal="true">
     <div class="modal">
       <div class="modal-header">
@@ -338,6 +363,7 @@
     </div>
   </div>
 
+  <!-- Scripts -->
   <script src="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.11/index.global.min.js"></script>
   <script type="module" src="./app.js?v=20260228_huberts_house_v6"></script>
 </body>
