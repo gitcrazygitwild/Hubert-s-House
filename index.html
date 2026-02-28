@@ -1,4 +1,3 @@
-<!-- index.html (v6) -->
 <!doctype html>
 <html lang="en">
 <head>
@@ -6,7 +5,6 @@
   <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
   <title>Hubert’s House</title>
 
-  <!-- FullCalendar -->
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.11/index.global.min.css">
   <link rel="stylesheet" href="./styles.css?v=20260228_huberts_house_v6" />
 </head>
@@ -45,25 +43,26 @@
   <div id="app">
     <header class="topbar">
       <div class="brand">
-        <!-- Animated cat link -->
         <a class="catlink" href="https://gitcrazygitwild.github.io/Flapurr/" target="_blank" rel="noopener" aria-label="Play Flapurr!">
           <span class="cat">🐱</span>
         </a>
 
-        <div class="brand-stack">
+        <div>
           <div class="brand-title">Hubert’s House</div>
           <span id="status" class="pill">Sync: connecting…</span>
         </div>
       </div>
 
       <div class="actions">
-        <!-- Theme centered-ish, Log out top-right -->
+        <!-- Top row above search -->
         <div class="actions-top">
-          <button id="themeBtn" class="btn btn-ghost" type="button" title="Shuffle theme">🎲 Theme</button>
-          <div class="actions-spacer"></div>
+          <div class="actions-mid">
+            <button id="themeBtn" class="btn btn-ghost" type="button" title="Shuffle theme">🎲 Theme</button>
+          </div>
           <button id="logoutBtn" class="btn btn-ghost" type="button">Log out</button>
         </div>
 
+        <!-- Search row -->
         <div class="searchbar">
           <div class="searchbar-top">
             <input id="searchInput" class="search" type="search" placeholder="Search events…" />
@@ -79,6 +78,7 @@
               <span>To</span>
               <input id="searchTo" class="search-date" type="date" />
             </label>
+
             <button id="clearDatesBtn" class="btn btn-ghost" type="button">Clear dates</button>
           </div>
         </div>
@@ -86,6 +86,15 @@
     </header>
 
     <div id="calendarWrap" class="card calendar-card">
+      <!-- Quick Add (dealer’s choice) -->
+      <div class="quickadd">
+        <button class="chip" data-template="dinner" type="button">🍝 Dinner 7pm</button>
+        <button class="chip" data-template="groceries" type="button">🛒 Groceries</button>
+        <button class="chip" data-template="weekend" type="button">🗓️ Weekend plan</button>
+        <button class="chip" data-template="reminder" type="button">✅ Reminder today</button>
+      </div>
+
+      <!-- Tools row (compressed) -->
       <div class="calendar-tools">
         <button id="todayBtn" class="btn btn-ghost calbtn" type="button">Today</button>
 
@@ -112,16 +121,13 @@
         </div>
       </div>
 
-      <!-- Legend as a compact dropdown to save vertical space -->
-      <details class="legend-details">
-        <summary class="legend-summary">Legend</summary>
-        <div class="legend">
-          <div class="legend-row"><span class="dot dot-hanry"></span><span class="legend-label">hanry</span></div>
-          <div class="legend-row"><span class="dot dot-karena"></span><span class="legend-label">Karena</span></div>
-          <div class="legend-row"><span class="dot dot-both"></span><span class="legend-label">Both</span></div>
-          <div class="legend-row"><span class="dot dot-custom"></span><span class="legend-label">Other</span></div>
-        </div>
-      </details>
+      <!-- Legend moved down near calendar header (compress vertical space) -->
+      <div class="legend legend-compact">
+        <div class="legend-row"><span class="dot dot-hanry"></span><span class="legend-label">hanry</span></div>
+        <div class="legend-row"><span class="dot dot-karena"></span><span class="legend-label">Karena</span></div>
+        <div class="legend-row"><span class="dot dot-both"></span><span class="legend-label">Both</span></div>
+        <div class="legend-row"><span class="dot dot-custom"></span><span class="legend-label">Other</span></div>
+      </div>
 
       <div id="calendar"></div>
       <div class="hint tiny muted">Tip: swipe left/right to change months. Tap the month title to jump.</div>
@@ -142,6 +148,7 @@
         <div class="panel-title">Checklist — outstanding</div>
         <div class="panel-sub tiny muted">Events with unchecked items</div>
       </div>
+
       <div id="outstandingList" class="panel-list tiny muted">Loading…</div>
 
       <div class="pager">
@@ -154,7 +161,7 @@
     <button id="fab" class="fab" type="button" aria-label="Add event">＋</button>
   </div>
 
-  <!-- Event modal (full edit) -->
+  <!-- Event modal -->
   <div id="modalBackdrop" class="modal-backdrop hidden" role="dialog" aria-modal="true">
     <div class="modal">
       <div class="modal-header">
@@ -256,7 +263,7 @@
     </div>
   </div>
 
-  <!-- Checklist-focused modal (from panels) -->
+  <!-- Checklist-focused modal -->
   <div id="taskBackdrop" class="modal-backdrop hidden" role="dialog" aria-modal="true">
     <div class="modal">
       <div class="modal-header">
