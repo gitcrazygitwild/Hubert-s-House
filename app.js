@@ -896,20 +896,16 @@ function bindMonthTitleClick() {
   const titleEl = document.querySelector(".fc .fc-toolbar-title");
   if (!titleEl) return;
 
-  // avoid duplicate binding
   if (titleEl.dataset.boundJump === "1") return;
   titleEl.dataset.boundJump = "1";
 
   titleEl.style.cursor = "pointer";
   titleEl.title = "Tap to jump to a month";
 
-  titleEl.addEventListener("click", () => {
-    // show the month picker
-    if (jumpMonth?.showPicker) jumpMonth.showPicker();
-    else {
-      jumpMonth?.focus();
-      jumpMonth?.click();
-    }
+  // ✅ pointerup is much more reliable on iOS than click
+  titleEl.addEventListener("pointerup", (e) => {
+    e.preventDefault();
+    openJumpModal();
   });
 }
 
