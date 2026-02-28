@@ -50,12 +50,24 @@
       </div>
 
       <div class="actions">
-        <div class="search-row">
-          <input id="searchInput" class="search" type="search" placeholder="Search events…" />
-          <input id="searchFrom" class="search-date" type="date" />
-          <input id="searchTo" class="search-date" type="date" />
-        </div>
+       <div class="search-block">
+  <label class="search-field">
+    <span>Search</span>
+    <input id="searchInput" class="search" type="search" placeholder="Search events…" />
+  </label>
 
+  <div class="date-range">
+    <label class="search-field">
+      <span>From</span>
+      <input id="searchFrom" class="search-date" type="date" />
+    </label>
+
+    <label class="search-field">
+      <span>To</span>
+      <input id="searchTo" class="search-date" type="date" />
+    </label>
+  </div>
+</div>
         <button id="todayBtn" class="btn btn-ghost" type="button">Today</button>
         <button id="logoutBtn" class="btn btn-ghost" type="button">Lock</button>
       </div>
