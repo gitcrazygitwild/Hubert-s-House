@@ -50,22 +50,25 @@
       </div>
 
       <div class="actions">
-       <div class="search-block">
-  <label class="search-field">
-    <span>Search</span>
+<div class="searchbar">
+  <div class="searchbar-top">
     <input id="searchInput" class="search" type="search" placeholder="Search events…" />
-  </label>
+    <button id="searchFiltersBtn" class="btn btn-ghost btn-icon-sm" type="button" aria-label="Search filters">
+      ☰
+    </button>
+  </div>
 
-  <div class="date-range">
+  <div id="searchFilters" class="search-filters hidden">
     <label class="search-field">
       <span>From</span>
       <input id="searchFrom" class="search-date" type="date" />
     </label>
-
     <label class="search-field">
       <span>To</span>
       <input id="searchTo" class="search-date" type="date" />
     </label>
+
+    <button id="clearDatesBtn" class="btn btn-ghost" type="button">Clear dates</button>
   </div>
 </div>
         <button id="todayBtn" class="btn btn-ghost" type="button">Today</button>
