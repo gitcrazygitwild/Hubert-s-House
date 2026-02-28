@@ -226,3 +226,19 @@ button.danger{
 .gate-input{
   -webkit-text-security: disc; /* iOS Safari masking */
 }
+
+@media (max-width: 720px){
+  .modal-backdrop{
+    align-items: flex-end;   /* bottom sheet */
+    padding: 10px;
+  }
+  .modal{
+    width: 100%;
+    border-bottom-left-radius: 0;
+    border-bottom-right-radius: 0;
+    max-height: 85vh;
+    overflow: auto;
+  }
+}
+
+
