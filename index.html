@@ -8,7 +8,7 @@
 
   <!-- FullCalendar -->
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.11/index.global.min.css">
-  <link rel="stylesheet" href="./styles.css?v=20260228_huberts_house_v4" />
+  <link rel="stylesheet" href="./styles.css?v=20260228_huberts_house_v5" />
 </head>
 <body>
 
@@ -45,11 +45,19 @@
   <div id="app">
     <header class="topbar">
       <div class="brand">
-        <div class="brand-title">Hubert’s House</div>
-        <span id="status" class="pill">Sync: connecting…</span>
+        <!-- Animated cat link -->
+        <a class="catlink" href="https://gitcrazygitwild.github.io/Flapurr/" target="_blank" rel="noopener" aria-label="Play Flapurr!">
+          <span class="cat">🐱</span>
+        </a>
+
+        <div>
+          <div class="brand-title">Hubert’s House</div>
+          <span id="status" class="pill">Sync: connecting…</span>
+        </div>
       </div>
 
       <div class="actions">
+        <!-- Search + dropdown filters -->
         <div class="searchbar">
           <div class="searchbar-top">
             <input id="searchInput" class="search" type="search" placeholder="Search events…" />
@@ -70,13 +78,16 @@
           </div>
         </div>
 
-        <button id="todayBtn" class="btn btn-ghost" type="button">Today</button>
+        <!-- Log out top-right -->
         <button id="logoutBtn" class="btn btn-ghost" type="button">Log out</button>
       </div>
     </header>
 
     <div id="calendarWrap" class="card">
       <div class="calendar-tools">
+        <!-- Today moved into calendar window -->
+        <button id="todayBtn" class="btn btn-ghost" type="button">Today</button>
+
         <label class="mini-label">
           <span>Owner</span>
           <select id="ownerFilter">
@@ -96,21 +107,18 @@
             <option value="30">30 days</option>
           </select>
         </label>
+
+        <!-- Dealer’s choice: Theme shuffle -->
+        <button id="themeBtn" class="btn btn-ghost" type="button" title="Shuffle theme">🎲 Theme</button>
       </div>
 
-      <!-- Dealer’s choice POP: tiny legend -->
-<div class="legend">
-  <div class="legend-row"><span class="dot dot-hanry"></span><span class="legend-label">hanry</span></div>
-  <div class="legend-row"><span class="dot dot-karena"></span><span class="legend-label">Karena</span></div>
-  <div class="legend-row"><span class="dot dot-both"></span><span class="legend-label">Both</span></div>
-  <div class="legend-row"><span class="dot dot-custom"></span><span class="legend-label">Other</span></div>
-</div>
-
-.legend-row{
-  display:flex;
-  align-items:center;
-  gap: 8px;
-}
+      <!-- Vertical legend -->
+      <div class="legend">
+        <div class="legend-row"><span class="dot dot-hanry"></span><span class="legend-label">hanry</span></div>
+        <div class="legend-row"><span class="dot dot-karena"></span><span class="legend-label">Karena</span></div>
+        <div class="legend-row"><span class="dot dot-both"></span><span class="legend-label">Both</span></div>
+        <div class="legend-row"><span class="dot dot-custom"></span><span class="legend-label">Other</span></div>
+      </div>
 
       <div id="calendar"></div>
       <div class="hint tiny muted">Tip: swipe left/right to change months. Tap the month title to jump.</div>
@@ -118,14 +126,32 @@
 
     <!-- Upcoming panel -->
     <div id="upcoming" class="upcoming card">
-      <div class="upcoming-title">Upcoming</div>
-      <div id="upcomingList" class="upcoming-list tiny muted">Loading…</div>
+      <div class="panel-head">
+        <div class="panel-title">Upcoming</div>
+        <div class="panel-sub tiny muted">Top 5 (includes all-day events today)</div>
+      </div>
+      <div id="upcomingList" class="panel-list tiny muted">Loading…</div>
+    </div>
+
+    <!-- Outstanding checklist panel -->
+    <div id="outstanding" class="upcoming card">
+      <div class="panel-head">
+        <div class="panel-title">Checklist — outstanding</div>
+        <div class="panel-sub tiny muted">Events with unchecked items</div>
+      </div>
+      <div id="outstandingList" class="panel-list tiny muted">Loading…</div>
+
+      <div class="pager">
+        <button id="outPrev" class="btn btn-ghost" type="button">Prev</button>
+        <div id="outPage" class="tiny muted">Page 1</div>
+        <button id="outNext" class="btn btn-ghost" type="button">Next</button>
+      </div>
     </div>
 
     <button id="fab" class="fab" type="button" aria-label="Add event">＋</button>
   </div>
 
-  <!-- Event modal -->
+  <!-- Event modal (full edit) -->
   <div id="modalBackdrop" class="modal-backdrop hidden" role="dialog" aria-modal="true">
     <div class="modal">
       <div class="modal-header">
@@ -227,6 +253,31 @@
     </div>
   </div>
 
+  <!-- Checklist-focused modal (from panels) -->
+  <div id="taskBackdrop" class="modal-backdrop hidden" role="dialog" aria-modal="true">
+    <div class="modal">
+      <div class="modal-header">
+        <div class="modal-title">Checklist</div>
+        <button id="taskClose" class="btn btn-icon" type="button" aria-label="Close">✕</button>
+      </div>
+
+      <div class="modal-body">
+        <div id="taskMeta" class="task-meta"></div>
+        <div id="taskChecklist" class="checklist"></div>
+
+        <div class="modal-actions">
+          <button id="taskAddItem" type="button" class="btn btn-ghost">+ Add item</button>
+          <div class="spacer"></div>
+          <button id="taskDone" type="button" class="btn btn-primary">Done</button>
+        </div>
+
+        <div class="tiny muted" style="margin-top:8px;">
+          Tip: this view is optimized for checking items off fast.
+        </div>
+      </div>
+    </div>
+  </div>
+
   <!-- Jump-to-month modal -->
   <div id="jumpBackdrop" class="modal-backdrop hidden" role="dialog" aria-modal="true">
     <div class="modal">
@@ -271,6 +322,6 @@
   </div>
 
   <script src="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.11/index.global.min.js"></script>
-  <script type="module" src="./app.js?v=20260228_huberts_house_v4"></script>
+  <script type="module" src="./app.js?v=20260228_huberts_house_v5"></script>
 </body>
 </html>
