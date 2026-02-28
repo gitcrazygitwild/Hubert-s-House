@@ -10,6 +10,21 @@
   --blob1:rgba(122,162,255,.55);
   --blob2:rgba(255,107,107,.45);
   --blob3:rgba(116,217,155,.40);
+  
+
+  /* ✅ density-controlled */
+  --event-font: 11px;
+  --cal-pad: 8px;
+}
+:root[data-density="compact"]{ --event-font: 10px; --cal-pad: 6px; }
+:root[data-density="cozy"]{ --event-font: 12px; --cal-pad: 10px; }
+
+/* ✅ THEMES (so 🎲 is visibly working) */
+:root[data-theme="aurora"]{ --accent:#7aa2ff; --blob1:rgba(122,162,255,.55); --blob2:rgba(255,107,107,.45); --blob3:rgba(116,217,155,.40); }
+:root[data-theme="sunset"]{ --accent:#ff6b6b; --blob1:rgba(255,107,107,.55); --blob2:rgba(255,200,107,.40); --blob3:rgba(122,162,255,.30); }
+:root[data-theme="mint"]  { --accent:#74d99b; --blob1:rgba(116,217,155,.55); --blob2:rgba(122,162,255,.35); --blob3:rgba(255,107,107,.28); }
+:root[data-theme="grape"] { --accent:#bb86fc; --blob1:rgba(187,134,252,.55); --blob2:rgba(122,162,255,.35); --blob3:rgba(255,107,107,.25); }
+:root[data-theme="mono"]  { --accent:#cfd6e6; --blob1:rgba(255,255,255,.14); --blob2:rgba(255,255,255,.08); --blob3:rgba(255,255,255,.06); }
 }
 
 *{ box-sizing:border-box; }
@@ -89,17 +104,25 @@ input, select, textarea{ font-size:16px; }
 }
 
 /* Topbar */
-.topbar{
-  display:flex;
-  flex-direction:column;
-  gap:10px;
-  padding:12px 6px 6px;
-}
+.topbar{ padding:12px 6px 6px; }
 .topbar-row{
   display:flex;
   justify-content:space-between;
   align-items:flex-start;
   gap:12px;
+}
+
+.brand-title-row{
+  display:flex;
+  align-items:center;
+  gap:10px;
+  flex-wrap:wrap;
+}
+
+.actions-toprow{
+  display:flex;
+  gap:10px;
+  align-items:center;
 }
 
 .brand{
