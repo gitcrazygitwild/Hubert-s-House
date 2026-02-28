@@ -221,6 +221,7 @@ button.danger{
 }
 .gate.hidden{ display:none; }
 .gate-card{ width: min(520px, 100%); }
+.gate-input{ -webkit-text-security: disc; }
 
 /* Mask text like a password without triggering iOS password manager */
 .gate-input{
