@@ -12,6 +12,9 @@ const gate = document.getElementById("gate");
 const gateForm = document.getElementById("gateForm");
 const gateInput = document.getElementById("gateInput");
 
+const mainEl = document.getElementById("main");
+mainEl?.classList.remove("hidden"); // ensure main is visible
+
 function unlock() {
   // optional: keep this line if you want “remember me” behavior later
   // localStorage.setItem(LS_UNLOCK, "1");
