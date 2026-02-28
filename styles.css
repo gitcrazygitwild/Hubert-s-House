@@ -302,6 +302,33 @@ input:focus, select:focus, textarea:focus{
 }
 .upcoming-item strong{ font-weight: 900; }
 
+.upcoming-item{
+  position: relative;
+  overflow: hidden;
+}
+
+/* left color stripe */
+.upcoming-item::before{
+  content:"";
+  position:absolute;
+  left:0;
+  top:0;
+  bottom:0;
+  width: 6px;
+  background: rgba(255,255,255,0.25); /* fallback */
+}
+
+/* owner-specific stripe colors */
+.upcoming-item.owner-hanry::before{ background: rgba(122,162,255,0.85); }
+.upcoming-item.owner-karena::before{ background: rgba(255,107,107,0.85); }
+.upcoming-item.owner-both::before{ background: rgba(116,217,155,0.85); }
+.upcoming-item.owner-custom::before{ background: rgba(186,140,255,0.80); }
+
+/* give content a little breathing room from stripe */
+.upcoming-item{
+  padding-left: 14px; /* was 8/10 earlier; bump to account for stripe */
+}
+
 /* Floating add button */
 .fab{
   position: fixed;
