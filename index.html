@@ -5,84 +5,115 @@
   <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
   <title>Mack Calendar</title>
 
+  <!-- FullCalendar -->
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.11/index.global.min.css">
-  <link rel="stylesheet" href="./styles.css?v=final1" />
+
+  <!-- IMPORTANT: cache-bust -->
+  <link rel="stylesheet" href="./styles.css?v=20260227_final" />
 </head>
 <body>
 
-<!-- Gate Overlay -->
-<div id="gate" class="gate">
-  <div class="gate-card card">
-    <h1>Mack Calendar</h1>
-    <p class="muted">Enter password to continue</p>
+  <!-- Gate overlay (blocks everything until unlocked) -->
+  <div id="gate" class="gate">
+    <div class="gate-card">
+      <div class="gate-title">Mack Calendar</div>
+      <div class="gate-sub">Enter password to continue</div>
 
-    <form id="gateForm">
-      <input id="gateInput" class="gate-input" placeholder="Password" />
-      <button type="submit">Unlock</button>
-    </form>
-  </div>
-</div>
+      <form id="gateForm" class="gate-form" autocomplete="off">
+        <input
+          id="gateInput"
+          class="gate-input"
+          type="text"
+          inputmode="text"
+          autocomplete="off"
+          autocapitalize="none"
+          autocorrect="off"
+          spellcheck="false"
+          placeholder="Password"
+        />
+        <button class="btn btn-primary" type="submit">Unlock</button>
+      </form>
 
-<div id="app">
-  <header class="topbar">
-    <div class="brand">
-      <strong>Mack Calendar</strong>
-      <span id="status" class="pill muted">Connecting…</span>
+      <div class="gate-note">Simple gate (not real security).</div>
     </div>
-    <div class="actions">
-      <button id="todayBtn" class="secondary">Today</button>
-      <button id="logoutBtn" class="secondary">Lock</button>
-    </div>
-  </header>
-
-  <div id="calendarWrap" class="card">
-    <div id="calendar"></div>
   </div>
 
-  <button id="fab">＋</button>
-</div>
+  <div id="app">
+    <header class="topbar">
+      <div class="brand">
+        <div class="brand-title">Mack Calendar</div>
+        <span id="status" class="pill">Sync: connecting…</span>
+      </div>
+      <div class="actions">
+        <button id="todayBtn" class="btn btn-ghost">Today</button>
+        <button id="logoutBtn" class="btn btn-ghost">Lock</button>
+      </div>
+    </header>
 
-<!-- Event Modal -->
-<div id="modalBackdrop" class="modal-backdrop hidden">
-  <div class="modal card">
-    <div class="modal-header">
-      <strong id="modalTitle">Event</strong>
-      <button id="modalClose">✕</button>
+    <div id="calendarWrap" class="card">
+      <div id="calendar"></div>
     </div>
 
-    <form id="eventForm" class="modal-body">
-      <input id="evtTitle" placeholder="Event title" required />
+    <button id="fab" class="fab" aria-label="Add event">＋</button>
+  </div>
 
-      <div class="row">
-        <input id="evtStart" type="datetime-local" required />
-        <input id="evtEnd" type="datetime-local" />
+  <!-- Event modal -->
+  <div id="modalBackdrop" class="modal-backdrop hidden" role="dialog" aria-modal="true">
+    <div class="modal">
+      <div class="modal-header">
+        <div id="modalTitle" class="modal-title">New event</div>
+        <button id="modalClose" class="btn btn-icon" type="button" aria-label="Close">✕</button>
       </div>
 
-      <label class="check">
-        <input id="evtAllDay" type="checkbox" />
-        All day
-      </label>
+      <form id="eventForm" class="modal-body">
+        <label class="field">
+          <span>Title</span>
+          <input id="evtTitle" type="text" required placeholder="e.g., OB appointment" />
+        </label>
 
-      <select id="evtOwner">
-        <option value="his">His</option>
-        <option value="hers">Hers</option>
-        <option value="both">Both</option>
-      </select>
+        <div class="row">
+          <label class="field">
+            <span>Start</span>
+            <input id="evtStart" type="datetime-local" required />
+          </label>
+          <label class="field">
+            <span>End</span>
+            <input id="evtEnd" type="datetime-local" />
+          </label>
+        </div>
 
-      <textarea id="evtNotes" rows="3" placeholder="Notes..."></textarea>
+        <label class="check">
+          <input id="evtAllDay" type="checkbox" />
+          <span>All day</span>
+        </label>
 
-      <div class="modal-actions">
-        <button id="deleteBtn" type="button" class="danger hidden">Delete</button>
-        <div class="spacer"></div>
-        <button type="button" id="cancelBtn" class="secondary">Cancel</button>
-        <button type="submit">Save</button>
-      </div>
-    </form>
+        <label class="field">
+          <span>Who</span>
+          <select id="evtOwner">
+            <option value="his">His</option>
+            <option value="hers">Hers</option>
+            <option value="both">Both</option>
+          </select>
+        </label>
+
+        <label class="field">
+          <span>Notes</span>
+          <textarea id="evtNotes" rows="4" placeholder="Anything helpful…"></textarea>
+        </label>
+
+        <div class="modal-actions">
+          <button id="deleteBtn" type="button" class="btn btn-danger hidden">Delete</button>
+          <div class="spacer"></div>
+          <button id="cancelBtn" type="button" class="btn btn-ghost">Cancel</button>
+          <button id="saveBtn" type="submit" class="btn btn-primary">Save</button>
+        </div>
+      </form>
+    </div>
   </div>
-</div>
 
-<script src="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.11/index.global.min.js"></script>
-<script type="module" src="./app.js?v=final1"></script>
+  <script src="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.11/index.global.min.js"></script>
 
+  <!-- IMPORTANT: must be module (Firebase imports) + cache-bust -->
+  <script type="module" src="./app.js?v=20260227_final"></script>
 </body>
 </html>
