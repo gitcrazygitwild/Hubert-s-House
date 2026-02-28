@@ -11,10 +11,13 @@
 <body>
 
   <!-- Gate overlay -->
-  <div id="gate" class="gate">
-    <div class="gate-card">
-      <div class="gate-title">Hubert’s House</div>
-      <div class="gate-sub">Enter password to continue</div>
+  <div id="gate" class="gate hidden">
+    <div class="gate-card card glass">
+      <div class="gate-title-row">
+        <div class="gate-title">Hubert’s House</div>
+        <a class="catlink" href="https://gitcrazygitwild.github.io/Flapurr/" target="_blank" rel="noopener" title="Flapurr!">🐱</a>
+      </div>
+      <div class="gate-sub muted">Enter password to continue</div>
 
       <form id="gateForm" class="gate-form" autocomplete="off">
         <input
@@ -36,33 +39,28 @@
         <span>Remember this device</span>
       </label>
 
-      <div class="gate-note">Simple gate (not real security).</div>
+      <div class="tiny muted gate-note">Simple gate (not real security).</div>
     </div>
   </div>
 
   <div id="app">
     <header class="topbar">
       <div class="brand">
-        <a class="catlink" href="https://gitcrazygitwild.github.io/Flapurr/" target="_blank" rel="noopener" aria-label="Play Flapurr!">
-          <span class="cat">🐱</span>
-        </a>
-
-        <div>
+        <a class="catlink cat-anim" href="https://gitcrazygitwild.github.io/Flapurr/" target="_blank" rel="noopener" title="Flapurr!">🐱</a>
+        <div class="brand-stack">
           <div class="brand-title">Hubert’s House</div>
           <span id="status" class="pill">Sync: connecting…</span>
         </div>
       </div>
 
       <div class="actions">
-        <!-- Top row above search -->
+        <!-- top row above search -->
         <div class="actions-top">
-          <div class="actions-mid">
-            <button id="themeBtn" class="btn btn-ghost" type="button" title="Shuffle theme">🎲 Theme</button>
-          </div>
+          <button id="themeBtn" class="btn btn-ghost" type="button" title="Shuffle theme">🎲 Theme</button>
           <button id="logoutBtn" class="btn btn-ghost" type="button">Log out</button>
         </div>
 
-        <!-- Search row -->
+        <!-- search row -->
         <div class="searchbar">
           <div class="searchbar-top">
             <input id="searchInput" class="search" type="search" placeholder="Search events…" />
@@ -78,23 +76,13 @@
               <span>To</span>
               <input id="searchTo" class="search-date" type="date" />
             </label>
-
             <button id="clearDatesBtn" class="btn btn-ghost" type="button">Clear dates</button>
           </div>
         </div>
       </div>
     </header>
 
-    <div id="calendarWrap" class="card calendar-card">
-      <!-- Quick Add (dealer’s choice) -->
-      <div class="quickadd">
-        <button class="chip" data-template="dinner" type="button">🍝 Dinner 7pm</button>
-        <button class="chip" data-template="groceries" type="button">🛒 Groceries</button>
-        <button class="chip" data-template="weekend" type="button">🗓️ Weekend plan</button>
-        <button class="chip" data-template="reminder" type="button">✅ Reminder today</button>
-      </div>
-
-      <!-- Tools row (compressed) -->
+    <div id="calendarWrap" class="card glass calendar-shell">
       <div class="calendar-tools">
         <button id="todayBtn" class="btn btn-ghost calbtn" type="button">Today</button>
 
@@ -119,41 +107,42 @@
             </select>
           </label>
         </div>
+
+        <button id="legendBtn" class="btn btn-ghost btn-icon-sm" type="button" aria-label="Legend">ⓘ</button>
       </div>
 
-      <!-- Legend moved down near calendar header (compress vertical space) -->
-      <div class="legend legend-compact">
-        <div class="legend-row"><span class="dot dot-hanry"></span><span class="legend-label">hanry</span></div>
-        <div class="legend-row"><span class="dot dot-karena"></span><span class="legend-label">Karena</span></div>
-        <div class="legend-row"><span class="dot dot-both"></span><span class="legend-label">Both</span></div>
-        <div class="legend-row"><span class="dot dot-custom"></span><span class="legend-label">Other</span></div>
+      <div id="legendDropdown" class="legend-dropdown hidden">
+        <div class="legend-item"><span class="dot dot-hanry"></span> hanry</div>
+        <div class="legend-item"><span class="dot dot-karena"></span> Karena</div>
+        <div class="legend-item"><span class="dot dot-both"></span> Both</div>
+        <div class="legend-item"><span class="dot dot-custom"></span> Other</div>
       </div>
 
-      <div id="calendar"></div>
+      <div id="calendar" class="calendar-border"></div>
+
       <div class="hint tiny muted">Tip: swipe left/right to change months. Tap the month title to jump.</div>
     </div>
 
-    <!-- Upcoming panel -->
-    <div id="upcoming" class="upcoming card">
-      <div class="panel-head">
+    <!-- Upcoming -->
+    <div id="upcoming" class="card glass">
+      <div class="panel-header">
         <div class="panel-title">Upcoming</div>
-        <div class="panel-sub tiny muted">Top 5 (includes all-day events today)</div>
+        <div class="tiny muted">Top 5 (includes all-day today)</div>
       </div>
-      <div id="upcomingList" class="panel-list tiny muted">Loading…</div>
+      <div id="upcomingList" class="panel-list muted tiny">Loading…</div>
     </div>
 
-    <!-- Outstanding checklist panel -->
-    <div id="outstanding" class="upcoming card">
-      <div class="panel-head panel-head-tight">
+    <!-- Outstanding checklist -->
+    <div id="outstanding" class="card glass">
+      <div class="panel-header tight">
         <div class="panel-title">Checklist — outstanding</div>
-        <div class="panel-sub tiny muted">Events with unchecked items</div>
+        <div class="tiny muted">Events with unchecked items</div>
       </div>
+      <div id="outstandingList" class="panel-list muted tiny">Loading…</div>
 
-      <div id="outstandingList" class="panel-list tiny muted">Loading…</div>
-
-      <div class="pager">
+      <div id="outstandingPager" class="pager hidden">
         <button id="outPrev" class="btn btn-ghost" type="button">Prev</button>
-        <div id="outPage" class="tiny muted">Page 1</div>
+        <div id="outPageInfo" class="tiny muted">Page 1 / 1</div>
         <button id="outNext" class="btn btn-ghost" type="button">Next</button>
       </div>
     </div>
@@ -161,9 +150,9 @@
     <button id="fab" class="fab" type="button" aria-label="Add event">＋</button>
   </div>
 
-  <!-- Event modal -->
+  <!-- Event edit modal -->
   <div id="modalBackdrop" class="modal-backdrop hidden" role="dialog" aria-modal="true">
-    <div class="modal">
+    <div class="modal card glass">
       <div class="modal-header">
         <div id="modalTitle" class="modal-title">New event</div>
         <button id="modalClose" class="btn btn-icon" type="button" aria-label="Close">✕</button>
@@ -264,33 +253,24 @@
   </div>
 
   <!-- Checklist-focused modal -->
-  <div id="taskBackdrop" class="modal-backdrop hidden" role="dialog" aria-modal="true">
-    <div class="modal">
+  <div id="todoBackdrop" class="modal-backdrop hidden" role="dialog" aria-modal="true">
+    <div class="modal card glass">
       <div class="modal-header">
         <div class="modal-title">Checklist</div>
-        <button id="taskClose" class="btn btn-icon" type="button" aria-label="Close">✕</button>
+        <button id="todoClose" class="btn btn-icon" type="button" aria-label="Close">✕</button>
       </div>
 
       <div class="modal-body">
-        <div id="taskMeta" class="task-meta"></div>
-        <div id="taskChecklist" class="checklist"></div>
-
-        <div class="modal-actions">
-          <button id="taskAddItem" type="button" class="btn btn-ghost">+ Add item</button>
-          <div class="spacer"></div>
-          <button id="taskDone" type="button" class="btn btn-primary">Done</button>
-        </div>
-
-        <div class="tiny muted" style="margin-top:8px;">
-          Tip: this view is optimized for checking items off fast.
-        </div>
+        <div id="todoMeta" class="todo-meta muted tiny"></div>
+        <div id="todoList" class="checklist"></div>
+        <button id="todoAddItem" type="button" class="btn btn-ghost" style="margin-top:10px;">+ Add item</button>
       </div>
     </div>
   </div>
 
   <!-- Jump-to-month modal -->
   <div id="jumpBackdrop" class="modal-backdrop hidden" role="dialog" aria-modal="true">
-    <div class="modal">
+    <div class="modal card glass">
       <div class="modal-header">
         <div class="modal-title">Jump to month</div>
         <button id="jumpClose" class="btn btn-icon" type="button" aria-label="Close">✕</button>
