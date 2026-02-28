@@ -1,3 +1,15 @@
+<!-- index.html — Hubert’s House (FULL)
+     Works with the FULL app.js + FULL styles.css I sent.
+     Includes: gate (remember device), topbar with theme + logout, collapsible search date filters,
+     calendar tools row (Today / List range / Owner), compact legend aligned under header,
+     Upcoming + Outstanding panels, Event modal, Checklist-focused modal, Jump-to-month modal.
+
+     NOTE: make sure your files are named exactly:
+       - index.html
+       - styles.css
+       - app.js
+     and in GitHub Pages they live in the same folder.
+-->
 <!doctype html>
 <html lang="en">
 <head>
@@ -5,19 +17,17 @@
   <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
   <title>Hubert’s House</title>
 
+  <!-- FullCalendar -->
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.11/index.global.min.css">
-  <link rel="stylesheet" href="./styles.css?v=20260228_huberts_house_v6" />
+  <link rel="stylesheet" href="./styles.css?v=20260228_huberts_house_v4" />
 </head>
 <body>
 
   <!-- Gate overlay -->
-  <div id="gate" class="gate hidden">
-    <div class="gate-card card glass">
-      <div class="gate-title-row">
-        <div class="gate-title">Hubert’s House</div>
-        <a class="catlink" href="https://gitcrazygitwild.github.io/Flapurr/" target="_blank" rel="noopener" title="Flapurr!">🐱</a>
-      </div>
-      <div class="gate-sub muted">Enter password to continue</div>
+  <div id="gate" class="gate">
+    <div class="gate-card">
+      <div class="gate-title">Hubert’s House</div>
+      <div class="gate-sub">Enter password to continue</div>
 
       <form id="gateForm" class="gate-form" autocomplete="off">
         <input
@@ -39,54 +49,76 @@
         <span>Remember this device</span>
       </label>
 
-      <div class="tiny muted gate-note">Simple gate (not real security).</div>
+      <div class="gate-note">Simple gate (not real security).</div>
     </div>
   </div>
 
   <div id="app">
+
+    <!-- Top bar -->
     <header class="topbar">
       <div class="brand">
-        <a class="catlink cat-anim" href="https://gitcrazygitwild.github.io/Flapurr/" target="_blank" rel="noopener" title="Flapurr!">🐱</a>
-        <div class="brand-stack">
-          <div class="brand-title">Hubert’s House</div>
-          <span id="status" class="pill">Sync: connecting…</span>
-        </div>
+        <a class="catlink" href="https://gitcrazygitwild.github.io/Flapurr/" target="_blank" rel="noopener">🐈‍⬛</a>
+        <div class="brand-title">Hubert’s House</div>
+        <span id="status" class="pill">Sync: connecting…</span>
       </div>
 
       <div class="actions">
-        <!-- top row above search -->
+        <!-- Actions row: Theme + Logout on top-right above search -->
         <div class="actions-top">
-          <button id="themeBtn" class="btn btn-ghost" type="button" title="Shuffle theme">🎲 Theme</button>
+          <button id="themeBtn" class="btn btn-ghost" type="button" title="Randomize theme">Theme</button>
           <button id="logoutBtn" class="btn btn-ghost" type="button">Log out</button>
         </div>
 
-        <!-- search row -->
-        <div class="searchbar">
-          <div class="searchbar-top">
-            <input id="searchInput" class="search" type="search" placeholder="Search events…" />
-            <button id="searchFiltersBtn" class="btn btn-ghost btn-icon-sm" type="button" aria-label="Search filters">☰</button>
-          </div>
+        <!-- Search row: search + date filters tucked behind a button -->
+        <div class="search-row">
+          <input id="searchInput" class="search" type="search" placeholder="Search events…" />
 
-          <div id="searchFilters" class="search-filters hidden">
-            <label class="search-field">
-              <span>From</span>
-              <input id="searchFrom" class="search-date" type="date" />
-            </label>
-            <label class="search-field">
-              <span>To</span>
-              <input id="searchTo" class="search-date" type="date" />
-            </label>
-            <button id="clearDatesBtn" class="btn btn-ghost" type="button">Clear dates</button>
+          <div class="search-filters-wrap">
+            <button id="searchFiltersBtn" class="btn btn-ghost search-filters-btn" type="button">
+              Dates
+            </button>
+
+            <div id="searchFilters" class="search-filters hidden">
+              <div class="row">
+                <label class="field">
+                  <span>From</span>
+                  <input id="searchFrom" class="search-date" type="date" />
+                </label>
+                <label class="field">
+                  <span>To</span>
+                  <input id="searchTo" class="search-date" type="date" />
+                </label>
+              </div>
+
+              <div class="modal-actions" style="margin-top:10px;">
+                <div class="spacer"></div>
+                <button id="clearDatesBtn" class="btn btn-ghost" type="button">Clear</button>
+              </div>
+            </div>
           </div>
         </div>
       </div>
     </header>
 
-    <div id="calendarWrap" class="card glass calendar-shell">
-      <div class="calendar-tools">
-        <button id="todayBtn" class="btn btn-ghost calbtn" type="button">Today</button>
+    <!-- Calendar card -->
+    <div id="calendarWrap" class="card">
 
-        <div class="tool-group">
+      <!-- Tools row INSIDE calendar window: Today left, List range + Owner next to it -->
+      <div class="calendar-tools">
+        <div class="tools-left">
+          <button id="todayBtn" class="btn btn-ghost" type="button">Today</button>
+
+          <label class="mini-label">
+            <span>List range</span>
+            <select id="listRangeSelect" class="mini-select">
+              <option value="7" selected>7 days</option>
+              <option value="14">14 days</option>
+              <option value="30">30 days</option>
+              <option value="60">60 days</option>
+            </select>
+          </label>
+
           <label class="mini-label">
             <span>Owner</span>
             <select id="ownerFilter" class="mini-select">
@@ -97,68 +129,65 @@
               <option value="custom">Other</option>
             </select>
           </label>
-
-          <label class="mini-label">
-            <span>List range</span>
-            <select id="listRangeSelect" class="mini-select">
-              <option value="7" selected>7 days</option>
-              <option value="14">14 days</option>
-              <option value="30">30 days</option>
-            </select>
-          </label>
         </div>
 
-        <button id="legendBtn" class="btn btn-ghost btn-icon-sm" type="button" aria-label="Legend">ⓘ</button>
+        <div class="tools-right">
+          <!-- Optional quick add chips (JS supports these if present) -->
+          <button class="btn btn-ghost chip" type="button" data-template="dinner">Dinner</button>
+          <button class="btn btn-ghost chip" type="button" data-template="groceries">Groceries</button>
+          <button class="btn btn-ghost chip" type="button" data-template="weekend">Weekend</button>
+        </div>
       </div>
 
-      <div id="legendDropdown" class="legend-dropdown hidden">
-        <div class="legend-item"><span class="dot dot-hanry"></span> hanry</div>
-        <div class="legend-item"><span class="dot dot-karena"></span> Karena</div>
-        <div class="legend-item"><span class="dot dot-both"></span> Both</div>
-        <div class="legend-item"><span class="dot dot-custom"></span> Other</div>
+      <!-- Legend compressed to align under the FullCalendar header area -->
+      <div class="legend-inline">
+        <div class="item"><span class="dot dot-hanry"></span>hanry</div>
+        <div class="item"><span class="dot dot-karena"></span>Karena</div>
+        <div class="item"><span class="dot dot-both"></span>Both</div>
+        <div class="item"><span class="dot dot-custom"></span>Other</div>
       </div>
 
-      <div id="calendar" class="calendar-border"></div>
-
+      <div id="calendar"></div>
       <div class="hint tiny muted">Tip: swipe left/right to change months. Tap the month title to jump.</div>
     </div>
 
-    <!-- Upcoming -->
-    <div id="upcoming" class="card glass">
+    <!-- Panels -->
+    <div id="upcoming" class="panel card">
       <div class="panel-header">
-        <div class="panel-title">Upcoming</div>
-        <div class="tiny muted">Top 5 (includes all-day today)</div>
+        <span>Upcoming</span>
+        <span class="tiny muted">Top 5</span>
       </div>
-      <div id="upcomingList" class="panel-list muted tiny">Loading…</div>
+      <div id="upcomingList" class="panel-list tiny muted">Loading…</div>
     </div>
 
-    <!-- Outstanding checklist -->
-    <div id="outstanding" class="card glass">
+    <div id="outstanding" class="panel card">
       <div class="panel-header tight">
-        <div class="panel-title">Checklist — outstanding</div>
-        <div class="tiny muted">Events with unchecked items</div>
-      </div>
-      <div id="outstandingList" class="panel-list muted tiny">Loading…</div>
+        <span>Events with unchecked items</span>
 
-      <div id="outstandingPager" class="pager hidden">
-        <button id="outPrev" class="btn btn-ghost" type="button">Prev</button>
-        <div id="outPageInfo" class="tiny muted">Page 1 / 1</div>
-        <button id="outNext" class="btn btn-ghost" type="button">Next</button>
+        <div class="panel-controls">
+          <button id="outPrev" class="btn btn-ghost" type="button">‹</button>
+          <span id="outPage" class="tiny muted">Page 1 / 1</span>
+          <button id="outNext" class="btn btn-ghost" type="button">›</button>
+        </div>
       </div>
+
+      <div id="outstandingList" class="panel-list tiny muted">Loading…</div>
     </div>
 
+    <!-- Floating add -->
     <button id="fab" class="fab" type="button" aria-label="Add event">＋</button>
   </div>
 
-  <!-- Event edit modal -->
+  <!-- Event modal -->
   <div id="modalBackdrop" class="modal-backdrop hidden" role="dialog" aria-modal="true">
-    <div class="modal card glass">
+    <div class="modal">
       <div class="modal-header">
         <div id="modalTitle" class="modal-title">New event</div>
         <button id="modalClose" class="btn btn-icon" type="button" aria-label="Close">✕</button>
       </div>
 
       <form id="eventForm" class="modal-body">
+
         <label class="field">
           <span>Title</span>
           <input id="evtTitle" type="text" required placeholder="e.g., Dinner reservation" />
@@ -169,6 +198,7 @@
             <span>Start</span>
             <input id="evtStart" type="datetime-local" required />
           </label>
+
           <label class="field">
             <span>End</span>
             <input id="evtEnd" type="datetime-local" />
@@ -186,7 +216,7 @@
             <select id="evtOwner">
               <option value="hanry">hanry</option>
               <option value="karena">Karena</option>
-              <option value="both">Both</option>
+              <option value="both" selected>Both</option>
               <option value="custom">Other…</option>
             </select>
           </label>
@@ -194,7 +224,7 @@
           <label class="field">
             <span>Type</span>
             <select id="evtType">
-              <option value="general">General</option>
+              <option value="general" selected>General</option>
               <option value="wedding">Wedding</option>
               <option value="trip">Trip</option>
               <option value="appointment">Appointment</option>
@@ -212,7 +242,7 @@
           <label class="field">
             <span>Repeat</span>
             <select id="evtRepeat">
-              <option value="none">Does not repeat</option>
+              <option value="none" selected>Does not repeat</option>
               <option value="daily">Daily</option>
               <option value="weekly">Weekly</option>
               <option value="monthly">Monthly</option>
@@ -253,24 +283,33 @@
   </div>
 
   <!-- Checklist-focused modal -->
-  <div id="todoBackdrop" class="modal-backdrop hidden" role="dialog" aria-modal="true">
-    <div class="modal card glass">
+  <div id="taskBackdrop" class="modal-backdrop hidden" role="dialog" aria-modal="true">
+    <div class="modal">
       <div class="modal-header">
         <div class="modal-title">Checklist</div>
-        <button id="todoClose" class="btn btn-icon" type="button" aria-label="Close">✕</button>
+        <button id="taskClose" class="btn btn-icon" type="button" aria-label="Close">✕</button>
       </div>
 
       <div class="modal-body">
-        <div id="todoMeta" class="todo-meta muted tiny"></div>
-        <div id="todoList" class="checklist"></div>
-        <button id="todoAddItem" type="button" class="btn btn-ghost" style="margin-top:10px;">+ Add item</button>
+        <div id="taskMeta" class="tiny muted">Loading…</div>
+
+        <div class="field">
+          <span>Items</span>
+          <div id="taskChecklist" class="checklist"></div>
+          <button id="taskAddItem" type="button" class="btn btn-ghost" style="margin-top:8px;">+ Add item</button>
+        </div>
+
+        <div class="modal-actions">
+          <div class="spacer"></div>
+          <button id="taskDone" type="button" class="btn btn-primary">Done</button>
+        </div>
       </div>
     </div>
   </div>
 
   <!-- Jump-to-month modal -->
   <div id="jumpBackdrop" class="modal-backdrop hidden" role="dialog" aria-modal="true">
-    <div class="modal card glass">
+    <div class="modal">
       <div class="modal-header">
         <div class="modal-title">Jump to month</div>
         <button id="jumpClose" class="btn btn-icon" type="button" aria-label="Close">✕</button>
@@ -311,7 +350,8 @@
     </div>
   </div>
 
+  <!-- Scripts -->
   <script src="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.11/index.global.min.js"></script>
-  <script type="module" src="./app.js?v=20260228_huberts_house_v6"></script>
+  <script type="module" src="./app.js?v=20260228_huberts_house_v4"></script>
 </body>
 </html>
