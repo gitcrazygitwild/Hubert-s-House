@@ -1,11 +1,10 @@
-/* styles.css — Hubert’s House (v9)
-   Goals:
-   - Crisper typography + spacing
-   - Keep "Hubert’s House" fully visible (no overflow)
-   - Ensure FullCalendar header (month/week/day/list) stays INSIDE calendar card
-   - Center month + year nicely (FC toolbar title)
-   - Fixed FAB bottom-right always visible
-   - Search date range only appears when active (JS toggles .hidden)
+/* styles.css — Hubert’s House (v10)
+   Adds:
+   - iOS modal scroll fix (.modal-scroll + safe-area padding + overscroll)
+   - New Details modal styling (clean read-only view)
+   - Cat Mode hooks (paw button, purr dot, ambient cat layer)
+   - Keeps FullCalendar header fully inside calendar window
+   - Title clamp so “Hubert’s House” always fits
 */
 
 :root{
@@ -29,21 +28,21 @@
 
   --radius: 22px;
 
-  /* Typography hooks (JS theme dice sets these) */
   --font-ui: -apple-system,system-ui,"SF Pro Text","Segoe UI",Roboto,Helvetica,Arial,sans-serif;
   --font-display: -apple-system,system-ui,"SF Pro Display","Segoe UI",Roboto,Helvetica,Arial,sans-serif;
 
-  /* FC event font size (JS uses this var) */
   --event-font: 11px;
 
-  /* Crispness */
   --shadow: 0 30px 70px rgba(0,0,0,.45);
   --shadow2: 0 18px 45px rgba(0,0,0,.35);
+
+  /* iOS safe areas */
+  --safe-top: env(safe-area-inset-top, 0px);
+  --safe-bot: env(safe-area-inset-bottom, 0px);
 }
 
 *{ box-sizing:border-box; }
 html,body{ height:100%; }
-
 body{
   margin:0;
   font-family:var(--font-ui);
@@ -57,13 +56,6 @@ body{
   -webkit-font-smoothing:antialiased;
   text-rendering:optimizeLegibility;
 }
-
-@keyframes floatBlobs{
-  0%{background-position:20% 20%,75% 55%,40% 85%,0 0;}
-  50%{background-position:23% 18%,72% 58%,43% 82%,0 0;}
-  100%{background-position:20% 20%,75% 55%,40% 85%,0 0;}
-}
-html.designs-on body{ animation:floatBlobs 18s ease-in-out infinite; }
 
 .hidden{ display:none !important; }
 .muted{ color:var(--muted); }
@@ -155,7 +147,7 @@ input, select, textarea{ font-size:16px; }
   display:flex;
   align-items:center;
   gap:12px;
-  min-width:0; /* allow ellipsis in children */
+  min-width:0;
 }
 .catlink{
   font-size:28px;
@@ -164,22 +156,18 @@ input, select, textarea{ font-size:16px; }
   transform: translateY(1px);
   filter: drop-shadow(0 8px 18px rgba(0,0,0,.25));
 }
-
 .brand-stack{
   display:flex;
   flex-direction:column;
   gap:6px;
   min-width:0;
 }
-
 .brand-title-row{
   display:flex;
   align-items:center;
   gap:8px;
   min-width:0;
 }
-
-/* Force title to ALWAYS fit (no overflow, no wrap, clamp font) */
 .brand-title{
   font-family: var(--font-display);
   font-weight: 950;
@@ -189,7 +177,6 @@ input, select, textarea{ font-size:16px; }
   overflow: hidden;
   text-overflow: ellipsis;
   max-width: min(62vw, 520px);
-  /* clamp keeps it from ever getting too big to fit */
   font-size: clamp(16px, 3.2vw, 20px);
 }
 
@@ -199,12 +186,33 @@ input, select, textarea{ font-size:16px; }
   filter: drop-shadow(0 10px 18px rgba(0,0,0,.30));
 }
 
+/* Enhancement: purr dot */
+.purr-dot{
+  width:10px;
+  height:10px;
+  border-radius:999px;
+  background: rgba(255,255,255,.22);
+  border:1px solid rgba(255,255,255,.26);
+  box-shadow: 0 0 0 3px rgba(255,255,255,.05);
+}
+html.purr-on .purr-dot{
+  background: rgba(116,217,155,.85);
+  border-color: rgba(116,217,155,.65);
+  box-shadow: 0 0 0 3px rgba(116,217,155,.18), 0 10px 18px rgba(0,0,0,.25);
+  animation: purrPulse 1.2s ease-in-out infinite;
+}
+@keyframes purrPulse{
+  0%,100%{ transform:scale(1); opacity:.95; }
+  50%{ transform:scale(1.12); opacity:1; }
+}
+
 .top-actions{
   display:flex;
   gap:10px;
   align-items:center;
   flex-shrink:0;
 }
+
 #themeBtn{
   width:46px;
   padding:8px 0;
@@ -221,7 +229,6 @@ input, select, textarea{ font-size:16px; }
   align-items:center;
   flex-wrap:wrap;
 }
-
 .search-shell{
   position:relative;
   flex: 1 1 260px;
@@ -242,7 +249,6 @@ input, select, textarea{ font-size:16px; }
   border-color: rgba(122,162,255,.60);
   box-shadow: 0 0 0 3px rgba(122,162,255,.18), inset 0 -1px 0 rgba(255,255,255,.06);
 }
-
 .search-clear{
   position:absolute;
   right:10px;
@@ -265,12 +271,10 @@ input, select, textarea{ font-size:16px; }
   align-items:center;
   gap:10px;
 }
-
 .search-filters-btn.is-active{
   box-shadow:0 0 0 3px rgba(122,162,255,.18);
   border-color: rgba(122,162,255,.55);
 }
-
 .search-filters{
   position:absolute;
   right:0;
@@ -306,9 +310,8 @@ input, select, textarea{ font-size:16px; }
   color: var(--text);
 }
 
-/* ---------- Calendar tools row ---------- */
+/* ---------- Calendar tools ---------- */
 #calendarWrap{ margin-top:10px; }
-
 .calendar-tools{
   display:flex;
   justify-content:space-between;
@@ -316,7 +319,6 @@ input, select, textarea{ font-size:16px; }
   gap:10px;
   margin-bottom:10px;
 }
-
 .tools-left{
   width:100%;
   display:grid;
@@ -324,7 +326,6 @@ input, select, textarea{ font-size:16px; }
   gap:10px;
   align-items:center;
 }
-
 .mini-label{
   display:flex;
   align-items:center;
@@ -371,16 +372,16 @@ input, select, textarea{ font-size:16px; }
 .dot-both{ background:#74d99b; }
 .dot-custom{ background:#bb86fc; }
 
-/* ---------- Calendar shell (keep FC header INSIDE) ---------- */
+/* ---------- Calendar shell (contain FC header) ---------- */
 #calendar{
   border: 1px solid rgba(255,255,255,.18);
   border-radius: 18px;
   padding: 10px;
   background: rgba(0,0,0,.10);
-  overflow: hidden; /* ensures FC header/buttons never spill outside */
+  overflow: hidden; /* key: keep toolbar buttons inside */
 }
 
-/* ---------- FullCalendar theme tweaks ---------- */
+/* ---------- FullCalendar tweaks ---------- */
 .fc{
   --fc-page-bg-color: transparent;
   --fc-neutral-bg-color: rgba(255,255,255,0.035);
@@ -391,12 +392,12 @@ input, select, textarea{ font-size:16px; }
   font-size: 12px;
 }
 
-/* Make header stay inside and wrap nicely on small screens */
 .fc .fc-header-toolbar{
   margin: 6px 2px 10px;
   gap: 8px;
   flex-wrap: wrap;
 }
+
 .fc .fc-toolbar-chunk{
   display:flex;
   align-items:center;
@@ -404,7 +405,11 @@ input, select, textarea{ font-size:16px; }
   min-width: 0;
 }
 
-/* Center month + year (the title) */
+/* Center title chunk */
+.fc .fc-toolbar-chunk:nth-child(2){
+  flex: 1 1 100%;
+  justify-content: center;
+}
 .fc .fc-toolbar-title{
   font-family: var(--font-display);
   font-size: 18px;
@@ -417,13 +422,13 @@ input, select, textarea{ font-size:16px; }
   width: 100%;
 }
 
-/* Ensure the center chunk actually centers */
-.fc .fc-toolbar-chunk:nth-child(2){
+/* Keep right buttons inside and centered */
+.fc .fc-toolbar-chunk:last-child{
   flex: 1 1 100%;
   justify-content: center;
+  flex-wrap: wrap;
 }
 
-/* Buttons: crisp + smaller so they fit on mobile */
 .fc .fc-button{
   border-radius: 14px;
   border: 1px solid var(--border);
@@ -439,14 +444,6 @@ input, select, textarea{ font-size:16px; }
   border-color: rgba(122,162,255,.55);
 }
 
-/* Keep the right-side view buttons inside and tidy */
-.fc .fc-toolbar-chunk:last-child{
-  flex: 1 1 100%;
-  justify-content: center;
-  flex-wrap: wrap;
-}
-
-/* Grid cell text */
 .fc .fc-col-header-cell-cushion,
 .fc .fc-daygrid-day-number{
   color: rgba(238,241,247,.92);
@@ -457,7 +454,6 @@ input, select, textarea{ font-size:16px; }
   padding: 6px 8px;
 }
 
-/* Event pills */
 .fc-event{
   border-radius: 10px !important;
   font-size: 11px;
@@ -483,19 +479,16 @@ input, select, textarea{ font-size:16px; }
   font-family: var(--font-display);
 }
 .panel-header.tight{ margin-bottom:8px; }
-
 .panel-controls{
   display:flex;
   gap:8px;
   align-items:center;
 }
-
 .panel-list{
   display:flex;
   flex-direction:column;
   gap:10px;
 }
-
 .panel-card{
   padding: 12px 12px;
   border: 1px solid rgba(255,255,255,.12);
@@ -520,22 +513,18 @@ input, select, textarea{ font-size:16px; }
   white-space: nowrap;
 }
 
-.progress-pill{
-  margin-left:auto;
-  font-size: 11px;
+.details-title{
+  font-family: var(--font-display);
   font-weight: 950;
-  padding: 4px 9px;
-  border-radius: 999px;
-  border: 1px solid rgba(255,255,255,.16);
-  background: rgba(255,255,255,.05);
-  color: rgba(238,241,247,.85);
+  font-size: 18px;
+  letter-spacing: .2px;
 }
 
-/* ---------- FAB (always visible bottom-right) ---------- */
+/* ---------- FAB ---------- */
 .fab{
   position: fixed;
   right: 18px;
-  bottom: 18px;
+  bottom: calc(18px + var(--safe-bot));
   width: 64px;
   height: 64px;
   border-radius: 999px;
@@ -550,7 +539,7 @@ input, select, textarea{ font-size:16px; }
 }
 .fab:hover{ transform: scale(1.08); filter: brightness(1.05); }
 
-/* ---------- Inputs / fields ---------- */
+/* ---------- Inputs ---------- */
 input, select, textarea{
   width:100%;
   padding:10px 12px;
@@ -586,7 +575,7 @@ input:focus, select:focus, textarea:focus{
 }
 .check input{ width:auto; }
 
-/* ---------- Modals ---------- */
+/* ---------- Modals (iOS FIX) ---------- */
 .modal-backdrop{
   position:fixed;
   inset:0;
@@ -594,8 +583,13 @@ input:focus, select:focus, textarea:focus{
   display:flex;
   align-items:center;
   justify-content:center;
-  padding:14px;
+  padding: 14px;
+  padding-top: calc(14px + var(--safe-top));
+  padding-bottom: calc(14px + var(--safe-bot));
   z-index:9998;
+
+  /* prevent body behind from scrolling weirdly */
+  overscroll-behavior: contain;
 }
 
 .modal{
@@ -607,6 +601,9 @@ input:focus, select:focus, textarea:focus{
   backdrop-filter: blur(18px);
   -webkit-backdrop-filter: blur(18px);
   box-shadow: var(--shadow);
+  max-height: min(86vh, 780px);
+  display:flex;
+  flex-direction:column;
 }
 
 .modal-header{
@@ -621,29 +618,67 @@ input:focus, select:focus, textarea:focus{
   font-weight: 950;
   font-size: 18px;
 }
+
+.modal-scroll{
+  /* Key: scrolling happens inside here */
+  overflow:auto;
+  -webkit-overflow-scrolling: touch;
+  overscroll-behavior: contain;
+  padding-bottom: calc(10px + var(--safe-bot));
+}
+
 .modal-body{
   display:flex;
   flex-direction:column;
   gap:10px;
 }
+
 .modal-actions{
   display:flex;
   align-items:center;
   gap:10px;
-  margin-top:4px;
+  margin-top: 12px;
 }
 .spacer{ flex:1; }
 
-@media (max-width:720px){
-  .modal-backdrop{ align-items:flex-end; padding:10px; }
-  .modal{
-    width:100%;
-    border-bottom-left-radius:0;
-    border-bottom-right-radius:0;
-    max-height:86vh;
-    overflow:auto;
-  }
-  .row{ grid-template-columns:1fr; }
+/* Details modal */
+.modal--details .modal-scroll{
+  padding: 2px 2px calc(12px + var(--safe-bot));
+}
+.details-hero{
+  padding: 10px 10px 6px;
+  border: 1px solid rgba(255,255,255,.10);
+  background: rgba(0,0,0,.16);
+  border-radius: 18px;
+}
+.details-title{
+  margin-top: 8px;
+  margin-bottom: 4px;
+}
+.details-grid{
+  margin-top: 10px;
+  display:flex;
+  flex-direction:column;
+  gap:10px;
+}
+.details-row{
+  padding: 10px 10px;
+  border: 1px solid rgba(255,255,255,.10);
+  background: rgba(0,0,0,.14);
+  border-radius: 18px;
+}
+.details-label{
+  font-size: 12px;
+  font-weight: 950;
+  color: rgba(238,241,247,.72);
+  margin-bottom: 6px;
+}
+.details-value{
+  font-size: 14px;
+  font-weight: 850;
+  color: rgba(238,241,247,.92);
+  line-height: 1.3;
+  white-space: pre-wrap;
 }
 
 /* ---------- Checklist ---------- */
@@ -652,7 +687,6 @@ input:focus, select:focus, textarea:focus{
   flex-direction:column;
   gap:8px;
 }
-
 .checkitem{
   display:grid;
   grid-template-columns: 22px 1fr 46px;
@@ -662,10 +696,7 @@ input:focus, select:focus, textarea:focus{
 .checkitem input[type="checkbox"]{ width:18px; height:18px; }
 
 /* ---------- Hint ---------- */
-.hint{
-  margin-top:10px;
-  opacity:.92;
-}
+.hint{ margin-top:10px; opacity:.92; }
 
 /* ---------- Gate ---------- */
 .gate{
@@ -680,7 +711,6 @@ input:focus, select:focus, textarea:focus{
   -webkit-backdrop-filter: blur(10px);
   z-index:9999;
 }
-
 .gate-card{
   width: min(520px, 100%);
   background: var(--card);
@@ -689,7 +719,6 @@ input:focus, select:focus, textarea:focus{
   padding:18px;
   box-shadow: var(--shadow);
 }
-
 .gate-title{
   font-family: var(--font-display);
   font-weight: 950;
@@ -703,7 +732,6 @@ input:focus, select:focus, textarea:focus{
 }
 .gate-form{ display:flex; gap:10px; }
 .gate-input{ -webkit-text-security: disc; }
-
 .gate-note{
   margin-top:10px;
   font-size:11px;
@@ -719,7 +747,33 @@ input:focus, select:focus, textarea:focus{
 }
 .gate-remember input{ width:auto; }
 
-/* ---------- Theme color tokens (CSS-only; dice toggles data-theme) ---------- */
+/* ---------- Cat mode ambient layer ---------- */
+.cat-layer{
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 2;
+  opacity: .55;
+  mix-blend-mode: screen;
+}
+html.cat-mode .cat-layer{ display:block !important; }
+html.cat-mode body{ }
+html.cat-mode .sparkle-badge{ animation: sparkleWiggle 1.8s ease-in-out infinite; }
+@keyframes sparkleWiggle{
+  0%,100%{ transform: rotate(0deg); }
+  50%{ transform: rotate(10deg); }
+}
+
+/* Optional: subtle pawprint background via CSS (JS can also inject floating paws) */
+html.cat-mode body{
+  background:
+    radial-gradient(circle at 20% 20%, var(--blob1), transparent 48%),
+    radial-gradient(circle at 75% 55%, var(--blob2), transparent 52%),
+    radial-gradient(circle at 40% 85%, var(--blob3), transparent 55%),
+    linear-gradient(180deg, var(--bg), var(--bg2));
+}
+
+/* ---------- Theme variants (dice sets data-theme) ---------- */
 :root[data-theme="aurora"]{
   --accent:#7aa2ff;
   --blob1: rgba(122,162,255,.45);
@@ -757,13 +811,16 @@ input:focus, select:focus, textarea:focus{
   .search-row{ align-items:stretch; }
   .search-filters{ right:auto; left:0; }
   .search-filters .row{ grid-template-columns: 1fr; }
+  .fc .fc-button{ padding: 7px 9px; border-radius: 13px; }
+  .fc .fc-toolbar-title{ font-size: 17px; }
 
-  /* Make FC buttons tighter on small screens */
-  .fc .fc-button{
-    padding: 7px 9px;
-    border-radius: 13px;
+  /* iOS: anchor modal to bottom sheet style for comfort */
+  .modal-backdrop{ align-items:flex-end; }
+  .modal{
+    width:100%;
+    border-bottom-left-radius:0;
+    border-bottom-right-radius:0;
+    max-height: 86vh;
   }
-  .fc .fc-toolbar-title{
-    font-size: 17px;
-  }
+  .row{ grid-template-columns:1fr; }
 }
