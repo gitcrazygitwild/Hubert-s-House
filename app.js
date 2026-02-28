@@ -3,25 +3,28 @@
 
 // ---------- Gate ----------
 const PASSWORD = "Mack";
+
+// IMPORTANT: to require password EVERY time, we do NOT auto-read localStorage.
+// If you want "remember on this device", I can re-enable it cleanly.
 const LS_UNLOCK = "mack_calendar_unlocked";
 
 const gate = document.getElementById("gate");
 const gateForm = document.getElementById("gateForm");
 const gateInput = document.getElementById("gateInput");
 
-function isUnlocked() {
-  return localStorage.getItem(LS_UNLOCK) === "1";
-}
 function unlock() {
-  localStorage.setItem(LS_UNLOCK, "1");
+  // optional: keep this line if you want “remember me” behavior later
+  // localStorage.setItem(LS_UNLOCK, "1");
   gate.classList.add("hidden");
 }
+
 function lock() {
   localStorage.removeItem(LS_UNLOCK);
   gate.classList.remove("hidden");
+  gateInput?.focus?.();
 }
 
-gateForm.addEventListener("submit", (e) => {
+gateForm?.addEventListener("submit", (e) => {
   e.preventDefault();
   const pw = (gateInput.value || "").trim();
   if (pw === PASSWORD) {
@@ -34,12 +37,8 @@ gateForm.addEventListener("submit", (e) => {
   }
 });
 
-// Show/hide gate immediately
-if (isUnlocked()) {
-  gate.classList.add("hidden");
-} else {
-  gate.classList.remove("hidden");
-}
+// ALWAYS show gate on load (no auto-unlock)
+gate?.classList.remove("hidden");
 
 // ---------- Topbar buttons ----------
 const logoutBtn = document.getElementById("logoutBtn");
@@ -66,6 +65,9 @@ const deleteBtn = document.getElementById("deleteBtn");
 const cancelBtn = document.getElementById("cancelBtn");
 const fab = document.getElementById("fab");
 
+// Force modal to be hidden on load (prevents “inline editor” feeling if HTML/CSS is off)
+backdrop?.classList.add("hidden");
+
 // ---------- Colors ----------
 const OWNER_STYLE = {
   his:  { backgroundColor: "rgba(122,162,255,0.35)", borderColor: "rgba(122,162,255,0.85)" },
@@ -88,7 +90,6 @@ import {
   serverTimestamp
 } from "https://www.gstatic.com/firebasejs/12.9.0/firebase-firestore.js";
 
-// Your Firebase config (yours is already here)
 const firebaseConfig = {
   apiKey: "AIzaSyBEXNyX6vIbHwGCpI3fpVUb5llubOjt9qQ",
   authDomain: "huberts-house.firebaseapp.com",
@@ -113,16 +114,13 @@ async function initApp() {
 
   initCalendarUI();
 
-  // Realtime listener
   const q = query(eventsCol, orderBy("start", "asc"));
   onSnapshot(q, (snap) => {
     const events = [];
     snap.forEach((d) => events.push({ id: d.id, ...d.data() }));
 
     calendar.removeAllEvents();
-    for (const e of events) {
-      calendar.addEvent(normalizeEventForCalendar(e));
-    }
+    for (const e of events) calendar.addEvent(normalizeEventForCalendar(e));
 
     statusEl.textContent = "Sync: live";
   }, (err) => {
@@ -149,7 +147,6 @@ function initCalendarUI() {
     longPressDelay: 350,
     selectLongPressDelay: 350,
 
-    // Tap a day in month view to create at 9am
     dateClick: (info) => {
       const start = new Date(info.date);
       start.setHours(9, 0, 0, 0);
@@ -157,17 +154,9 @@ function initCalendarUI() {
       openModal({ mode: "create", title: "", start, end, allDay: false, owner: "both", notes: "" });
     },
 
-    // Drag-select to create
-    select: (info) => {
-      openCreateModalFromSelection(info);
-    },
+    select: (info) => openCreateModalFromSelection(info),
+    eventClick: (info) => openEditModalFromEvent(info.event),
 
-    // Tap event to edit
-    eventClick: (info) => {
-      openEditModalFromEvent(info.event);
-    },
-
-    // Persist move/resize
     eventDrop: async (info) => persistMovedEvent(info.event),
     eventResize: async (info) => persistMovedEvent(info.event),
   });
@@ -184,7 +173,19 @@ function initCalendarUI() {
   cancelBtn?.addEventListener("click", closeModal);
   backdrop?.addEventListener("click", (e) => { if (e.target === backdrop) closeModal(); });
 
-  evtAllDay?.addEventListener("change", () => setDateTimeInputMode(evtAllDay.checked));
+  // FIX: all-day should NOT clear the date
+  evtAllDay?.addEventListener("change", () => {
+    const allDay = evtAllDay.checked;
+
+    const prevStart = evtStart.value;
+    const prevEnd = evtEnd.value;
+
+    evtStart.type = allDay ? "date" : "datetime-local";
+    evtEnd.type = allDay ? "date" : "datetime-local";
+
+    evtStart.value = convertInputValue(prevStart, allDay);
+    evtEnd.value = prevEnd ? convertInputValue(prevEnd, allDay) : "";
+  });
 
   eventForm?.addEventListener("submit", async (e) => {
     e.preventDefault();
@@ -237,8 +238,9 @@ function openModal(payload) {
   deleteBtn.classList.toggle("hidden", !isEdit);
 
   evtTitle.value = payload.title ?? "";
-  evtAllDay.checked = !!payload.allDay;
 
+  // Set checkbox first, then types, then values
+  evtAllDay.checked = !!payload.allDay;
   setDateTimeInputMode(evtAllDay.checked);
 
   evtStart.value = toInputValue(payload.start, evtAllDay.checked);
@@ -259,6 +261,17 @@ function closeModal() {
 function setDateTimeInputMode(isAllDay) {
   evtStart.type = isAllDay ? "date" : "datetime-local";
   evtEnd.type = isAllDay ? "date" : "datetime-local";
+}
+
+function convertInputValue(value, allDay) {
+  if (!value) return "";
+  if (allDay) {
+    // datetime-local -> date
+    return value.includes("T") ? value.split("T")[0] : value;
+  }
+  // date -> datetime-local
+  if (!value.includes("T")) return `${value}T09:00`;
+  return value;
 }
 
 async function handleSave() {
@@ -318,7 +331,7 @@ function normalizeEventForCalendar(e) {
     allDay: !!e.allDay,
     backgroundColor: style.backgroundColor,
     borderColor: style.borderColor,
-    textColor: "#111", // readable in default light-ish FC rendering on iOS
+    textColor: "#111",
     extendedProps: { owner: e.owner || "both", notes }
   };
 }
@@ -346,7 +359,7 @@ function fromInputValue(value, allDay) {
   return new Date(value);
 }
 
-// Start immediately (calendar renders, gate just covers it)
+// Start immediately (calendar renders, gate covers it until unlock)
 initApp().catch((err) => {
   console.error(err);
   statusEl.textContent = "Sync: error";
