@@ -1,3 +1,4 @@
+<!-- index.html -->
 <!doctype html>
 <html lang="en">
 <head>
@@ -5,8 +6,9 @@
   <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
   <title>Hubert’s House</title>
 
+  <!-- FullCalendar -->
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.11/index.global.min.css">
-  <link rel="stylesheet" href="./styles.css?v=20260227_huberts_house_v2" />
+  <link rel="stylesheet" href="./styles.css?v=20260228_huberts_house_v3" />
 </head>
 <body>
 
@@ -48,29 +50,39 @@
       </div>
 
       <div class="actions">
-        <!-- Dealer’s choice: Search -->
-        <input id="searchInput" class="search" type="search" placeholder="Search events…" />
+        <div class="search-row">
+          <input id="searchInput" class="search" type="search" placeholder="Search events…" />
+          <input id="searchFrom" class="search-date" type="date" />
+          <input id="searchTo" class="search-date" type="date" />
+        </div>
 
         <button id="todayBtn" class="btn btn-ghost" type="button">Today</button>
         <button id="logoutBtn" class="btn btn-ghost" type="button">Lock</button>
-
-        <!-- Hidden month picker used when user taps the month title -->
-        <input id="jumpMonth" class="jump-hidden" type="month" />
       </div>
     </header>
 
-    <div class="filters">
-      <button class="chip active" data-owner="hanry" type="button">hanry</button>
-      <button class="chip active" data-owner="karena" type="button">Karena</button>
-      <button class="chip active" data-owner="both" type="button">Both</button>
-      <button class="chip active" data-owner="custom" type="button">Other</button>
-      <button id="filtersAll" class="chip ghost" type="button">All</button>
-      <button id="filtersNone" class="chip ghost" type="button">None</button>
-    </div>
-
     <div id="calendarWrap" class="card">
+      <div class="calendar-tools">
+        <label class="mini-label">
+          <span>Owner</span>
+          <select id="ownerFilter">
+            <option value="all" selected>All</option>
+            <option value="hanry">hanry</option>
+            <option value="karena">Karena</option>
+            <option value="both">Both</option>
+            <option value="custom">Other</option>
+          </select>
+        </label>
+      </div>
+
       <div id="calendar"></div>
       <div class="hint tiny muted">Tip: swipe left/right to change months. Tap the month title to jump.</div>
+    </div>
+
+    <!-- Dealer’s choice enhancement: Upcoming panel -->
+    <div id="upcoming" class="upcoming card">
+      <div class="upcoming-title">Upcoming</div>
+      <div id="upcomingList" class="upcoming-list tiny muted">Loading…</div>
     </div>
 
     <button id="fab" class="fab" type="button" aria-label="Add event">＋</button>
@@ -134,7 +146,6 @@
           <input id="evtOwnerCustom" type="text" placeholder="Type a name…" />
         </label>
 
-        <!-- Recurrence -->
         <div class="row">
           <label class="field">
             <span>Repeat</span>
@@ -179,49 +190,50 @@
     </div>
   </div>
 
-  <script src="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.11/index.global.min.js"></script>
-  <script type="module" src="./app.js?v=20260227_huberts_house_v2"></script>
-<!-- Jump-to-month modal -->
-<div id="jumpBackdrop" class="modal-backdrop hidden" role="dialog" aria-modal="true">
-  <div class="modal">
-    <div class="modal-header">
-      <div class="modal-title">Jump to month</div>
-      <button id="jumpClose" class="btn btn-icon" type="button" aria-label="Close">✕</button>
-    </div>
-
-    <div class="modal-body">
-      <div class="row">
-        <label class="field">
-          <span>Month</span>
-          <select id="jumpMonthSelect">
-            <option value="0">January</option>
-            <option value="1">February</option>
-            <option value="2">March</option>
-            <option value="3">April</option>
-            <option value="4">May</option>
-            <option value="5">June</option>
-            <option value="6">July</option>
-            <option value="7">August</option>
-            <option value="8">September</option>
-            <option value="9">October</option>
-            <option value="10">November</option>
-            <option value="11">December</option>
-          </select>
-        </label>
-
-        <label class="field">
-          <span>Year</span>
-          <input id="jumpYearInput" type="number" min="2000" max="2100" />
-        </label>
+  <!-- Jump-to-month modal -->
+  <div id="jumpBackdrop" class="modal-backdrop hidden" role="dialog" aria-modal="true">
+    <div class="modal">
+      <div class="modal-header">
+        <div class="modal-title">Jump to month</div>
+        <button id="jumpClose" class="btn btn-icon" type="button" aria-label="Close">✕</button>
       </div>
 
-      <div class="modal-actions">
-        <div class="spacer"></div>
-        <button id="jumpCancel" class="btn btn-ghost" type="button">Cancel</button>
-        <button id="jumpGoBtn" class="btn btn-primary" type="button">Go</button>
+      <div class="modal-body">
+        <div class="row">
+          <label class="field">
+            <span>Month</span>
+            <select id="jumpMonthSelect">
+              <option value="0">January</option>
+              <option value="1">February</option>
+              <option value="2">March</option>
+              <option value="3">April</option>
+              <option value="4">May</option>
+              <option value="5">June</option>
+              <option value="6">July</option>
+              <option value="7">August</option>
+              <option value="8">September</option>
+              <option value="9">October</option>
+              <option value="10">November</option>
+              <option value="11">December</option>
+            </select>
+          </label>
+
+          <label class="field">
+            <span>Year</span>
+            <select id="jumpYearSelect"></select>
+          </label>
+        </div>
+
+        <div class="modal-actions">
+          <div class="spacer"></div>
+          <button id="jumpCancel" class="btn btn-ghost" type="button">Cancel</button>
+          <button id="jumpGoBtn" class="btn btn-primary" type="button">Go</button>
+        </div>
       </div>
     </div>
   </div>
-</div>
+
+  <script src="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.11/index.global.min.js"></script>
+  <script type="module" src="./app.js?v=20260228_huberts_house_v3"></script>
 </body>
 </html>
