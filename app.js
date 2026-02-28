@@ -198,6 +198,7 @@ function initCalendarUI() {
 
   calendar = new FullCalendar.Calendar(calendarEl, {
     initialView: "dayGridMonth",
+initialDate: new Date(),
     headerToolbar: {
       left: "prev,next",
       center: "title",
@@ -262,6 +263,23 @@ function initCalendarUI() {
   });
 
   calendar.render();
+  resetSearchUIOnLoad();
+calendar.changeView("dayGridMonth");
+calendar.today();
+
+  function resetSearchUIOnLoad() {
+  // Clear any autofilled values so we don't enter search mode on load
+  if (searchInput) searchInput.value = "";
+  if (searchFrom) searchFrom.value = "";
+  if (searchTo) searchTo.value = "";
+
+  searchQuery = "";
+  searchFromValue = "";
+  searchToValue = "";
+
+  preSearchView = null;
+  preSearchDate = null;
+}
   bindMonthTitleClick();
   attachSwipeNavigation(wrap);
 
