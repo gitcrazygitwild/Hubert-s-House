@@ -195,6 +195,13 @@ function initCalendarUI() {
     editable: true,
     nowIndicator: true,
     height: "auto",
+    dateClick: (info) => {
+  // In month view, tapping a day opens an event starting at 9am
+  const start = new Date(info.date);
+  start.setHours(9,0,0,0);
+  const end = new Date(start.getTime() + 60*60*1000);
+  openModal({ mode:"create", title:"", start, end, allDay:false, owner:"both", notes:"" });
+},
 
     // Create event by selecting a range
     select: (info) => {
@@ -268,6 +275,10 @@ function openCreateModalFromSelection(info) {
   // FullCalendar provides start/end Date objects.
   const start = info.start;
   const end = info.end || null;
+  
+  const start = info.start;
+let end = info.end;
+if (!end && !info.allDay) end = new Date(start.getTime() + 60*60*1000);
 
   openModal({
     mode: "create",
