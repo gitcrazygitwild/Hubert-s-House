@@ -1,12 +1,9 @@
-<!-- index.html — Hubert’s House (v7)
-  Requested updates:
-  - FAB (+) stays fixed bottom-right (already fixed-position; kept + ensured z-index)
-  - Removed Sync pill entirely
-  - Dice ONLY changes theme (JS will be updated later; HTML keeps themeBtn)
-  - Removed redundant + near search (quickAddBtn removed)
-  - Date range UI is now a CLEAN "Search options" popover that only appears while searching
-    (HTML supports this; JS will control show/hide based on search text)
-  - Overall crisper: tightened header, simplified rows, cleaner controls
+<!-- index.html — Hubert’s House (v8)
+  Updates requested:
+  - Remove Focus button (and focus toggle entirely)
+  - Keep 🎲 theme button (themeBtn) — JS will implement full theme changes (fonts/colors/background/designs)
+  - Calendar not loading: this HTML keeps the required #calendar mount + all IDs expected by app.js
+    (We’ll fix the actual render issue in JS next.)
 -->
 
 <!doctype html>
@@ -18,7 +15,7 @@
 
   <!-- FullCalendar -->
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.11/index.global.min.css">
-  <link rel="stylesheet" href="./styles.css?v=20260228_huberts_house_v7" />
+  <link rel="stylesheet" href="./styles.css?v=20260228_huberts_house_v8" />
 </head>
 
 <body>
@@ -65,22 +62,14 @@
           <div class="brand-stack">
             <div class="brand-title-row">
               <div class="brand-title">Hubert’s House</div>
-              <span id="sparkleBadge" class="sparkle-badge" title="You’re crushing it">✨</span>
+              <span id="sparkleBadge" class="sparkle-badge" title="✨">✨</span>
             </div>
           </div>
         </div>
 
-        <!-- RIGHT: Focus + Theme + Log out -->
+        <!-- RIGHT: Theme + Log out -->
         <div class="top-actions">
-          <!-- Focus mode (compact) -->
-          <label class="btn btn-ghost focus-btn" for="focusToggle" title="Toggle focus mode">
-            <input id="focusToggle" type="checkbox" style="position:absolute;opacity:0;pointer-events:none;width:1px;height:1px;" />
-            Focus
-          </label>
-
-          <!-- Theme dice (JS will only randomize theme) -->
-          <button id="themeBtn" class="btn btn-ghost" type="button" title="Randomize theme">🎲</button>
-
+          <button id="themeBtn" class="btn btn-ghost" type="button" title="Change theme">🎲</button>
           <button id="logoutBtn" class="btn btn-ghost" type="button">Log out</button>
         </div>
       </div>
@@ -91,11 +80,10 @@
       <div class="search-row">
         <div class="search-shell">
           <input id="searchInput" class="search" type="search" placeholder="Search events…" />
-          <!-- Small clear button (CSS/JS later; harmless if unused) -->
           <button id="searchClearBtn" class="search-clear hidden" type="button" aria-label="Clear search">✕</button>
         </div>
 
-        <!-- Clean search options: only relevant when searching -->
+        <!-- Search options only relevant while searching -->
         <div class="search-filters-wrap">
           <button id="searchFiltersBtn" class="btn btn-ghost search-filters-btn hidden" type="button" aria-haspopup="dialog">
             Options
@@ -124,7 +112,6 @@
         </div>
       </div>
 
-      <!-- Hint (optional) -->
       <div id="searchHint" class="tiny muted hidden">Tip: type to search; optionally narrow by date range.</div>
     </div>
 
@@ -164,7 +151,9 @@
         <div class="item"><span class="dot dot-custom"></span>Other</div>
       </div>
 
+      <!-- FullCalendar mounts here -->
       <div id="calendar"></div>
+
       <div class="hint tiny muted">Tip: swipe left/right to change months. Tap the month title to jump.</div>
     </div>
 
@@ -368,6 +357,6 @@
 
   <!-- Scripts -->
   <script src="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.11/index.global.min.js"></script>
-  <script type="module" src="./app.js?v=20260228_huberts_house_v7"></script>
+  <script type="module" src="./app.js?v=20260228_huberts_house_v8"></script>
 </body>
 </html>
