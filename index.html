@@ -5,119 +5,84 @@
   <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
   <title>Mack Calendar</title>
 
-  <!-- FullCalendar -->
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.11/index.global.min.css">
-  <link rel="stylesheet" href="./styles.css?v=20260227a" />
-<<script src="./app.js?v=20260227b"></script>
+  <link rel="stylesheet" href="./styles.css?v=final1" />
 </head>
 <body>
-  <div id="app">
-    
-    <!-- Login -->
-<!-- Gate overlay (always in front until unlocked) -->
+
+<!-- Gate Overlay -->
 <div id="gate" class="gate">
   <div class="gate-card card">
-    <h1 style="margin:0 0 6px;">Mack Calendar</h1>
-    <p class="muted" style="margin:0 0 12px;">Enter password to unlock.</p>
+    <h1>Mack Calendar</h1>
+    <p class="muted">Enter password to continue</p>
 
-    <form id="gateForm" autocomplete="off">
-      <input
-        id="gateInput"
-        type="text"
-        class="gate-input"
-        placeholder="Password"
-        autocomplete="off"
-        autocapitalize="none"
-        autocorrect="off"
-        spellcheck="false"
-      />
+    <form id="gateForm">
+      <input id="gateInput" class="gate-input" placeholder="Password" />
       <button type="submit">Unlock</button>
     </form>
-
-    <p class="tiny muted" style="margin:10px 0 0;">Simple gate (not real security).</p>
   </div>
 </div>
 
-    <!-- Main -->
-    <section id="main">
-      <header class="topbar">
-        <div class="brand">
-          <strong>Mack Calendar</strong>
-          <span id="status" class="pill muted">Connecting…</span>
-        </div>
-        <div class="actions">
-          <button id="todayBtn" class="secondary">Today</button>
-          <button id="logoutBtn" class="secondary">Log out</button>
-        </div>
-      </header>
-
-      <div id="calendarWrap" class="card">
-        <div id="calendar"></div>
-      </div>
-
-      <!-- Mobile-friendly floating + button -->
-      <button id="fab" aria-label="Add event">＋</button>
-    </section>
-  </div>
-
-  <!-- Event modal -->
-  <div id="modalBackdrop" class="modal-backdrop hidden" role="dialog" aria-modal="true">
-    <div class="modal card">
-      <div class="modal-header">
-        <strong id="modalTitle">Event</strong>
-        <button id="modalClose" class="icon-btn" aria-label="Close">✕</button>
-      </div>
-
-      <form id="eventForm" class="modal-body">
-        <label class="field">
-          <span>Title</span>
-          <input id="evtTitle" type="text" required placeholder="e.g., OB appointment" />
-        </label>
-
-        <div class="row">
-          <label class="field">
-            <span>Start</span>
-            <input id="evtStart" type="datetime-local" required />
-          </label>
-          <label class="field">
-            <span>End</span>
-            <input id="evtEnd" type="datetime-local" />
-          </label>
-        </div>
-
-        <label class="check">
-          <input id="evtAllDay" type="checkbox" />
-          <span>All day</span>
-        </label>
-
-        <label class="field">
-          <span>Who</span>
-          <select id="evtOwner">
-            <option value="his">His</option>
-            <option value="hers">Hers</option>
-            <option value="both">Both</option>
-          </select>
-        </label>
-
-        <label class="field">
-          <span>Notes</span>
-          <textarea id="evtNotes" rows="4" placeholder="Anything helpful…"></textarea>
-        </label>
-
-        <div class="modal-actions">
-          <button id="deleteBtn" type="button" class="danger hidden">Delete</button>
-          <div class="spacer"></div>
-          <button id="cancelBtn" type="button" class="secondary">Cancel</button>
-          <button id="saveBtn" type="submit">Save</button>
-        </div>
-      </form>
+<div id="app">
+  <header class="topbar">
+    <div class="brand">
+      <strong>Mack Calendar</strong>
+      <span id="status" class="pill muted">Connecting…</span>
     </div>
+    <div class="actions">
+      <button id="todayBtn" class="secondary">Today</button>
+      <button id="logoutBtn" class="secondary">Lock</button>
+    </div>
+  </header>
+
+  <div id="calendarWrap" class="card">
+    <div id="calendar"></div>
   </div>
 
-  <script src="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.11/index.global.min.js"></script>
-  <script type="module" src="./app.js"></script>
-</body>
-<div style="position:fixed;top:6px;left:6px;z-index:99999;background:#000;color:#0f0;padding:4px 6px;font:12px monospace;border-radius:6px;">
-  VERSION: 2026-02-27-1
+  <button id="fab">＋</button>
 </div>
+
+<!-- Event Modal -->
+<div id="modalBackdrop" class="modal-backdrop hidden">
+  <div class="modal card">
+    <div class="modal-header">
+      <strong id="modalTitle">Event</strong>
+      <button id="modalClose">✕</button>
+    </div>
+
+    <form id="eventForm" class="modal-body">
+      <input id="evtTitle" placeholder="Event title" required />
+
+      <div class="row">
+        <input id="evtStart" type="datetime-local" required />
+        <input id="evtEnd" type="datetime-local" />
+      </div>
+
+      <label class="check">
+        <input id="evtAllDay" type="checkbox" />
+        All day
+      </label>
+
+      <select id="evtOwner">
+        <option value="his">His</option>
+        <option value="hers">Hers</option>
+        <option value="both">Both</option>
+      </select>
+
+      <textarea id="evtNotes" rows="3" placeholder="Notes..."></textarea>
+
+      <div class="modal-actions">
+        <button id="deleteBtn" type="button" class="danger hidden">Delete</button>
+        <div class="spacer"></div>
+        <button type="button" id="cancelBtn" class="secondary">Cancel</button>
+        <button type="submit">Save</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.11/index.global.min.js"></script>
+<script type="module" src="./app.js?v=final1"></script>
+
+</body>
 </html>
