@@ -1,7 +1,3 @@
-/* styles.css — Hubert’s House (FULL)
-   Glassy cards + compact calendar + strong borders + panels + pills + modals + gate + responsive
-   Theme variables are set in :root and overridden by JS theme randomizer. */
-
 :root{
   --bg:#0b1020;
   --bg2:#070b17;
@@ -42,10 +38,10 @@ body{ animation:floatBlobs 20s ease-in-out infinite; }
 .muted{ color:var(--muted); }
 .tiny{ font-size:11px; color:var(--muted); }
 
-/* Prevent iOS zoom on inputs (must be >=16px) */
+/* Prevent iOS zoom on inputs (>=16px) */
 input, select, textarea{ font-size:16px; }
 
-/* ---------- Buttons ---------- */
+/* Buttons */
 .btn{
   padding:8px 14px;
   border-radius:14px;
@@ -53,12 +49,12 @@ input, select, textarea{ font-size:16px; }
   background:rgba(255,255,255,.08);
   color:var(--text);
   cursor:pointer;
-  font-weight:700;
+  font-weight:800;
   letter-spacing:.2px;
 }
 .btn:hover{ background:rgba(255,255,255,.14); transform:translateY(-1px); }
 .btn:disabled{ opacity:.45; cursor:default; transform:none; }
-.btn-primary{ background:var(--accent); border-color:rgba(0,0,0,.0); color:#fff; }
+.btn-primary{ background:var(--accent); border-color:transparent; color:#fff; }
 .btn-ghost{ background:rgba(255,255,255,.08); }
 .btn-icon{
   width:40px; height:40px;
@@ -72,7 +68,7 @@ input, select, textarea{ font-size:16px; }
   background:rgba(255,107,107,.16);
 }
 
-/* ---------- Cards ---------- */
+/* Cards */
 .card{
   background:var(--card);
   backdrop-filter:blur(18px);
@@ -85,53 +81,32 @@ input, select, textarea{ font-size:16px; }
     inset 0 0 0 1px rgba(255,255,255,.05);
 }
 
-/* ---------- Layout ---------- */
+/* Layout */
 #app{
   max-width:1120px;
   margin:0 auto;
-  padding:14px 12px 90px;
+  padding:14px 12px 110px;
 }
 
-/* ---------- Topbar ---------- */
+/* Topbar */
 .topbar{
-  display:flex;
-  justify-content:space-between;
-  align-items:flex-start;
-  gap:14px;
-  padding:14px 6px 6px;
-}
-.brand{
-  display:flex;
-  align-items:center;
-  gap:12px;
-}
-.brand-title{
-  font-weight:900;
-  font-size:20px;
-  letter-spacing:.3px;
-}
-.pill{
-  font-size:12px;
-  padding:4px 10px;
-  border-radius:999px;
-  border:1px solid var(--border);
-  background:rgba(255,255,255,.07);
-}
-
-.actions{
   display:flex;
   flex-direction:column;
   gap:10px;
-  align-items:flex-end;
+  padding:12px 6px 6px;
 }
-.actions-top{
+.topbar-row{
   display:flex;
-  gap:10px;
-  justify-content:flex-end;
-  width:100%;
+  justify-content:space-between;
+  align-items:flex-start;
+  gap:12px;
 }
 
-/* Cat link (optional) */
+.brand{
+  display:flex;
+  align-items:flex-start;
+  gap:12px;
+}
 .catlink{
   font-size:28px;
   text-decoration:none;
@@ -144,14 +119,44 @@ input, select, textarea{ font-size:16px; }
   50%{transform:translateY(-3px);}
 }
 
-/* ---------- Search ---------- */
-.search-row{
+.brand-stack{
+  display:flex;
+  flex-direction:column;
+  gap:6px;
+  margin-top:-2px; /* title slightly higher */
+}
+.brand-title{
+  font-weight:950;
+  font-size:20px;
+  letter-spacing:.3px;
+  line-height:1.05;
+}
+.pill{
+  font-size:12px;
+  padding:4px 10px;
+  border-radius:999px;
+  border:1px solid var(--border);
+  background:rgba(255,255,255,.07);
+  width:fit-content;
+  margin-top:-2px; /* sync slightly lower under title */
+}
+
+.top-actions{
   display:flex;
   gap:10px;
   align-items:center;
 }
+#themeBtn{ width:46px; padding:8px 0; } /* dice button compact */
+
+/* Search */
+.search-row{
+  display:flex;
+  gap:10px;
+  align-items:center;
+  flex-wrap:wrap;
+}
 .search{
-  width:280px;
+  flex:1 1 260px;
   padding:10px 14px;
   border-radius:14px;
   border:1px solid var(--border);
@@ -182,11 +187,11 @@ input, select, textarea{ font-size:16px; }
   backdrop-filter:blur(14px);
   -webkit-backdrop-filter:blur(14px);
   box-shadow:0 18px 50px rgba(0,0,0,.5);
-  z-index: 50;
+  z-index:50;
 }
 .search-filters .row{
   display:grid;
-  grid-template-columns: 1fr 1fr;
+  grid-template-columns:1fr 1fr;
   gap:10px;
 }
 .search-date{
@@ -198,8 +203,9 @@ input, select, textarea{ font-size:16px; }
   color:var(--text);
 }
 
-/* ---------- Calendar wrap + tools ---------- */
+/* Calendar tools */
 #calendarWrap{ margin-top:10px; }
+
 .calendar-tools{
   display:flex;
   justify-content:space-between;
@@ -207,37 +213,45 @@ input, select, textarea{ font-size:16px; }
   gap:10px;
   margin-bottom:10px;
 }
-.tools-left,.tools-right{
-  display:flex;
+
+/* Force Today/List range/Owner to one line on mobile */
+.tools-left{
+  width:100%;
+  display:grid;
+  grid-template-columns: auto 1fr 1fr;
+  gap:10px;
   align-items:center;
-  gap:14px;
-  flex-wrap:wrap;
 }
 .mini-label{
   display:flex;
   align-items:center;
-  gap:8px;
+  justify-content:space-between;
+  gap:10px;
   font-size:13px;
-  font-weight:800;
-  color:rgba(233,236,241,.88);
+  font-weight:900;
+  color:rgba(233,236,241,.90);
 }
-.mini-label span{ color:rgba(233,236,241,.75); font-weight:800; }
+.mini-label span{
+  color:rgba(233,236,241,.75);
+  font-weight:900;
+}
 .mini-select{
+  width:100%;
   font-size:13px;
-  padding:6px 10px;
+  padding:8px 10px;
   border-radius:12px;
   border:1px solid var(--border);
   background:rgba(0,0,0,.25);
   color:var(--text);
 }
 
-/* Legend: keep compact and align under header */
+/* Legend */
 .legend-inline{
   display:flex;
   align-items:center;
   gap:14px;
   font-size:12px;
-  font-weight:800;
+  font-weight:900;
   margin:2px 0 10px;
   opacity:.95;
   flex-wrap:wrap;
@@ -255,15 +269,15 @@ input, select, textarea{ font-size:16px; }
 .dot-both{background:#74d99b;}
 .dot-custom{background:#bb86fc;}
 
-/* Thicker outside border for the calendar block */
+/* Calendar border */
 #calendar{
-  border:3px solid rgba(255,255,255,.20);
+  border:3px solid rgba(255,255,255,.22);
   border-radius:18px;
   padding:8px;
   background:rgba(0,0,0,.10);
 }
 
-/* ---------- FullCalendar tweaks (smaller event text + tighter) ---------- */
+/* FullCalendar tweaks */
 .fc{
   --fc-page-bg-color: transparent;
   --fc-neutral-bg-color: rgba(255,255,255,0.04);
@@ -275,7 +289,7 @@ input, select, textarea{ font-size:16px; }
 }
 .fc .fc-toolbar-title{
   font-size:18px;
-  font-weight:900;
+  font-weight:950;
   cursor:pointer;
 }
 .fc .fc-button{
@@ -289,11 +303,9 @@ input, select, textarea{ font-size:16px; }
   background:rgba(122,162,255,.28);
   border-color:rgba(122,162,255,.55);
 }
-.fc-daygrid-day:hover{ background:rgba(255,255,255,.03); }
-
 .fc-event{
   border-radius:8px !important;
-  font-size:11px;            /* smaller event font */
+  font-size:11px;
   line-height:1.15;
   padding:1px 4px !important;
   margin:1px 2px !important;
@@ -304,21 +316,17 @@ input, select, textarea{ font-size:16px; }
   box-shadow:0 10px 18px rgba(0,0,0,.35);
 }
 
-/* ---------- Panels (Upcoming / Outstanding) ---------- */
-.panel{
-  margin-top:12px;
-}
+/* Panels */
+.panel{ margin-top:12px; }
 .panel-header{
   display:flex;
   align-items:center;
   justify-content:space-between;
   gap:10px;
-  font-weight:900;
+  font-weight:950;
   margin-bottom:10px;
 }
-.panel-header.tight{
-  margin-bottom:8px;
-}
+.panel-header.tight{ margin-bottom:8px; }
 .panel-controls{
   display:flex;
   gap:8px;
@@ -357,23 +365,22 @@ input, select, textarea{ font-size:16px; }
   min-width:0;
 }
 .panel-titletext{
-  font-weight:900;
+  font-weight:950;
   font-size:13px;
   white-space:nowrap;
   overflow:hidden;
   text-overflow:ellipsis;
-  max-width: 520px;
+  max-width:520px;
 }
 .prog{
-  font-weight:900;
+  font-weight:950;
   font-size:12px;
   opacity:.9;
 }
 
-/* owner pill used in panels + task modal */
 .owner-pill{
   font-size:11px;
-  font-weight:900;
+  font-weight:950;
   padding:3px 8px;
   border-radius:999px;
   border:1px solid rgba(255,255,255,.18);
@@ -385,7 +392,7 @@ input, select, textarea{ font-size:16px; }
 .owner-pill.both{ border-color:rgba(116,217,155,.55); }
 .owner-pill.custom{ border-color:rgba(187,134,252,.55); }
 
-/* ---------- FAB ---------- */
+/* FAB */
 .fab{
   position:fixed;
   bottom:20px;
@@ -402,7 +409,7 @@ input, select, textarea{ font-size:16px; }
 }
 .fab:hover{ transform:scale(1.08); }
 
-/* ---------- Inputs ---------- */
+/* Inputs */
 input, select, textarea{
   width:100%;
   padding:10px 12px;
@@ -418,7 +425,7 @@ input:focus, select:focus, textarea:focus{
   box-shadow:0 0 0 3px rgba(122,162,255,.18);
 }
 
-/* ---------- Modals ---------- */
+/* Modals */
 .modal-backdrop{
   position:fixed;
   inset:0;
@@ -447,7 +454,7 @@ input:focus, select:focus, textarea:focus{
   margin-bottom:12px;
 }
 .modal-title{
-  font-weight:900;
+  font-weight:950;
   font-size:18px;
 }
 .modal-body{
@@ -458,7 +465,7 @@ input:focus, select:focus, textarea:focus{
 .field span{
   display:block;
   font-size:12px;
-  font-weight:900;
+  font-weight:950;
   color:rgba(233,236,241,.75);
   margin-bottom:6px;
 }
@@ -474,7 +481,6 @@ input:focus, select:focus, textarea:focus{
   user-select:none;
 }
 .check input{ width:auto; }
-
 .modal-actions{
   display:flex;
   align-items:center;
@@ -483,7 +489,6 @@ input:focus, select:focus, textarea:focus{
 }
 .spacer{ flex:1; }
 
-/* bottom-sheet feel on mobile */
 @media (max-width:720px){
   .modal-backdrop{ align-items:flex-end; padding:10px; }
   .modal{
@@ -493,10 +498,9 @@ input:focus, select:focus, textarea:focus{
     max-height:86vh;
     overflow:auto;
   }
-  #app{ padding-bottom:110px; }
 }
 
-/* ---------- Checklist UI ---------- */
+/* Checklist */
 .checklist{
   display:flex;
   flex-direction:column;
@@ -504,7 +508,7 @@ input:focus, select:focus, textarea:focus{
 }
 .check-item{
   display:grid;
-  grid-template-columns: 20px 1fr 44px;
+  grid-template-columns:20px 1fr 44px;
   gap:8px;
   align-items:center;
 }
@@ -516,7 +520,7 @@ input:focus, select:focus, textarea:focus{
   border-radius:14px;
 }
 
-/* ---------- Gate overlay ---------- */
+/* Gate */
 .gate{
   position:fixed;
   inset:0;
@@ -538,22 +542,17 @@ input:focus, select:focus, textarea:focus{
   box-shadow:0 30px 70px rgba(0,0,0,.55);
 }
 .gate-title{
-  font-weight:900;
+  font-weight:950;
   font-size:22px;
   margin-bottom:4px;
 }
 .gate-sub{
   color:rgba(233,236,241,.75);
   margin-bottom:12px;
-  font-weight:700;
+  font-weight:800;
 }
-.gate-form{
-  display:flex;
-  gap:10px;
-}
-.gate-input{
-  -webkit-text-security: disc; /* mask like password */
-}
+.gate-form{ display:flex; gap:10px; }
+.gate-input{ -webkit-text-security:disc; }
 .gate-note{
   margin-top:10px;
   font-size:11px;
@@ -564,22 +563,58 @@ input:focus, select:focus, textarea:focus{
   display:flex;
   gap:10px;
   align-items:center;
-  font-weight:800;
+  font-weight:900;
   color:rgba(233,236,241,.75);
 }
 .gate-remember input{ width:auto; }
 
-/* ---------- Responsive tweaks ---------- */
-@media (max-width:900px){
-  .panel-titletext{ max-width: 360px; }
+/* Dealer’s choice #1: Toast */
+.toast{
+  position:fixed;
+  left:50%;
+  transform:translateX(-50%);
+  bottom:92px;
+  max-width:min(520px, 92vw);
+  padding:10px 14px;
+  border-radius:16px;
+  border:1px solid rgba(255,255,255,.18);
+  background:rgba(0,0,0,.35);
+  backdrop-filter:blur(14px);
+  -webkit-backdrop-filter:blur(14px);
+  box-shadow:0 18px 50px rgba(0,0,0,.5);
+  font-weight:900;
+  z-index:9997;
 }
+.toast.show{ animation:toastIn .18s ease-out; }
+@keyframes toastIn{
+  from{ transform:translateX(-50%) translateY(10px); opacity:0; }
+  to{ transform:translateX(-50%) translateY(0); opacity:1; }
+}
+
+/* Dealer’s choice #2: Back to top */
+.to-top{
+  position:fixed;
+  right:16px;
+  bottom:92px;
+  width:46px;
+  height:46px;
+  border-radius:999px;
+  border:1px solid rgba(255,255,255,.18);
+  background:rgba(0,0,0,.25);
+  color:var(--text);
+  font-weight:950;
+  display:grid;
+  place-items:center;
+  box-shadow:0 18px 44px rgba(0,0,0,.35);
+  z-index:9997;
+}
+.to-top:hover{ background:rgba(255,255,255,.10); transform:translateY(-1px); }
+
+/* Responsive tweaks */
 @media (max-width:720px){
-  .topbar{ flex-direction:column; align-items:stretch; }
-  .actions{ align-items:stretch; }
-  .actions-top{ justify-content:space-between; }
-  .search-row{ flex-direction:column; align-items:stretch; }
+  .search-row{ align-items:stretch; }
   .search{ width:100%; }
-  .calendar-tools{ flex-direction:column; align-items:flex-start; }
-  .tools-left,.tools-right{ width:100%; justify-content:space-between; }
-  .row{ grid-template-columns:1fr; }
+  .search-filters{ right:auto; left:0; }
+  .search-filters .row{ grid-template-columns:1fr; }
+  .panel-titletext{ max-width:340px; }
 }
