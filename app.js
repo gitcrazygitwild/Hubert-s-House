@@ -1,5 +1,6 @@
 // Mack Calendar — full features + checklist presets + checklist progress
-// Gate: case-insensitive password + remember device option (localStorage)
+// Gate: case-insensitive password + remember device (localStorage)
+// Owners: hanry / Karena / Both / custom name
 
 import { initializeApp } from "https://www.gstatic.com/firebasejs/12.9.0/firebase-app.js";
 import {
@@ -26,7 +27,7 @@ const firebaseConfig = {
 };
 
 // ---------- Gate ----------
-const PASSWORD = "mack"; // store lowercase
+const PASSWORD = "mack";
 const LS_UNLOCK = "mack_calendar_unlocked";
 
 const gate = document.getElementById("gate");
@@ -36,19 +37,15 @@ const rememberDevice = document.getElementById("rememberDevice");
 
 function showGate() {
   gate?.classList.remove("hidden");
-  // small delay helps iOS focus after overlay shows
   setTimeout(() => gateInput?.focus?.(), 50);
 }
-
 function hideGate() {
   gate?.classList.add("hidden");
 }
-
 function isRemembered() {
   return localStorage.getItem(LS_UNLOCK) === "1";
 }
 
-// On load: if remembered, skip gate
 if (isRemembered()) hideGate();
 else showGate();
 
@@ -88,7 +85,11 @@ const evtTitle = document.getElementById("evtTitle");
 const evtStart = document.getElementById("evtStart");
 const evtEnd = document.getElementById("evtEnd");
 const evtAllDay = document.getElementById("evtAllDay");
+
 const evtOwner = document.getElementById("evtOwner");
+const ownerCustomWrap = document.getElementById("ownerCustomWrap");
+const evtOwnerCustom = document.getElementById("evtOwnerCustom");
+
 const evtType = document.getElementById("evtType");
 const evtNotes = document.getElementById("evtNotes");
 
@@ -101,9 +102,10 @@ backdrop?.classList.add("hidden");
 
 // ---------- Owner colors ----------
 const OWNER_STYLE = {
-  his:  { backgroundColor: "rgba(122,162,255,0.35)", borderColor: "rgba(122,162,255,0.85)", textColor: "#e9ecf1" },
-  hers: { backgroundColor: "rgba(255,107,107,0.28)", borderColor: "rgba(255,107,107,0.85)", textColor: "#e9ecf1" },
-  both: { backgroundColor: "rgba(116,217,155,0.28)", borderColor: "rgba(116,217,155,0.85)", textColor: "#e9ecf1" }
+  hanry: { backgroundColor: "rgba(122,162,255,0.35)", borderColor: "rgba(122,162,255,0.85)", textColor: "#e9ecf1" },
+  karena:{ backgroundColor: "rgba(255,107,107,0.28)", borderColor: "rgba(255,107,107,0.85)", textColor: "#e9ecf1" },
+  both:  { backgroundColor: "rgba(116,217,155,0.28)", borderColor: "rgba(116,217,155,0.85)", textColor: "#e9ecf1" },
+  custom:{ backgroundColor: "rgba(186,140,255,0.25)", borderColor: "rgba(186,140,255,0.75)", textColor: "#e9ecf1" }
 };
 
 // ---------- Checklist presets ----------
@@ -195,7 +197,18 @@ function initCalendarUI() {
       const start = new Date(info.date);
       start.setHours(9, 0, 0, 0);
       const end = new Date(start.getTime() + 60 * 60 * 1000);
-      openModal({ mode: "create", title: "", start, end, allDay: false, owner: "both", type: "general", checklist: [], notes: "" });
+      openModal({
+        mode: "create",
+        title: "",
+        start,
+        end,
+        allDay: false,
+        ownerKey: "both",
+        ownerLabel: "Both",
+        type: "general",
+        checklist: [],
+        notes: ""
+      });
     },
 
     select: (info) => openCreateModalFromSelection(info),
@@ -213,7 +226,18 @@ function initCalendarUI() {
   fab?.addEventListener("click", () => {
     const start = new Date();
     const end = new Date(start.getTime() + 60 * 60 * 1000);
-    openModal({ mode: "create", title: "", start, end, allDay: false, owner: "both", type: "general", checklist: [], notes: "" });
+    openModal({
+      mode: "create",
+      title: "",
+      start,
+      end,
+      allDay: false,
+      ownerKey: "both",
+      ownerLabel: "Both",
+      type: "general",
+      checklist: [],
+      notes: ""
+    });
   });
 
   modalClose?.addEventListener("click", closeModal);
@@ -233,6 +257,13 @@ function initCalendarUI() {
     evtEnd.value = prevEnd ? convertInputValue(prevEnd, allDay) : "";
   });
 
+  // Owner custom field show/hide
+  evtOwner?.addEventListener("change", () => {
+    const isCustom = evtOwner.value === "custom";
+    ownerCustomWrap?.classList.toggle("hidden", !isCustom);
+    if (isCustom) setTimeout(() => evtOwnerCustom?.focus?.(), 50);
+  });
+
   // Type selection: apply preset (confirm if overwriting existing checklist)
   evtType?.addEventListener("change", () => {
     const nextType = evtType.value;
@@ -243,7 +274,6 @@ function initCalendarUI() {
     setChecklistPreset(nextType);
   });
 
-  // Add checklist item (manual)
   addCheckItemBtn?.addEventListener("click", () => {
     currentChecklist.push({ text: "", done: false });
     renderChecklist();
@@ -273,7 +303,8 @@ function openCreateModalFromSelection(info) {
     start,
     end,
     allDay: info.allDay,
-    owner: "both",
+    ownerKey: "both",
+    ownerLabel: "Both",
     type: "general",
     checklist: [],
     notes: ""
@@ -289,7 +320,8 @@ function openEditModalFromEvent(event) {
     start: event.start,
     end: event.end || null,
     allDay: event.allDay,
-    owner: data.owner || "both",
+    ownerKey: data.ownerKey || "both",
+    ownerLabel: data.ownerLabel || "Both",
     type: data.type || "general",
     checklist: Array.isArray(data.checklist) ? data.checklist : [],
     notes: data.notes || ""
@@ -315,7 +347,12 @@ function openModal(payload) {
   evtStart.value = toInputValue(payload.start, evtAllDay.checked);
   evtEnd.value = payload.end ? toInputValue(payload.end, evtAllDay.checked) : "";
 
-  evtOwner.value = payload.owner || "both";
+  // Owner handling
+  evtOwner.value = payload.ownerKey || "both";
+  const isCustom = evtOwner.value === "custom";
+  ownerCustomWrap?.classList.toggle("hidden", !isCustom);
+  evtOwnerCustom.value = isCustom ? (payload.ownerLabel || "") : "";
+
   evtType.value = payload.type || "general";
   evtNotes.value = payload.notes || "";
 
@@ -358,7 +395,6 @@ function setChecklistPreset(type) {
 }
 
 function renderChecklist() {
-  // Null-safe: if HTML didn't update for some reason, don't crash the whole app
   if (!checklistEl) return;
 
   checklistEl.innerHTML = "";
@@ -407,12 +443,33 @@ function renderChecklist() {
 }
 
 // ---------- Save / Update ----------
+function ownerFromInputs() {
+  const ownerKey = evtOwner.value || "both";
+
+  if (ownerKey === "custom") {
+    const label = (evtOwnerCustom.value || "").trim();
+    return { ownerKey: "custom", ownerLabel: label || "Other" };
+  }
+
+  if (ownerKey === "hanry") return { ownerKey: "hanry", ownerLabel: "hanry" };
+  if (ownerKey === "karena") return { ownerKey: "karena", ownerLabel: "Karena" };
+  return { ownerKey: "both", ownerLabel: "Both" };
+}
+
 async function handleSave() {
   const title = evtTitle.value.trim();
   if (!title) return;
 
   const allDay = evtAllDay.checked;
-  const owner = evtOwner.value;
+  const { ownerKey, ownerLabel } = ownerFromInputs();
+
+  // If custom selected, require a real name (so fill-in isn't useless)
+  if (ownerKey === "custom" && (!ownerLabel || ownerLabel === "Other")) {
+    alert("Please type a name for 'Other…'.");
+    evtOwnerCustom.focus();
+    return;
+  }
+
   const type = evtType.value;
   const notes = evtNotes.value.trim();
 
@@ -431,7 +488,8 @@ async function handleSave() {
   const payload = {
     title,
     allDay,
-    owner,
+    ownerKey,
+    ownerLabel,
     type,
     checklist,
     notes,
@@ -469,7 +527,9 @@ function checklistProgress(checklist) {
 }
 
 function normalizeEventForCalendar(e) {
-  const style = OWNER_STYLE[e.owner] || OWNER_STYLE.both;
+  const ownerKey = e.ownerKey || "both";
+  const style = OWNER_STYLE[ownerKey] || OWNER_STYLE.both;
+
   const checklist = Array.isArray(e.checklist) ? e.checklist : [];
   const prog = checklistProgress(checklist);
 
@@ -486,12 +546,12 @@ function normalizeEventForCalendar(e) {
     borderColor: style.borderColor,
     textColor: style.textColor,
     extendedProps: {
-      owner: e.owner || "both",
+      ownerKey,
+      ownerLabel: e.ownerLabel || (ownerKey === "karena" ? "Karena" : ownerKey === "hanry" ? "hanry" : "Both"),
       type: e.type || "general",
       notes: e.notes || "",
       checklist
     },
-    // Keep base title for editing so we don't double-append progress
     titleBase
   };
 }
