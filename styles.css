@@ -194,12 +194,23 @@ input:focus, select:focus, textarea:focus{
 /* Legend POP */
 .legend{
   display:flex;
-  gap:10px;
-  align-items:center;
+  flex-direction: column;   /* 👈 vertical */
+  gap: 8px;
+  align-items:flex-start;
   margin: 6px 0 10px;
   color: var(--muted);
   font-size: 12px;
-  flex-wrap: wrap;
+}
+
+/* each legend row */
+.legend .legend-label{
+  margin-right: 0;
+}
+
+/* optional: keep dot+label nicely aligned */
+.legend > span{
+  display:inline-flex;
+  align-items:center;
 }
 .dot{
   width: 10px;
