@@ -1,7 +1,6 @@
 :root{
   --bg:#0b1020;
   --card:#0f1833;
-  --card2:#0c142c;
   --text:#e9ecf1;
   --muted:#a9b2c7;
   --border: rgba(255,255,255,0.10);
@@ -47,7 +46,7 @@ body{
 }
 
 .brand{ display:flex; align-items:center; gap:10px; flex-wrap:wrap; }
-.brand-title{ font-weight: 800; letter-spacing: 0.2px; }
+.brand-title{ font-weight: 900; letter-spacing: 0.2px; }
 
 .actions{ display:flex; gap:10px; flex-wrap:wrap; }
 
@@ -68,7 +67,7 @@ body{
   color: var(--text);
   border-radius: 12px;
   padding: 10px 12px;
-  font-weight: 650;
+  font-weight: 700;
   cursor: pointer;
 }
 .btn:hover{ filter: brightness(1.07); }
@@ -94,7 +93,7 @@ body{
   place-items:center;
 }
 
-/* Inputs */
+/* Inputs — iOS zoom fix: keep at 16px */
 input, select, textarea{
   width: 100%;
   padding: 12px 12px;
@@ -103,6 +102,7 @@ input, select, textarea{
   background: rgba(0,0,0,0.20);
   color: var(--text);
   outline: none;
+  font-size: 16px;
 }
 textarea{ resize: vertical; }
 input:focus, select:focus, textarea:focus{
@@ -110,7 +110,7 @@ input:focus, select:focus, textarea:focus{
   box-shadow: 0 0 0 3px rgba(122,162,255,0.16);
 }
 
-/* FullCalendar */
+/* FullCalendar layout + smaller font */
 #calendarWrap{ padding: 10px; }
 
 .fc{
@@ -120,13 +120,16 @@ input:focus, select:focus, textarea:focus{
   --fc-today-bg-color: rgba(122,162,255,0.14);
   --fc-list-event-hover-bg-color: rgba(255,255,255,0.08);
   color: var(--text);
+  font-size: 13px; /* smaller calendar font */
 }
-.fc .fc-toolbar-title{ font-size: 18px; font-weight: 800; }
+.fc .fc-toolbar-title{ font-size: 16px; font-weight: 900; }
 .fc .fc-button{
   border-radius: 12px;
   border-color: var(--border);
   background: rgba(255,255,255,0.06);
   color: var(--text);
+  font-size: 13px;
+  padding: 6px 10px;
 }
 .fc .fc-button:hover{ filter: brightness(1.07); }
 .fc .fc-button-primary:not(:disabled).fc-button-active{
@@ -134,7 +137,6 @@ input:focus, select:focus, textarea:focus{
   background: rgba(122,162,255,0.22);
 }
 
-/* Mobile toolbar layout */
 @media (max-width: 720px){
   #app{ margin: 10px auto; padding-bottom: 90px; }
   .fc .fc-toolbar{
@@ -169,7 +171,7 @@ input:focus, select:focus, textarea:focus{
   z-index: 60;
 }
 
-/* Gate overlay (THIS is what you’re missing when CSS doesn’t load) */
+/* Gate overlay */
 .gate{
   position: fixed;
   inset: 0;
@@ -249,6 +251,29 @@ input:focus, select:focus, textarea:focus{
   margin-top: 4px;
 }
 .spacer{ flex: 1; }
+
+/* Checklist UI */
+.checklist{
+  display:flex;
+  flex-direction:column;
+  gap:10px;
+}
+.check-item{
+  display:grid;
+  grid-template-columns: 22px 1fr 42px;
+  gap:10px;
+  align-items:center;
+}
+.check-item input[type="text"]{
+  font-size: 16px; /* keep iOS from zooming */
+}
+.check-item .remove{
+  width: 42px;
+  height: 42px;
+  padding: 0;
+  display:grid;
+  place-items:center;
+}
 
 /* Mobile bottom sheet */
 @media (max-width: 720px){
