@@ -27,6 +27,17 @@
 :root[data-theme="mono"]  { --accent:#cfd6e6; --blob1:rgba(255,255,255,.14); --blob2:rgba(255,255,255,.08); --blob3:rgba(255,255,255,.06); }
 }
 
+.btn-focus{
+  padding:8px 10px;
+  border-radius:999px;
+  font-weight:950;
+}
+.btn-focus[aria-pressed="true"]{
+  border-color:rgba(122,162,255,.55);
+  box-shadow:0 0 0 3px rgba(122,162,255,.18);
+  background:rgba(122,162,255,.18);
+}
+
 *{ box-sizing:border-box; }
 html,body{ height:100%; }
 body{
@@ -154,15 +165,27 @@ input, select, textarea{ font-size:16px; }
   letter-spacing:.3px;
   line-height:1.05;
 }
+
 .pill{
-  font-size:12px;
-  padding:4px 10px;
-  border-radius:999px;
-  border:1px solid var(--border);
-  background:rgba(255,255,255,.07);
-  width:fit-content;
-  margin-top:-2px; /* sync slightly lower under title */
+  display:inline-flex;
+  align-items:center;
+  gap:8px;
 }
+
+.pill[data-status="live"]::before{
+  content:"";
+  width:8px; height:8px;
+  border-radius:50%;
+  background:var(--accent);
+  box-shadow:0 0 0 0 rgba(122,162,255,.45);
+  animation:livePulse 1.4s infinite ease-in-out;
+}
+@keyframes livePulse{
+  0%{ box-shadow:0 0 0 0 rgba(122,162,255,.45); opacity:1; }
+  70%{ box-shadow:0 0 0 10px rgba(122,162,255,0); opacity:.95; }
+  100%{ box-shadow:0 0 0 0 rgba(122,162,255,0); opacity:1; }
+}
+
 
 .top-actions{
   display:flex;
@@ -293,12 +316,7 @@ input, select, textarea{ font-size:16px; }
 .dot-custom{background:#bb86fc;}
 
 /* Calendar border */
-#calendar{
-  border:3px solid rgba(255,255,255,.22);
-  border-radius:18px;
-  padding:8px;
-  background:rgba(0,0,0,.10);
-}
+#calendar{ padding:var(--cal-pad); }
 
 /* FullCalendar tweaks */
 .fc{
@@ -326,14 +344,8 @@ input, select, textarea{ font-size:16px; }
   background:rgba(122,162,255,.28);
   border-color:rgba(122,162,255,.55);
 }
-.fc-event{
-  border-radius:8px !important;
-  font-size:11px;
-  line-height:1.15;
-  padding:1px 4px !important;
-  margin:1px 2px !important;
-  transition:transform .15s ease, box-shadow .15s ease;
-}
+.fc-event{ font-size:var(--event-font) !important; }
+
 .fc-event:hover{
   transform:scale(1.04);
   box-shadow:0 10px 18px rgba(0,0,0,.35);
