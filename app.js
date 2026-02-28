@@ -1,5 +1,6 @@
-// Hubert’s House — shared calendar (Firebase sync) + gate + mobile + checklist presets
-// Extras: swipe month navigation + month/year picker + owner filter chips
+// Hubert’s House — Firebase shared calendar
+// Features: gate, mobile modal, owner colors + custom owner, checklist + presets + progress,
+// swipe nav, tap month title to jump, recurring events, owner filters, search filter.
 
 import { initializeApp } from "https://www.gstatic.com/firebasejs/12.9.0/firebase-app.js";
 import {
@@ -68,13 +69,13 @@ document.getElementById("logoutBtn")?.addEventListener("click", () => {
   showGate();
 });
 
-// ---------- Top buttons + jump ----------
+// ---------- Top controls ----------
 const todayBtn = document.getElementById("todayBtn");
 const statusEl = document.getElementById("status");
 const jumpMonth = document.getElementById("jumpMonth");
-const jumpGo = document.getElementById("jumpGo");
+const searchInput = document.getElementById("searchInput");
 
-// ---------- Filters (dealer’s choice enhancement) ----------
+// ---------- Filters ----------
 const filterChips = Array.from(document.querySelectorAll(".chip[data-owner]"));
 const filtersAllBtn = document.getElementById("filtersAll");
 const filtersNoneBtn = document.getElementById("filtersNone");
@@ -86,26 +87,16 @@ function setChipActive(owner, isActive) {
   chip.classList.toggle("active", isActive);
 }
 
-function applyFiltersToCalendar() {
-  if (!calendar) return;
-
-  // Hide/show by ownerKey using FullCalendar’s API
-  calendar.getEvents().forEach((ev) => {
-    const ok = activeOwners.has(ev.extendedProps?.ownerKey || "both");
-    ev.setProp("display", ok ? "auto" : "none");
-  });
-}
+let searchQuery = "";
 
 filterChips.forEach((chip) => {
   chip.addEventListener("click", () => {
     const owner = chip.dataset.owner;
     const isActive = chip.classList.contains("active");
-
     if (isActive) activeOwners.delete(owner);
     else activeOwners.add(owner);
-
     chip.classList.toggle("active", !isActive);
-    applyFiltersToCalendar();
+    rebuildCalendarEvents();
   });
 });
 
@@ -114,14 +105,19 @@ filtersAllBtn?.addEventListener("click", () => {
     activeOwners.add(o);
     setChipActive(o, true);
   });
-  applyFiltersToCalendar();
+  rebuildCalendarEvents();
 });
 filtersNoneBtn?.addEventListener("click", () => {
   ["hanry", "karena", "both", "custom"].forEach((o) => {
     activeOwners.delete(o);
     setChipActive(o, false);
   });
-  applyFiltersToCalendar();
+  rebuildCalendarEvents();
+});
+
+searchInput?.addEventListener("input", () => {
+  searchQuery = (searchInput.value || "").trim().toLowerCase();
+  rebuildCalendarEvents();
 });
 
 // ---------- Modal elements ----------
@@ -143,6 +139,10 @@ const evtOwnerCustom = document.getElementById("evtOwnerCustom");
 
 const evtType = document.getElementById("evtType");
 const evtNotes = document.getElementById("evtNotes");
+
+const evtRepeat = document.getElementById("evtRepeat");
+const repeatUntilWrap = document.getElementById("repeatUntilWrap");
+const evtRepeatUntil = document.getElementById("evtRepeatUntil");
 
 const checklistEl = document.getElementById("checklist");
 const addCheckItemBtn = document.getElementById("addCheckItem");
@@ -169,32 +169,10 @@ function mapLegacyOwner(owner) {
 
 // ---------- Checklist presets ----------
 const CHECKLIST_PRESETS = {
-  wedding: [
-    "RSVP",
-    "Book travel",
-    "Book hotel",
-    "Buy gift",
-    "Outfit",
-    "Transportation plan"
-  ],
-  trip: [
-    "Book travel",
-    "Book lodging",
-    "Packing list",
-    "House/pet plan",
-    "Itinerary highlights"
-  ],
-  appointment: [
-    "Add questions",
-    "Bring documents/ID",
-    "Arrive 10 min early"
-  ],
-  party: [
-    "Confirm time/location",
-    "Bring something (food/drink)",
-    "Gift (if needed)",
-    "Transportation plan"
-  ],
+  wedding: ["RSVP","Book travel","Book hotel","Buy gift","Outfit","Transportation plan"],
+  trip: ["Book travel","Book lodging","Packing list","House/pet plan","Itinerary highlights"],
+  appointment: ["Add questions","Bring documents/ID","Arrive 10 min early"],
+  party: ["Confirm time/location","Bring something (food/drink)","Gift (if needed)","Transportation plan"],
   general: []
 };
 
@@ -203,6 +181,8 @@ let currentChecklist = []; // [{text, done}]
 // ---------- App state ----------
 let db, eventsCol, calendar;
 let editingEventId = null;
+let rawEvents = [];        // firestore docs normalized
+let currentRange = null;   // {start:Date,end:Date}
 
 // ---------- Init ----------
 initApp().catch((err) => {
@@ -222,15 +202,9 @@ async function initApp() {
 
   const q = query(eventsCol, orderBy("start", "asc"));
   onSnapshot(q, (snap) => {
-    const events = [];
-    snap.forEach((d) => events.push({ id: d.id, ...d.data() }));
-
-    calendar.removeAllEvents();
-    for (const e of events) calendar.addEvent(normalizeEventForCalendar(e));
-
-    // apply filters after load
-    applyFiltersToCalendar();
-
+    rawEvents = [];
+    snap.forEach((d) => rawEvents.push({ id: d.id, ...d.data() }));
+    rebuildCalendarEvents();
     statusEl.textContent = "Sync: live";
   }, (err) => {
     console.error(err);
@@ -240,6 +214,7 @@ async function initApp() {
 
 function initCalendarUI() {
   const calendarEl = document.getElementById("calendar");
+  const wrap = document.getElementById("calendarWrap");
 
   calendar = new FullCalendar.Calendar(calendarEl, {
     initialView: "dayGridMonth",
@@ -255,6 +230,17 @@ function initCalendarUI() {
     longPressDelay: 350,
     selectLongPressDelay: 350,
 
+    datesSet: (info) => {
+      currentRange = { start: info.start, end: info.end };
+      // keep the hidden month input in sync
+      const d = info.view.currentStart;
+      const y = d.getFullYear();
+      const m = String(d.getMonth() + 1).padStart(2, "0");
+      if (jumpMonth) jumpMonth.value = `${y}-${m}`;
+      rebuildCalendarEvents();
+      attachTitleClickForJump(); // title element re-renders; reattach
+    },
+
     dateClick: (info) => {
       const start = new Date(info.date);
       start.setHours(9, 0, 0, 0);
@@ -269,41 +255,49 @@ function initCalendarUI() {
         ownerLabel: "Both",
         type: "general",
         checklist: [],
-        notes: ""
+        notes: "",
+        recurrence: { freq: "none", until: null }
       });
     },
 
     select: (info) => openCreateModalFromSelection(info),
-
     eventClick: (info) => openEditModalFromEvent(info.event),
 
-    eventDrop: async (info) => persistMovedEvent(info.event),
-    eventResize: async (info) => persistMovedEvent(info.event),
+    eventDrop: async (info) => {
+      if (info.event.extendedProps?.isRecurringInstance) {
+        alert("Move the series by editing the repeating event (single-instance moves not supported yet).");
+        info.revert();
+        return;
+      }
+      await persistMovedEvent(info.event);
+    },
+    eventResize: async (info) => {
+      if (info.event.extendedProps?.isRecurringInstance) {
+        alert("Resize the series by editing the repeating event (single-instance edits not supported yet).");
+        info.revert();
+        return;
+      }
+      await persistMovedEvent(info.event);
+    },
   });
 
   calendar.render();
 
   todayBtn?.addEventListener("click", () => calendar.today());
 
-  // Jump month/year
-  jumpGo?.addEventListener("click", () => {
-    const v = jumpMonth?.value; // "YYYY-MM"
+  // Swipe navigation (robust iOS version)
+  attachSwipeNavigation(wrap);
+
+  // Hidden month input drives jump
+  jumpMonth?.addEventListener("change", () => {
+    const v = jumpMonth.value; // YYYY-MM
     if (!v) return;
     const [y, m] = v.split("-").map(Number);
     if (!y || !m) return;
     calendar.gotoDate(new Date(y, m - 1, 1));
   });
 
-  // Keep month picker synced with calendar view
-  calendar.on("datesSet", (info) => {
-    const d = info.start; // start of visible range
-    const y = d.getFullYear();
-    const m = String(d.getMonth() + 1).padStart(2, "0");
-    if (jumpMonth) jumpMonth.value = `${y}-${m}`;
-  });
-
-  // Swipe navigation (left/right)
-  attachSwipeNavigation(calendarEl);
+  attachTitleClickForJump();
 
   fab?.addEventListener("click", () => {
     const start = new Date();
@@ -318,7 +312,8 @@ function initCalendarUI() {
       ownerLabel: "Both",
       type: "general",
       checklist: [],
-      notes: ""
+      notes: "",
+      recurrence: { freq: "none", until: null }
     });
   });
 
@@ -339,14 +334,21 @@ function initCalendarUI() {
     evtEnd.value = prevEnd ? convertInputValue(prevEnd, allDay) : "";
   });
 
-  // Owner custom field show/hide
+  // Owner custom show/hide
   evtOwner?.addEventListener("change", () => {
     const isCustom = evtOwner.value === "custom";
     ownerCustomWrap?.classList.toggle("hidden", !isCustom);
     if (isCustom) setTimeout(() => evtOwnerCustom?.focus?.(), 50);
   });
 
-  // Type selection: apply preset (confirm if overwriting existing checklist)
+  // Repeat show/hide
+  evtRepeat?.addEventListener("change", () => {
+    const isRepeating = evtRepeat.value !== "none";
+    repeatUntilWrap?.classList.toggle("hidden", !isRepeating);
+    if (!isRepeating && evtRepeatUntil) evtRepeatUntil.value = "";
+  });
+
+  // Type presets
   evtType?.addEventListener("change", () => {
     const nextType = evtType.value;
     if (currentChecklist.length > 0) {
@@ -374,34 +376,64 @@ function initCalendarUI() {
   });
 }
 
-function attachSwipeNavigation(targetEl) {
-  let startX = 0;
-  let startY = 0;
-  let tracking = false;
+function attachTitleClickForJump() {
+  // FullCalendar recreates toolbar DOM sometimes — find current title node each time
+  const titleEl = document.querySelector(".fc .fc-toolbar-title");
+  if (!titleEl) return;
 
-  // threshold tuned for iPhone
-  const MIN_X = 45;
-  const MAX_Y = 60;
+  // prevent stacking multiple listeners
+  if (titleEl.dataset.jumpBound === "1") return;
+  titleEl.dataset.jumpBound = "1";
+
+  titleEl.addEventListener("click", () => {
+    // iOS Safari: showPicker may not exist; click/focus works
+    if (jumpMonth?.showPicker) jumpMonth.showPicker();
+    else {
+      jumpMonth?.focus();
+      jumpMonth?.click();
+    }
+  });
+}
+
+function attachSwipeNavigation(targetEl) {
+  let sx = 0, sy = 0;
+  let tracking = false;
+  let locked = false;
+
+  const MIN_X = 40;
+  const MIN_LOCK = 12;
+  const MAX_Y = 80;
 
   targetEl.addEventListener("touchstart", (e) => {
     if (!e.touches || e.touches.length !== 1) return;
     tracking = true;
-    startX = e.touches[0].clientX;
-    startY = e.touches[0].clientY;
+    locked = false;
+    sx = e.touches[0].clientX;
+    sy = e.touches[0].clientY;
   }, { passive: true });
 
+  targetEl.addEventListener("touchmove", (e) => {
+    if (!tracking || !e.touches || e.touches.length !== 1) return;
+    const dx = e.touches[0].clientX - sx;
+    const dy = e.touches[0].clientY - sy;
+
+    // lock into horizontal swipe once we see enough horizontal movement and not too vertical
+    if (!locked && Math.abs(dx) > MIN_LOCK && Math.abs(dy) < MAX_Y) {
+      locked = true;
+    }
+    // If locked, prevent the browser from scrolling horizontally/zooming weirdly
+    if (locked) e.preventDefault();
+  }, { passive: false });
+
   targetEl.addEventListener("touchend", (e) => {
-    if (!tracking) return;
+    if (!tracking || !e.changedTouches || e.changedTouches.length !== 1) return;
     tracking = false;
-    if (!e.changedTouches || e.changedTouches.length !== 1) return;
 
-    const endX = e.changedTouches[0].clientX;
-    const endY = e.changedTouches[0].clientY;
+    const ex = e.changedTouches[0].clientX;
+    const ey = e.changedTouches[0].clientY;
+    const dx = ex - sx;
+    const dy = ey - sy;
 
-    const dx = endX - startX;
-    const dy = endY - startY;
-
-    // mostly horizontal swipe
     if (Math.abs(dx) >= MIN_X && Math.abs(dy) <= MAX_Y) {
       if (dx < 0) calendar.next();
       else calendar.prev();
@@ -424,24 +456,32 @@ function openCreateModalFromSelection(info) {
     ownerLabel: "Both",
     type: "general",
     checklist: [],
-    notes: ""
+    notes: "",
+    recurrence: { freq: "none", until: null }
   });
 }
 
 function openEditModalFromEvent(event) {
   const data = event.extendedProps || {};
+  // If clicked an instance, edit the series doc
+  const seriesId = data.seriesId || event.id;
+
+  const raw = rawEvents.find((x) => x.id === seriesId);
+  if (!raw) return;
+
   openModal({
     mode: "edit",
-    id: event.id,
-    title: event.titleBase || event.title || "",
-    start: event.start,
-    end: event.end || null,
-    allDay: event.allDay,
-    ownerKey: data.ownerKey || "both",
-    ownerLabel: data.ownerLabel || "Both",
-    type: data.type || "general",
-    checklist: Array.isArray(data.checklist) ? data.checklist : [],
-    notes: data.notes || ""
+    id: raw.id,
+    title: raw.title || "",
+    start: new Date(raw.start),
+    end: raw.end ? new Date(raw.end) : null,
+    allDay: !!raw.allDay,
+    ownerKey: raw.ownerKey || mapLegacyOwner(raw.owner) || "both",
+    ownerLabel: raw.ownerLabel || "Both",
+    type: raw.type || "general",
+    checklist: Array.isArray(raw.checklist) ? raw.checklist : [],
+    notes: raw.notes || "",
+    recurrence: normalizeRecurrence(raw.recurrence)
   });
 }
 
@@ -457,7 +497,6 @@ function openModal(payload) {
   }
 
   evtTitle.value = payload.title ?? "";
-
   evtAllDay.checked = !!payload.allDay;
   setDateTimeInputMode(evtAllDay.checked);
 
@@ -470,9 +509,16 @@ function openModal(payload) {
   ownerCustomWrap?.classList.toggle("hidden", !isCustom);
   if (evtOwnerCustom) evtOwnerCustom.value = isCustom ? (payload.ownerLabel || "") : "";
 
+  // Type
   evtType.value = payload.type || "general";
-  evtNotes.value = payload.notes || "";
 
+  // Repeat
+  const rec = normalizeRecurrence(payload.recurrence);
+  evtRepeat.value = rec.freq || "none";
+  repeatUntilWrap?.classList.toggle("hidden", evtRepeat.value === "none");
+  evtRepeatUntil.value = rec.until ? rec.until : "";
+
+  evtNotes.value = payload.notes || "";
   currentChecklist = Array.isArray(payload.checklist) ? payload.checklist : [];
 
   if (!isEdit && currentChecklist.length === 0 && evtType.value !== "general") {
@@ -503,7 +549,7 @@ function convertInputValue(value, allDay) {
   return value;
 }
 
-// ---------- Checklist UI ----------
+// ---------- Checklist ----------
 function setChecklistPreset(type) {
   const preset = CHECKLIST_PRESETS[type] || [];
   currentChecklist = preset.map((t) => ({ text: t, done: false }));
@@ -512,7 +558,6 @@ function setChecklistPreset(type) {
 
 function renderChecklist() {
   if (!checklistEl) return;
-
   checklistEl.innerHTML = "";
 
   if (!currentChecklist.length) {
@@ -558,15 +603,83 @@ function renderChecklist() {
   });
 }
 
+// ---------- Recurrence ----------
+function normalizeRecurrence(r) {
+  const freq = r?.freq || "none";
+  const until = r?.until || null; // YYYY-MM-DD
+  return { freq, until };
+}
+
+function buildRecurrenceFromForm() {
+  const freq = evtRepeat?.value || "none";
+  if (freq === "none") return { freq: "none", until: null };
+
+  const until = (evtRepeatUntil?.value || "").trim();
+  return { freq, until: until || null };
+}
+
+function addInterval(date, freq) {
+  const d = new Date(date);
+  if (freq === "daily") d.setDate(d.getDate() + 1);
+  else if (freq === "weekly") d.setDate(d.getDate() + 7);
+  else if (freq === "monthly") d.setMonth(d.getMonth() + 1);
+  else if (freq === "yearly") d.setFullYear(d.getFullYear() + 1);
+  return d;
+}
+
+function expandRecurringEvent(base, rangeStart, rangeEnd) {
+  const rec = normalizeRecurrence(base.recurrence);
+  if (rec.freq === "none") return [];
+
+  const baseStart = new Date(base.start);
+  const baseEnd = base.end ? new Date(base.end) : null;
+  const durationMs = baseEnd ? (baseEnd.getTime() - baseStart.getTime()) : 0;
+
+  const untilDate = rec.until ? new Date(rec.until + "T23:59:59") : null;
+
+  // Start generating from the first occurrence that could appear in range
+  // naive approach: iterate forward from baseStart
+  const out = [];
+  let cur = new Date(baseStart);
+
+  // Advance until we reach rangeStart (bounded loop)
+  // (for long repeating series, this is okay for normal household use; can optimize later)
+  let guard = 0;
+  while (cur < rangeStart && guard < 5000) {
+    cur = addInterval(cur, rec.freq);
+    guard++;
+    if (untilDate && cur > untilDate) return out;
+  }
+
+  // Generate occurrences in visible range
+  guard = 0;
+  while (cur < rangeEnd && guard < 5000) {
+    if (!untilDate || cur <= untilDate) {
+      const occStart = new Date(cur);
+      const occEnd = baseEnd ? new Date(occStart.getTime() + durationMs) : null;
+
+      out.push({
+        ...base,
+        _occStart: occStart,
+        _occEnd: occEnd,
+        _seriesId: base.id
+      });
+    } else break;
+
+    cur = addInterval(cur, rec.freq);
+    guard++;
+  }
+
+  return out;
+}
+
 // ---------- Save / Update ----------
 function ownerFromInputs() {
   const ownerKey = evtOwner.value || "both";
-
   if (ownerKey === "custom") {
     const label = (evtOwnerCustom?.value || "").trim();
     return { ownerKey: "custom", ownerLabel: label || "Other" };
   }
-
   if (ownerKey === "hanry") return { ownerKey: "hanry", ownerLabel: "hanry" };
   if (ownerKey === "karena") return { ownerKey: "karena", ownerLabel: "Karena" };
   return { ownerKey: "both", ownerLabel: "Both" };
@@ -587,6 +700,7 @@ async function handleSave() {
 
   const type = evtType.value;
   const notes = evtNotes.value.trim();
+  const recurrence = buildRecurrenceFromForm();
 
   const start = fromInputValue(evtStart.value, allDay);
   const end = evtEnd.value ? fromInputValue(evtEnd.value, allDay) : null;
@@ -608,6 +722,7 @@ async function handleSave() {
     type,
     checklist,
     notes,
+    recurrence,
     start: start.toISOString(),
     end: end ? end.toISOString() : null,
     updatedAt: serverTimestamp()
@@ -632,7 +747,7 @@ async function persistMovedEvent(fcEvent) {
   await updateDoc(doc(db, "events", fcEvent.id), patch);
 }
 
-// ---------- Checklist progress + event normalization ----------
+// ---------- Calendar rebuild: apply filters + search + recurrence expansion ----------
 function checklistProgress(checklist) {
   if (!Array.isArray(checklist) || checklist.length === 0) return null;
   const total = checklist.length;
@@ -641,8 +756,19 @@ function checklistProgress(checklist) {
   return { done, total };
 }
 
-function normalizeEventForCalendar(e) {
-  const ownerKey = e.ownerKey || mapLegacyOwner(e.owner) || "both";
+function passesOwnerFilter(ownerKey) {
+  return activeOwners.has(ownerKey || "both");
+}
+
+function passesSearchFilter(e) {
+  if (!searchQuery) return true;
+  const t = (e.title || "").toLowerCase();
+  const n = (e.notes || "").toLowerCase();
+  return t.includes(searchQuery) || n.includes(searchQuery);
+}
+
+function normalizeEventForCalendar(e, overrides = {}) {
+  const ownerKey = (e.ownerKey || mapLegacyOwner(e.owner) || "both");
   const style = OWNER_STYLE[ownerKey] || OWNER_STYLE.both;
 
   const checklist = Array.isArray(e.checklist) ? e.checklist : [];
@@ -652,36 +778,73 @@ function normalizeEventForCalendar(e) {
   const titleWithProgress = prog ? `${titleBase} (${prog.done}/${prog.total})` : titleBase;
 
   return {
-    id: e.id,
+    id: overrides.id || e.id,
     title: titleWithProgress,
-    start: e.start,
-    end: e.end || undefined,
+    start: overrides.start || e.start,
+    end: overrides.end || (e.end || undefined),
     allDay: !!e.allDay,
     backgroundColor: style.backgroundColor,
     borderColor: style.borderColor,
     textColor: style.textColor,
+    editable: !overrides.isRecurringInstance, // prevent drag on instances
     extendedProps: {
       ownerKey,
       ownerLabel: e.ownerLabel || (ownerKey === "karena" ? "Karena" : ownerKey === "hanry" ? "hanry" : ownerKey === "custom" ? "Other" : "Both"),
       type: e.type || "general",
       notes: e.notes || "",
-      checklist
+      checklist,
+      isRecurringInstance: !!overrides.isRecurringInstance,
+      seriesId: overrides.seriesId || null
     },
     titleBase
   };
+}
+
+function rebuildCalendarEvents() {
+  if (!calendar) return;
+
+  // if range not known yet, do simple render
+  const rs = currentRange?.start ? new Date(currentRange.start) : null;
+  const re = currentRange?.end ? new Date(currentRange.end) : null;
+
+  calendar.removeAllEvents();
+
+  for (const e of rawEvents) {
+    const ownerKey = e.ownerKey || mapLegacyOwner(e.owner) || "both";
+    if (!passesOwnerFilter(ownerKey)) continue;
+    if (!passesSearchFilter(e)) continue;
+
+    const rec = normalizeRecurrence(e.recurrence);
+
+    if (rec.freq !== "none" && rs && re) {
+      const occs = expandRecurringEvent({ ...e, id: e.id }, rs, re);
+      for (const occ of occs) {
+        const occId = `${occ._seriesId}__${occ._occStart.toISOString()}`;
+        const startISO = occ._occStart.toISOString();
+        const endISO = occ._occEnd ? occ._occEnd.toISOString() : undefined;
+
+        calendar.addEvent(normalizeEventForCalendar(e, {
+          id: occId,
+          start: startISO,
+          end: endISO,
+          isRecurringInstance: true,
+          seriesId: occ._seriesId
+        }));
+      }
+    } else {
+      calendar.addEvent(normalizeEventForCalendar(e));
+    }
+  }
 }
 
 // ---------- Date helpers ----------
 function toInputValue(dateObj, allDay) {
   if (!(dateObj instanceof Date)) dateObj = new Date(dateObj);
   const pad = (n) => String(n).padStart(2, "0");
-
   const y = dateObj.getFullYear();
   const m = pad(dateObj.getMonth() + 1);
   const d = pad(dateObj.getDate());
-
   if (allDay) return `${y}-${m}-${d}`;
-
   const hh = pad(dateObj.getHours());
   const mm = pad(dateObj.getMinutes());
   return `${y}-${m}-${d}T${hh}:${mm}`;
