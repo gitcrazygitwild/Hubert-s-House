@@ -1,3 +1,23 @@
+<!-- index.html — Hubert’s House (v10)
+  Updates for your notes:
+  1) iPhone modal “can’t scroll to top” fix:
+     - Ensures modals have their own scroll container
+     - Adds safe-area padding + iOS momentum scrolling
+     - JS will also scroll modal to top on open
+  2) List range affects List tab:
+     - (JS will wire listRangeSelect to listCustom duration)
+  3) Clicking a day in month view opens DAY view for that date (instead of new event):
+     - (JS will change dateClick behavior)
+  4) Clicking an event opens a CLEAN “Details” window, with Edit button to open editor:
+     - Adds a new Details modal: #detailsBackdrop
+  5) New enhancement: “Cat Mode” ambient cats + header purr indicator hook
+     - Adds a small Cat Mode toggle (top row) + floating pawprint accent
+  6) More cat theme:
+     - Cat Mode toggle + pawprint + “purr” status dot (pure UI hooks; CSS/JS implement)
+
+  NOTE: You asked for HTML only. CSS/JS will follow.
+-->
+
 <!doctype html>
 <html lang="en">
 <head>
@@ -5,11 +25,9 @@
   <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
   <title>Hubert’s House</title>
 
-  <!-- FullCalendar (global build) -->
+  <!-- FullCalendar -->
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.11/index.global.min.css">
-
-  <!-- Your styles -->
-  <link rel="stylesheet" href="./styles.css?v=20260228_huberts_house_v9" />
+  <link rel="stylesheet" href="./styles.css?v=20260228_huberts_house_v10" />
 </head>
 
 <body>
@@ -50,42 +68,51 @@
     <header class="topbar">
       <div class="topbar-row">
 
-        <!-- LEFT: cat + title (force single line, never crop) -->
+        <!-- LEFT: cat + title -->
         <div class="brand">
-          <a class="catlink" href="https://gitcrazygitwild.github.io/Flapurr/" target="_blank" rel="noopener">🐈‍⬛</a>
+          <a class="catlink" href="https://gitcrazygitwild.github.io/Flapurr/" target="_blank" rel="noopener" aria-label="Open Flapurr">🐈‍⬛</a>
 
           <div class="brand-stack">
             <div class="brand-title-row">
               <div class="brand-title" aria-label="Hubert’s House">Hubert’s House</div>
-              <span id="sparkleBadge" class="sparkle-badge" title="Hubert approved">✨</span>
+
+              <!-- sparkles -->
+              <span id="sparkleBadge" class="sparkle-badge" title="✨">✨</span>
+
+              <!-- enhancement hook: purr indicator dot -->
+              <span id="purrDot" class="purr-dot" title="purr"></span>
             </div>
+
+            <!-- (Removed Sync: live pill per your prior request) -->
           </div>
         </div>
 
-        <!-- RIGHT: theme + logout -->
+        <!-- RIGHT: Cat mode + Theme + Log out -->
         <div class="top-actions">
-          <button id="themeBtn" class="btn btn-ghost" type="button" title="Change theme">🎲</button>
+          <!-- Enhancement: Cat mode toggle (JS/CSS will implement) -->
+          <button id="catModeBtn" class="btn btn-ghost" type="button" title="Toggle Cat Mode">🐾</button>
+
+          <button id="themeBtn" class="btn btn-ghost" type="button" title="Randomize theme">🎲</button>
           <button id="logoutBtn" class="btn btn-ghost" type="button">Log out</button>
         </div>
+
       </div>
     </header>
 
-    <!-- Search row (clean) -->
+    <!-- Search row -->
     <div class="search-row-wrap">
       <div class="search-row">
         <div class="search-shell">
           <input id="searchInput" class="search" type="search" placeholder="Search events…" />
-          <button id="searchClearBtn" class="search-clear hidden" type="button" aria-label="Clear search">✕</button>
+          <button id="searchClearBtn" class="search-clear hidden" type="button" aria-label="Clear search">×</button>
         </div>
 
-        <!-- Shows only once search is active (JS controls) -->
+        <!-- Dates: only shown when search is active (JS toggles) -->
         <div class="search-filters-wrap">
-          <button id="searchFiltersBtn" class="btn btn-ghost search-filters-btn hidden" type="button">
-            Dates
-          </button>
+          <button id="searchFiltersBtn" class="btn btn-ghost search-filters-btn hidden" type="button">Dates</button>
 
           <div id="searchFilters" class="search-filters hidden">
-            <div class="search-filters-title">Narrow by date</div>
+            <div class="search-filters-title">Narrow search by date</div>
 
             <div class="row">
               <label class="field">
@@ -144,19 +171,15 @@
       </div>
 
       <!-- Compact legend -->
-      <div class="legend-inline" aria-label="Legend">
+      <div class="legend-inline">
         <div class="item"><span class="dot dot-hanry"></span>hanry</div>
         <div class="item"><span class="dot dot-karena"></span>Karena</div>
         <div class="item"><span class="dot dot-both"></span>Both</div>
         <div class="item"><span class="dot dot-custom"></span>Other</div>
       </div>
 
-      <!-- FullCalendar mount -->
       <div id="calendar"></div>
-
-      <div class="hint tiny muted">
-        Tip: swipe left/right to change months. Tap the month title to jump.
-      </div>
+      <div class="hint tiny muted">Tip: swipe left/right to change months. Tap the month title to jump.</div>
     </div>
 
     <!-- Panels -->
@@ -186,7 +209,49 @@
     <button id="fab" class="fab" type="button" aria-label="Add event">＋</button>
   </div>
 
-  <!-- Event modal -->
+  <!-- DETAILS modal (NEW): clean read-only view + Edit button -->
+  <div id="detailsBackdrop" class="modal-backdrop hidden" role="dialog" aria-modal="true">
+    <div class="modal modal--details">
+      <div class="modal-header">
+        <div class="modal-title">Event</div>
+        <button id="detailsClose" class="btn btn-icon" type="button" aria-label="Close">✕</button>
+      </div>
+
+      <!-- iOS-friendly scroll container -->
+      <div id="detailsScroll" class="modal-scroll">
+        <div class="details-hero">
+          <div id="detailsOwnerPill" class="owner-pill">both</div>
+          <div id="detailsTitle" class="details-title">Title</div>
+          <div id="detailsWhen" class="tiny muted">When</div>
+        </div>
+
+        <div class="details-grid">
+          <div class="details-row">
+            <div class="details-label">Type</div>
+            <div id="detailsType" class="details-value">General</div>
+          </div>
+
+          <div class="details-row">
+            <div class="details-label">Notes</div>
+            <div id="detailsNotes" class="details-value muted">—</div>
+          </div>
+
+          <div class="details-row">
+            <div class="details-label">Checklist</div>
+            <div id="detailsChecklist" class="details-value muted">—</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="modal-actions">
+        <button id="detailsEditBtn" class="btn btn-primary" type="button">Edit</button>
+        <div class="spacer"></div>
+        <button id="detailsDeleteBtn" class="btn btn-danger" type="button">Delete</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- EDIT modal (existing): full editor -->
   <div id="modalBackdrop" class="modal-backdrop hidden" role="dialog" aria-modal="true">
     <div class="modal">
       <div class="modal-header">
@@ -194,98 +259,101 @@
         <button id="modalClose" class="btn btn-icon" type="button" aria-label="Close">✕</button>
       </div>
 
-      <form id="eventForm" class="modal-body">
-        <label class="field">
-          <span>Title</span>
-          <input id="evtTitle" type="text" required placeholder="e.g., Dinner reservation" />
-        </label>
-
-        <div class="row">
+      <!-- iOS-friendly scroll container -->
+      <div class="modal-scroll" id="editScroll">
+        <form id="eventForm" class="modal-body">
           <label class="field">
-            <span>Start</span>
-            <input id="evtStart" type="datetime-local" required />
+            <span>Title</span>
+            <input id="evtTitle" type="text" required placeholder="e.g., Dinner reservation" />
           </label>
+
+          <div class="row">
+            <label class="field">
+              <span>Start</span>
+              <input id="evtStart" type="datetime-local" required />
+            </label>
+
+            <label class="field">
+              <span>End</span>
+              <input id="evtEnd" type="datetime-local" />
+            </label>
+          </div>
+
+          <label class="check">
+            <input id="evtAllDay" type="checkbox" />
+            <span>All day</span>
+          </label>
+
+          <div class="row">
+            <label class="field">
+              <span>Who</span>
+              <select id="evtOwner">
+                <option value="hanry">hanry</option>
+                <option value="karena">Karena</option>
+                <option value="both" selected>Both</option>
+                <option value="custom">Other…</option>
+              </select>
+            </label>
+
+            <label class="field">
+              <span>Type</span>
+              <select id="evtType">
+                <option value="general" selected>General</option>
+                <option value="wedding">Wedding</option>
+                <option value="trip">Trip</option>
+                <option value="appointment">Appointment</option>
+                <option value="party">Party</option>
+              </select>
+            </label>
+          </div>
+
+          <label id="ownerCustomWrap" class="field hidden">
+            <span>Who (custom)</span>
+            <input id="evtOwnerCustom" type="text" placeholder="Type a name…" />
+          </label>
+
+          <div class="row">
+            <label class="field">
+              <span>Repeat</span>
+              <select id="evtRepeat">
+                <option value="none" selected>Does not repeat</option>
+                <option value="daily">Daily</option>
+                <option value="weekly">Weekly</option>
+                <option value="monthly">Monthly</option>
+                <option value="yearly">Yearly</option>
+              </select>
+            </label>
+
+            <label id="repeatUntilWrap" class="field hidden">
+              <span>Repeat until</span>
+              <input id="evtRepeatUntil" type="date" />
+            </label>
+          </div>
+
+          <div class="field">
+            <span>Checklist</span>
+            <div id="checklist" class="checklist"></div>
+            <button id="addCheckItem" type="button" class="btn btn-ghost" style="margin-top:8px;">+ Add item</button>
+            <div class="tiny muted" style="margin-top:8px;">Tip: choosing a Type can auto-fill a checklist.</div>
+          </div>
 
           <label class="field">
-            <span>End</span>
-            <input id="evtEnd" type="datetime-local" />
-          </label>
-        </div>
-
-        <label class="check">
-          <input id="evtAllDay" type="checkbox" />
-          <span>All day</span>
-        </label>
-
-        <div class="row">
-          <label class="field">
-            <span>Who</span>
-            <select id="evtOwner">
-              <option value="hanry">hanry</option>
-              <option value="karena">Karena</option>
-              <option value="both" selected>Both</option>
-              <option value="custom">Other…</option>
-            </select>
+            <span>Notes</span>
+            <textarea id="evtNotes" rows="4" placeholder="Anything helpful…"></textarea>
           </label>
 
-          <label class="field">
-            <span>Type</span>
-            <select id="evtType">
-              <option value="general" selected>General</option>
-              <option value="wedding">Wedding</option>
-              <option value="trip">Trip</option>
-              <option value="appointment">Appointment</option>
-              <option value="party">Party</option>
-            </select>
-          </label>
-        </div>
+          <div class="modal-actions">
+            <button id="deleteBtn" type="button" class="btn btn-danger hidden">Delete</button>
+            <div class="spacer"></div>
+            <button id="cancelBtn" type="button" class="btn btn-ghost">Cancel</button>
+            <button id="saveBtn" type="submit" class="btn btn-primary">Save</button>
+          </div>
 
-        <label id="ownerCustomWrap" class="field hidden">
-          <span>Who (custom)</span>
-          <input id="evtOwnerCustom" type="text" placeholder="Type a name…" />
-        </label>
-
-        <div class="row">
-          <label class="field">
-            <span>Repeat</span>
-            <select id="evtRepeat">
-              <option value="none" selected>Does not repeat</option>
-              <option value="daily">Daily</option>
-              <option value="weekly">Weekly</option>
-              <option value="monthly">Monthly</option>
-              <option value="yearly">Yearly</option>
-            </select>
-          </label>
-
-          <label id="repeatUntilWrap" class="field hidden">
-            <span>Repeat until</span>
-            <input id="evtRepeatUntil" type="date" />
-          </label>
-        </div>
-
-        <div class="field">
-          <span>Checklist</span>
-          <div id="checklist" class="checklist"></div>
-          <button id="addCheckItem" type="button" class="btn btn-ghost" style="margin-top:8px;">+ Add item</button>
-          <div class="tiny muted" style="margin-top:8px;">Tip: choosing a Type can auto-fill a checklist.</div>
-        </div>
-
-        <label class="field">
-          <span>Notes</span>
-          <textarea id="evtNotes" rows="4" placeholder="Anything helpful…"></textarea>
-        </label>
-
-        <div class="modal-actions">
-          <button id="deleteBtn" type="button" class="btn btn-danger hidden">Delete</button>
-          <div class="spacer"></div>
-          <button id="cancelBtn" type="button" class="btn btn-ghost">Cancel</button>
-          <button id="saveBtn" type="submit" class="btn btn-primary">Save</button>
-        </div>
-
-        <div class="tiny muted" style="margin-top:8px;">
-          Note: repeating events update the whole series (no single-instance edits yet).
-        </div>
-      </form>
+          <div class="tiny muted" style="margin-top:8px;">
+            Note: repeating events update the whole series (no single-instance edits yet).
+          </div>
+        </form>
+      </div>
     </div>
   </div>
 
@@ -297,18 +365,20 @@
         <button id="taskClose" class="btn btn-icon" type="button" aria-label="Close">✕</button>
       </div>
 
-      <div class="modal-body">
-        <div id="taskMeta" class="tiny muted">Loading…</div>
+      <div class="modal-scroll">
+        <div class="modal-body">
+          <div id="taskMeta" class="tiny muted">Loading…</div>
 
-        <div class="field">
-          <span>Items</span>
-          <div id="taskChecklist" class="checklist"></div>
-          <button id="taskAddItem" type="button" class="btn btn-ghost" style="margin-top:8px;">+ Add item</button>
-        </div>
+          <div class="field">
+            <span>Items</span>
+            <div id="taskChecklist" class="checklist"></div>
+            <button id="taskAddItem" type="button" class="btn btn-ghost" style="margin-top:8px;">+ Add item</button>
+          </div>
 
-        <div class="modal-actions">
-          <div class="spacer"></div>
-          <button id="taskDone" type="button" class="btn btn-primary">Done</button>
+          <div class="modal-actions">
+            <div class="spacer"></div>
+            <button id="taskDone" type="button" class="btn btn-primary">Done</button>
+          </div>
         </div>
       </div>
     </div>
@@ -322,45 +392,48 @@
         <button id="jumpClose" class="btn btn-icon" type="button" aria-label="Close">✕</button>
       </div>
 
-      <div class="modal-body">
-        <div class="row">
-          <label class="field">
-            <span>Month</span>
-            <select id="jumpMonthSelect">
-              <option value="0">January</option>
-              <option value="1">February</option>
-              <option value="2">March</option>
-              <option value="3">April</option>
-              <option value="4">May</option>
-              <option value="5">June</option>
-              <option value="6">July</option>
-              <option value="7">August</option>
-              <option value="8">September</option>
-              <option value="9">October</option>
-              <option value="10">November</option>
-              <option value="11">December</option>
-            </select>
-          </label>
+      <div class="modal-scroll">
+        <div class="modal-body">
+          <div class="row">
+            <label class="field">
+              <span>Month</span>
+              <select id="jumpMonthSelect">
+                <option value="0">January</option>
+                <option value="1">February</option>
+                <option value="2">March</option>
+                <option value="3">April</option>
+                <option value="4">May</option>
+                <option value="5">June</option>
+                <option value="6">July</option>
+                <option value="7">August</option>
+                <option value="8">September</option>
+                <option value="9">October</option>
+                <option value="10">November</option>
+                <option value="11">December</option>
+              </select>
+            </label>
 
-          <label class="field">
-            <span>Year</span>
-            <select id="jumpYearSelect"></select>
-          </label>
-        </div>
+            <label class="field">
+              <span>Year</span>
+              <select id="jumpYearSelect"></select>
+            </label>
+          </div>
 
-        <div class="modal-actions">
-          <div class="spacer"></div>
-          <button id="jumpCancel" class="btn btn-ghost" type="button">Cancel</button>
-          <button id="jumpGoBtn" class="btn btn-primary" type="button">Go</button>
+          <div class="modal-actions">
+            <div class="spacer"></div>
+            <button id="jumpCancel" class="btn btn-ghost" type="button">Cancel</button>
+            <button id="jumpGoBtn" class="btn btn-primary" type="button">Go</button>
+          </div>
         </div>
       </div>
     </div>
   </div>
 
-  <!-- FullCalendar JS must load BEFORE app.js -->
-  <script src="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.11/index.global.min.js"></script>
+  <!-- Cat mode ambient layer (enhancement hook) -->
+  <div id="catLayer" class="cat-layer hidden" aria-hidden="true"></div>
 
-  <!-- Your app (module) -->
-  <script type="module" src="./app.js?v=20260228_huberts_house_v9"></script>
+  <!-- Scripts -->
+  <script src="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.11/index.global.min.js"></script>
+  <script type="module" src="./app.js?v=20260228_huberts_house_v10"></script>
 </body>
 </html>
