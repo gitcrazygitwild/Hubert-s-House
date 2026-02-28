@@ -5,13 +5,43 @@
 const PASSWORD = "Mack";
 const LS_UNLOCK = "mack_calendar_unlocked";
 
-const loginEl = document.getElementById("login");
-const mainEl = document.getElementById("main");
-const loginForm = document.getElementById("loginForm");
-const passwordInput = document.getElementById("password");
-const logoutBtn = document.getElementById("logoutBtn");
-const todayBtn = document.getElementById("todayBtn");
-const statusEl = document.getElementById("status");
+const gate = document.getElementById("gate");
+const gateForm = document.getElementById("gateForm");
+const gateInput = document.getElementById("gateInput");
+
+function isUnlocked() {
+  return localStorage.getItem(LS_UNLOCK) === "1";
+}
+
+function unlock() {
+  localStorage.setItem(LS_UNLOCK, "1");
+  gate.classList.add("hidden");
+}
+
+function lock() {
+  localStorage.removeItem(LS_UNLOCK);
+  gate.classList.remove("hidden");
+}
+
+gateForm.addEventListener("submit", (e) => {
+  e.preventDefault();
+  const pw = gateInput.value.trim();
+  if (pw === PASSWORD) {
+    unlock();
+    gateInput.value = "";
+  } else {
+    gateInput.value = "";
+    gateInput.focus();
+    alert("Wrong password.");
+  }
+});
+
+// On load
+if (isUnlocked()) {
+  gate.classList.add("hidden");
+} else {
+  gate.classList.remove("hidden");
+}
 
 // ---------- Modal elements ----------
 const backdrop = document.getElementById("modalBackdrop");
