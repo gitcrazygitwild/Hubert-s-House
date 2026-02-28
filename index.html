@@ -12,19 +12,33 @@
 <body>
   <div id="app">
     <!-- Login -->
-    <section id="login" class="card">
-      <h1>Calendar</h1>
-      <p class="muted">Enter password to continue.</p>
+<!-- Gate overlay (always in front until unlocked) -->
+<div id="gate" class="gate">
+  <div class="gate-card card">
+    <h1 style="margin:0 0 6px;">Mack Calendar</h1>
+    <p class="muted" style="margin:0 0 12px;">Enter password to unlock.</p>
 
-      <form id="loginForm">
-        <input id="password" type="password" placeholder="Password" autocomplete="current-password" />
-        <button type="submit">Unlock</button>
-      </form>
+    <form id="gateForm" autocomplete="off">
+      <!-- IMPORTANT: not type="password" so iOS won’t prompt “Save Password?” -->
+      <input
+        id="gateInput"
+        type="text"
+        inputmode="text"
+        autocomplete="off"
+        autocapitalize="none"
+        autocorrect="off"
+        spellcheck="false"
+        placeholder="Password"
+        class="gate-input"
+      />
+      <button type="submit">Unlock</button>
+    </form>
 
-      <p class="tiny muted">
-        Note: this is a simple client-side password gate (not real security).
-      </p>
-    </section>
+    <p class="tiny muted" style="margin:10px 0 0;">
+      Simple gate (not real security).
+    </p>
+  </div>
+</div>
 
     <!-- Main -->
     <section id="main" class="hidden">
