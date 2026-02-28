@@ -1,8 +1,192 @@
-// app.js — Hubert’s House (FULL JS)
-// Firebase sync + gate (remember device) + mobile-friendly + owner colors + notes + checklist + recurring
-// Upcoming + Outstanding panels + checklist-focused modal + swipe months + month-title jump modal
-// Theme randomizer + smooth theme transitions + optional time-of-day auto theme
+// app.js — Hubert’s House (v5)
+// Firebase sync + password gate + theme dice + search/list-range + owner filter
+// Upcoming + Outstanding checklist panels + checklist-focused modal
+// Month title tap = jump-to-month + swipe left/right to change months
+//
+// NOTE: Gate is client-side only (not real security).
 
+// ---------- Gate ----------
+const PASSWORD = "Mack"; // not real security
+const LS_UNLOCK = "huberts_house_unlocked_v1";
+
+const gate = document.getElementById("gate");
+const gateForm = document.getElementById("gateForm");
+const gateInput = document.getElementById("gateInput");
+const rememberDevice = document.getElementById("rememberDevice");
+
+// Allow temporary unlock without localStorage (if remember unchecked)
+let sessionUnlocked = false;
+
+function isUnlocked() {
+  if (sessionUnlocked) return true;
+  return localStorage.getItem(LS_UNLOCK) === "1";
+}
+
+function unlock() {
+  const remember = rememberDevice?.checked ?? true;
+  if (remember) localStorage.setItem(LS_UNLOCK, "1");
+  sessionUnlocked = true;
+  gate?.classList.add("hidden");
+}
+
+function lock() {
+  sessionUnlocked = false;
+  localStorage.removeItem(LS_UNLOCK);
+  gate?.classList.remove("hidden");
+  closeModal();
+  closeTaskModal();
+  closeJumpModal();
+}
+
+gateForm?.addEventListener("submit", (e) => {
+  e.preventDefault();
+  const pw = String(gateInput?.value ?? "").trim();
+  if (pw.toLowerCase() === PASSWORD.toLowerCase()) {
+    unlock();
+    if (gateInput) gateInput.value = "";
+  } else {
+    if (gateInput) {
+      gateInput.value = "";
+      gateInput.focus();
+    }
+    alert("Wrong password.");
+  }
+});
+
+// Show/hide gate immediately
+if (isUnlocked()) gate?.classList.add("hidden");
+else gate?.classList.remove("hidden");
+
+// ---------- Topbar / controls ----------
+const statusEl = document.getElementById("status");
+
+const logoutBtn = document.getElementById("logoutBtn");
+const todayBtn = document.getElementById("todayBtn");
+const themeBtn = document.getElementById("themeBtn");
+
+const searchInput = document.getElementById("searchInput");
+const searchFiltersBtn = document.getElementById("searchFiltersBtn");
+const searchFilters = document.getElementById("searchFilters");
+const searchFrom = document.getElementById("searchFrom");
+const searchTo = document.getElementById("searchTo");
+const clearDatesBtn = document.getElementById("clearDatesBtn");
+
+const listRangeSelect = document.getElementById("listRangeSelect");
+const ownerFilter = document.getElementById("ownerFilter");
+
+const quickAddBtn = document.getElementById("quickAddBtn");
+const focusToggle = document.getElementById("focusToggle");
+
+logoutBtn?.addEventListener("click", lock);
+todayBtn?.addEventListener("click", () => calendar?.today());
+
+searchFiltersBtn?.addEventListener("click", () => {
+  searchFilters?.classList.toggle("hidden");
+});
+
+document.addEventListener("click", (e) => {
+  // click-outside closes search filters
+  if (!searchFilters || searchFilters.classList.contains("hidden")) return;
+  const wrap = searchFilters.closest(".search-filters-wrap");
+  if (wrap && !wrap.contains(e.target)) searchFilters.classList.add("hidden");
+});
+
+clearDatesBtn?.addEventListener("click", () => {
+  if (searchFrom) searchFrom.value = "";
+  if (searchTo) searchTo.value = "";
+  applySearchAndFilters();
+});
+
+focusToggle?.addEventListener("change", () => {
+  const on = !!focusToggle.checked;
+  document.body.classList.toggle("focus-on", on);
+  // In focus mode, hide panels
+  const upcoming = document.getElementById("upcoming");
+  const outstanding = document.getElementById("outstanding");
+  if (upcoming) upcoming.style.display = on ? "none" : "";
+  if (outstanding) outstanding.style.display = on ? "none" : "";
+});
+
+// ---------- Modal: event editor ----------
+const backdrop = document.getElementById("modalBackdrop");
+const modalClose = document.getElementById("modalClose");
+const eventForm = document.getElementById("eventForm");
+const modalTitle = document.getElementById("modalTitle");
+
+const evtTitle = document.getElementById("evtTitle");
+const evtStart = document.getElementById("evtStart");
+const evtEnd = document.getElementById("evtEnd");
+const evtAllDay = document.getElementById("evtAllDay");
+
+const evtOwner = document.getElementById("evtOwner");
+const ownerCustomWrap = document.getElementById("ownerCustomWrap");
+const evtOwnerCustom = document.getElementById("evtOwnerCustom");
+
+const evtType = document.getElementById("evtType");
+
+const evtRepeat = document.getElementById("evtRepeat");
+const repeatUntilWrap = document.getElementById("repeatUntilWrap");
+const evtRepeatUntil = document.getElementById("evtRepeatUntil");
+
+const checklistEl = document.getElementById("checklist");
+const addCheckItemBtn = document.getElementById("addCheckItem");
+
+const evtNotes = document.getElementById("evtNotes");
+
+const deleteBtn = document.getElementById("deleteBtn");
+const cancelBtn = document.getElementById("cancelBtn");
+
+const fab = document.getElementById("fab");
+
+// ---------- Checklist-focused modal ----------
+const taskBackdrop = document.getElementById("taskBackdrop");
+const taskClose = document.getElementById("taskClose");
+const taskDone = document.getElementById("taskDone");
+const taskMeta = document.getElementById("taskMeta");
+const taskChecklist = document.getElementById("taskChecklist");
+const taskAddItem = document.getElementById("taskAddItem");
+
+// ---------- Jump-to-month modal ----------
+const jumpBackdrop = document.getElementById("jumpBackdrop");
+const jumpClose = document.getElementById("jumpClose");
+const jumpCancel = document.getElementById("jumpCancel");
+const jumpGoBtn = document.getElementById("jumpGoBtn");
+const jumpMonthSelect = document.getElementById("jumpMonthSelect");
+const jumpYearSelect = document.getElementById("jumpYearSelect");
+
+// Panels
+const upcomingListEl = document.getElementById("upcomingList");
+const outstandingListEl = document.getElementById("outstandingList");
+const outPrev = document.getElementById("outPrev");
+const outNext = document.getElementById("outNext");
+const outPage = document.getElementById("outPage");
+
+// ---------- Colors / owners ----------
+const OWNER_STYLE = {
+  hanry:  { bg: "rgba(122,162,255,0.35)", border: "rgba(122,162,255,0.85)" },
+  karena: { bg: "rgba(255,107,107,0.28)", border: "rgba(255,107,107,0.85)" },
+  both:   { bg: "rgba(116,217,155,0.28)", border: "rgba(116,217,155,0.85)" },
+  custom: { bg: "rgba(184,140,255,0.26)", border: "rgba(184,140,255,0.85)" }
+};
+
+function normalizeOwner(rawOwner) {
+  const o = String(rawOwner || "").toLowerCase();
+  if (o === "hanry") return "hanry";
+  if (o === "karena") return "karena";
+  if (o === "both") return "both";
+  return "custom";
+}
+
+// ---------- Checklist presets ----------
+const CHECKLIST_PRESETS = {
+  general: [],
+  wedding: ["RSVP", "Gift", "Travel", "Outfit", "Hotel"],
+  trip: ["Book travel", "Lodging", "Packing list", "Car / rides", "Itinerary"],
+  appointment: ["Add address", "Bring ID", "Arrive early", "Paperwork"],
+  party: ["Invite list", "Food/drinks", "Music", "Supplies", "Cleanup plan"]
+};
+
+// ---------- Firebase (CDN imports ONLY) ----------
 import { initializeApp } from "https://www.gstatic.com/firebasejs/12.9.0/firebase-app.js";
 import {
   getFirestore,
@@ -17,7 +201,7 @@ import {
   serverTimestamp
 } from "https://www.gstatic.com/firebasejs/12.9.0/firebase-firestore.js";
 
-/* ---------------- Firebase config ---------------- */
+// Your Firebase config
 const firebaseConfig = {
   apiKey: "AIzaSyBEXNyX6vIbHwGCpI3fpVUb5llubOjt9qQ",
   authDomain: "huberts-house.firebaseapp.com",
@@ -28,344 +212,128 @@ const firebaseConfig = {
   measurementId: "G-CX5MN6WBFP"
 };
 
-/* ---------------- DOM helpers ---------------- */
-const $ = (id) => document.getElementById(id);
-const on = (el, evt, fn, opts) => el && el.addEventListener(evt, fn, opts);
+let db, eventsCol;
+let calendar;
 
-/* ---------------- Theme (random + smooth transition + time-of-day auto) ---------------- */
-const LS_THEME = "huberts_house_theme_v3";
+// In-memory cache from Firestore
+let rawDocs = [];         // [{id,...data}]
+let expandedEvents = [];  // normalized + expanded repeats (each has sourceId)
 
-const THEMES = [
-  {
-    name: "Midnight Neon",
-    vars: {
-      "--bg": "#0b1020",
-      "--bg2": "#070b17",
-      "--card": "rgba(17,26,53,.72)",
-      "--text": "#e9ecf1",
-      "--muted": "#9aa6c4",
-      "--border": "rgba(255,255,255,0.18)",
-      "--accent": "#7aa2ff",
-      "--blob1": "rgba(122,162,255,.60)",
-      "--blob2": "rgba(255,107,107,.48)",
-      "--blob3": "rgba(116,217,155,.42)"
-    }
-  },
-  {
-    name: "Grape Pop",
-    vars: {
-      "--bg": "#12071a",
-      "--bg2": "#0b0510",
-      "--card": "rgba(26,13,38,.70)",
-      "--text": "#f6ecff",
-      "--muted": "#d0b7ff",
-      "--border": "rgba(255,255,255,0.16)",
-      "--accent": "#bb86fc",
-      "--blob1": "rgba(187,134,252,.55)",
-      "--blob2": "rgba(255,180,120,.40)",
-      "--blob3": "rgba(116,217,155,.30)"
-    }
-  },
-  {
-    name: "Mint Soda",
-    vars: {
-      "--bg": "#061615",
-      "--bg2": "#040f0f",
-      "--card": "rgba(10,31,29,.68)",
-      "--text": "#e8fff8",
-      "--muted": "#a8d4c7",
-      "--border": "rgba(255,255,255,0.16)",
-      "--accent": "#66f2c1",
-      "--blob1": "rgba(102,242,193,.42)",
-      "--blob2": "rgba(122,162,255,.32)",
-      "--blob3": "rgba(255,107,143,.28)"
-    }
-  },
-  // A lighter “daytime” theme (still subtle)
-  {
-    name: "Soft Daylight",
-    vars: {
-      "--bg": "#0b1222",
-      "--bg2": "#0a0f1c",
-      "--card": "rgba(230,236,255,.10)",
-      "--text": "#f4f6ff",
-      "--muted": "#c1c9e6",
-      "--border": "rgba(255,255,255,0.22)",
-      "--accent": "#8fb3ff",
-      "--blob1": "rgba(143,179,255,.45)",
-      "--blob2": "rgba(255,196,156,.28)",
-      "--blob3": "rgba(166,255,215,.22)"
-    }
-  }
-];
+let editingDocId = null; // Firestore doc id
+let editingSourceId = null; // for repeat occurrence click (maps to doc id)
+let editingOccurrenceStart = null;
 
-function applyTheme(theme) {
-  const root = document.documentElement;
-
-  // Smooth fade (no extra CSS needed; we do a quick opacity pulse)
-  root.style.transition = "filter .25s ease";
-  root.style.filter = "brightness(0.98)";
-  setTimeout(() => (root.style.filter = "brightness(1)"), 60);
-
-  for (const [k, v] of Object.entries(theme.vars)) {
-    root.style.setProperty(k, v);
-  }
-  localStorage.setItem(LS_THEME, JSON.stringify(theme));
-}
-
-function pickRandomTheme() {
-  const t = THEMES[Math.floor(Math.random() * THEMES.length)];
-  applyTheme(t);
-  return t;
-}
-
-function initTheme() {
-  const saved = localStorage.getItem(LS_THEME);
-  if (saved) {
-    try {
-      applyTheme(JSON.parse(saved));
-      return;
-    } catch {}
-  }
-
-  // Time-of-day auto theme (only if no saved theme)
-  const hr = new Date().getHours();
-  const isDay = hr >= 7 && hr < 19;
-  const t = isDay ? THEMES.find((x) => x.name === "Soft Daylight") : THEMES[0];
-  applyTheme(t || THEMES[0]);
-}
-
-/* ---------------- Gate (password) ---------------- */
-const PASSWORD = "mack"; // case-insensitive
-const LS_UNLOCK = "huberts_house_unlocked";
-
-const gate = $("gate");
-const gateForm = $("gateForm");
-const gateInput = $("gateInput");
-const rememberDevice = $("rememberDevice"); // optional in some HTML versions
-
-function showGate() {
-  gate?.classList.remove("hidden");
-  setTimeout(() => gateInput?.focus?.(), 50);
-}
-
-function hideGate() {
-  gate?.classList.add("hidden");
-}
-
-function isUnlocked() {
-  return localStorage.getItem(LS_UNLOCK) === "1";
-}
-
-on(gateForm, "submit", (e) => {
-  e.preventDefault();
-  const pw = (gateInput?.value || "").trim().toLowerCase();
-
-  if (pw === PASSWORD) {
-    // Remember device checkbox defaults to true if present; otherwise remember by default
-    const remember = rememberDevice ? !!rememberDevice.checked : true;
-    if (remember) localStorage.setItem(LS_UNLOCK, "1");
-    else localStorage.removeItem(LS_UNLOCK);
-
-    if (gateInput) gateInput.value = "";
-    hideGate();
-  } else {
-    if (gateInput) {
-      gateInput.value = "";
-      gateInput.focus();
-    }
-    alert("Wrong password.");
-  }
-});
-
-/* ---------------- UI elements ---------------- */
-const statusEl = $("status");
-const logoutBtn = $("logoutBtn");
-const todayBtn = $("todayBtn");
-const themeBtn = $("themeBtn");
-const fab = $("fab");
-
-const ownerFilter = $("ownerFilter");
-const listRangeSelect = $("listRangeSelect");
-
-const searchInput = $("searchInput");
-const searchFrom = $("searchFrom"); // optional
-const searchTo = $("searchTo");     // optional
-const searchFiltersBtn = $("searchFiltersBtn"); // optional
-const searchFilters = $("searchFilters");       // optional
-const clearDatesBtn = $("clearDatesBtn");       // optional
-
-const upcomingList = $("upcomingList");
-const outstandingList = $("outstandingList");
-const outPrev = $("outPrev");
-const outNext = $("outNext");
-const outPage = $("outPage");
-
-/* Event modal */
-const backdrop = $("modalBackdrop");
-const modalClose = $("modalClose");
-const cancelBtn = $("cancelBtn");
-const deleteBtn = $("deleteBtn");
-const eventForm = $("eventForm");
-const modalTitle = $("modalTitle");
-
-const evtTitle = $("evtTitle");
-const evtStart = $("evtStart");
-const evtEnd = $("evtEnd");
-const evtAllDay = $("evtAllDay");
-const evtOwner = $("evtOwner");
-const evtType = $("evtType");
-const evtNotes = $("evtNotes");
-const ownerCustomWrap = $("ownerCustomWrap");
-const evtOwnerCustom = $("evtOwnerCustom");
-
-const evtRepeat = $("evtRepeat");
-const repeatUntilWrap = $("repeatUntilWrap");
-const evtRepeatUntil = $("evtRepeatUntil");
-
-const checklistEl = $("checklist");
-const addCheckItem = $("addCheckItem");
-
-/* Checklist-focused modal */
-const taskBackdrop = $("taskBackdrop");
-const taskClose = $("taskClose");
-const taskDone = $("taskDone");
-const taskMeta = $("taskMeta");
-const taskChecklistEl = $("taskChecklist");
-const taskAddItem = $("taskAddItem");
-
-/* Jump modal */
-const jumpBackdrop = $("jumpBackdrop");
-const jumpClose = $("jumpClose");
-const jumpCancel = $("jumpCancel");
-const jumpGoBtn = $("jumpGoBtn");
-const jumpMonthSelect = $("jumpMonthSelect");
-const jumpYearSelect = $("jumpYearSelect");
-
-/* Quick add chips (optional) */
-const quickChips = Array.from(document.querySelectorAll(".chip"));
-
-/* ---------------- Owner styles ---------------- */
-const OWNER_STYLE = {
-  hanry:  { backgroundColor: "rgba(122,162,255,0.35)", borderColor: "rgba(122,162,255,0.85)", textColor: "#e9ecf1" },
-  karena: { backgroundColor: "rgba(255,107,107,0.28)", borderColor: "rgba(255,107,107,0.85)", textColor: "#e9ecf1" },
-  both:   { backgroundColor: "rgba(116,217,155,0.28)", borderColor: "rgba(116,217,155,0.85)", textColor: "#e9ecf1" },
-  custom: { backgroundColor: "rgba(186,140,255,0.25)", borderColor: "rgba(186,140,255,0.78)", textColor: "#e9ecf1" }
-};
-
-function mapLegacyOwner(owner) {
-  if (!owner) return null;
-  if (owner === "his") return "hanry";
-  if (owner === "hers") return "karena";
-  if (owner === "both") return "both";
-  return null;
-}
-
-function ownerKeyOf(e) {
-  return e.ownerKey || mapLegacyOwner(e.owner) || "both";
-}
-function ownerLabelOf(e) {
-  if (e.ownerLabel) return e.ownerLabel;
-  const k = ownerKeyOf(e);
-  if (k === "hanry") return "hanry";
-  if (k === "karena") return "Karena";
-  if (k === "both") return "Both";
-  if (k === "custom") return "Other";
-  return "Both";
-}
-
-/* ---------------- Checklist presets ---------------- */
-const CHECKLIST_PRESETS = {
-  wedding: ["RSVP", "Book travel", "Book hotel", "Buy gift", "Outfit", "Transportation"],
-  trip: ["Book travel", "Book lodging", "Packing list", "House/pet plan", "Itinerary highlights"],
-  appointment: ["Add questions", "Bring documents/ID", "Arrive 10 min early"],
-  party: ["Confirm time/location", "Bring something", "Gift (if needed)", "Transportation"],
-  general: []
-};
-
-/* ---------------- State ---------------- */
-let db, eventsCol, calendar;
-let rawEvents = [];
-let editingEventId = null;
-let currentRange = null;
-
-let currentChecklist = [];
-
-let ownerFilterValue = "all";
-let listRangeDays = 7;
-
-let searchQuery = "";
-let searchFromValue = "";
-let searchToValue = "";
-
-let preSearchView = null;
-let preSearchDate = null;
-
-let outPageIdx = 0;
+// Outstanding pagination
+let outstandingPage = 1;
 const OUT_PAGE_SIZE = 10;
 
-/* Task modal state */
-let taskEventId = null;
-let taskChecklist = [];
-let taskPersistTimer = null;
+// Search state
+let searchText = "";
 
-/* ---------------- Init ---------------- */
-initTheme();
-on(themeBtn, "click", () => pickRandomTheme());
+// Filter state
+let ownerFilterValue = "all";
 
-on(logoutBtn, "click", () => {
-  localStorage.removeItem(LS_UNLOCK);
-  showGate();
-});
+// Theme
+const THEMES = ["aurora", "sunset", "mint", "grape", "mono"];
+function pickTheme() {
+  const t = THEMES[Math.floor(Math.random() * THEMES.length)];
+  document.documentElement.dataset.theme = t;
+  // turn on/off designs sometimes
+  document.documentElement.classList.toggle("designs-on", Math.random() < 0.75);
+}
+themeBtn?.addEventListener("click", () => pickTheme());
+pickTheme();
 
-if (isUnlocked()) hideGate();
-else showGate();
-
-/* ---------------- Firestore init ---------------- */
+// ---------- Init ----------
 async function initApp() {
-  statusEl && (statusEl.textContent = "Sync: connecting…");
+  statusEl.textContent = "Sync: connecting…";
 
   const app = initializeApp(firebaseConfig);
   db = getFirestore(app);
   eventsCol = collection(db, "events");
 
   initCalendarUI();
+  initUIHooks();
 
   const q = query(eventsCol, orderBy("start", "asc"));
-  onSnapshot(
-    q,
-    (snap) => {
-      rawEvents = [];
-      snap.forEach((d) => rawEvents.push({ id: d.id, ...d.data() }));
+  onSnapshot(q, (snap) => {
+    const docs = [];
+    snap.forEach((d) => docs.push({ id: d.id, ...d.data() }));
+    rawDocs = docs;
 
-      rebuildCalendarEvents();
-      renderUpcoming();
-      renderOutstanding();
-      statusEl && (statusEl.textContent = "Sync: live");
-    },
-    (err) => {
-      console.error(err);
-      statusEl && (statusEl.textContent = "Sync: error (check rules)");
-    }
-  );
+    expandedEvents = expandRepeats(normalizeDocs(rawDocs));
+    renderCalendarFromCache();
+    renderPanels();
+
+    statusEl.textContent = "Sync: live";
+  }, (err) => {
+    console.error(err);
+    statusEl.textContent = "Sync: error (check rules)";
+  });
 }
 
-/* ---------------- Calendar setup ---------------- */
+// ---------- UI hooks ----------
+function initUIHooks() {
+  // Search debounce
+  let t = null;
+  searchInput?.addEventListener("input", () => {
+    clearTimeout(t);
+    t = setTimeout(() => {
+      searchText = (searchInput.value || "").trim();
+      applySearchAndFilters(true);
+    }, 180);
+  });
+
+  searchFrom?.addEventListener("change", () => applySearchAndFilters(true));
+  searchTo?.addEventListener("change", () => applySearchAndFilters(true));
+
+  listRangeSelect?.addEventListener("change", () => {
+    // If user is in list view, refresh it
+    if (calendar && calendar.view?.type === "listCustom") openListView();
+    else renderPanels();
+  });
+
+  ownerFilter?.addEventListener("change", () => {
+    ownerFilterValue = ownerFilter.value || "all";
+    applySearchAndFilters(false);
+  });
+
+  quickAddBtn?.addEventListener("click", () => {
+    const start = roundToNextHour(new Date());
+    const end = new Date(start.getTime() + 60 * 60 * 1000);
+    openEventModal({
+      mode: "create",
+      title: "",
+      start,
+      end,
+      allDay: false,
+      owner: "both",
+      ownerCustom: "",
+      type: "general",
+      repeat: "none",
+      repeatUntil: "",
+      notes: "",
+      checklist: []
+    });
+  });
+}
+
+// ---------- Calendar ----------
 function initCalendarUI() {
-  const calendarEl = $("calendar");
-  if (!calendarEl) return;
+  const calendarEl = document.getElementById("calendar");
 
   calendar = new FullCalendar.Calendar(calendarEl, {
     initialView: "dayGridMonth",
-    initialDate: new Date(),
     headerToolbar: {
       left: "prev,next",
       center: "title",
-      right: "dayGridMonth,timeGridWeek,timeGridDay,listRange"
+      right: "dayGridMonth,timeGridWeek,timeGridDay,listBtn"
+    },
+    customButtons: {
+      listBtn: { text: "List", click: () => openListView() }
     },
     views: {
-      listRange: { type: "list", duration: { days: listRangeDays }, buttonText: "List" },
-      listAll: { type: "list", duration: { years: 5 } }
+      listCustom: { type: "list", duration: { days: 7 }, buttonText: "List" }
     },
     selectable: true,
     editable: true,
@@ -374,11 +342,7 @@ function initCalendarUI() {
     longPressDelay: 350,
     selectLongPressDelay: 350,
 
-    datesSet: (info) => {
-      currentRange = { start: info.start, end: info.end };
-      rebuildCalendarEvents();
-      bindMonthTitleClick();
-    },
+    datesSet: () => hookMonthTitleClick(),
 
     dateClick: (info) => {
       const start = new Date(info.date);
@@ -390,48 +354,90 @@ function initCalendarUI() {
         start,
         end,
         allDay: false,
-        ownerKey: "both",
-        ownerLabel: "Both",
+        owner: "both",
+        ownerCustom: "",
         type: "general",
-        checklist: [],
+        repeat: "none",
+        repeatUntil: "",
         notes: "",
-        recurrence: { freq: "none", until: null }
+        checklist: []
       });
     },
 
     select: (info) => {
       const start = info.start;
-      let end = info.end || null;
-      if (!end && !info.allDay) end = new Date(start.getTime() + 60 * 60 * 1000);
+      const end = info.end || new Date(start.getTime() + 60 * 60 * 1000);
       openEventModal({
         mode: "create",
         title: "",
         start,
         end,
         allDay: info.allDay,
-        ownerKey: "both",
-        ownerLabel: "Both",
+        owner: "both",
+        ownerCustom: "",
         type: "general",
-        checklist: [],
+        repeat: "none",
+        repeatUntil: "",
         notes: "",
-        recurrence: { freq: "none", until: null }
+        checklist: []
       });
     },
 
-    eventClick: (info) => openEditModalFromEvent(info.event),
+    eventClick: (info) => {
+      const ev = info.event;
+      const p = ev.extendedProps || {};
+      const sourceId = p.sourceId || ev.id;
+
+      const docData = rawDocs.find(d => d.id === sourceId);
+      if (!docData) return;
+
+      openEventModal({
+        mode: "edit",
+        id: sourceId,
+        occurrenceStart: ev.start ? new Date(ev.start) : null,
+        title: docData.title || "",
+        start: docData.start ? new Date(docData.start) : ev.start,
+        end: docData.end ? new Date(docData.end) : ev.end,
+        allDay: !!docData.allDay,
+        owner: normalizeOwner(docData.owner),
+        ownerCustom: docData.ownerCustom || "",
+        type: docData.type || "general",
+        repeat: docData.repeat || "none",
+        repeatUntil: docData.repeatUntil || "",
+        notes: docData.notes || "",
+        checklist: Array.isArray(docData.checklist) ? docData.checklist : []
+      });
+    },
+
+    eventDidMount: (arg) => {
+      const show = shouldShowEvent(arg.event);
+      if (!show) arg.el.style.display = "none";
+
+      const p = arg.event.extendedProps || {};
+      if (p.isRepeatOccurrence) {
+        arg.event.setProp("editable", false);
+        arg.event.setProp("durationEditable", false);
+        arg.event.setProp("startEditable", false);
+      }
+
+      arg.el.style.fontSize = "var(--event-font)";
+    },
 
     eventDrop: async (info) => {
-      if (info.event.extendedProps?.isRecurringInstance) {
-        alert("Edit the repeating event to move the whole series (single-instance moves not supported yet).");
+      const p = info.event.extendedProps || {};
+      if (p.isRepeatOccurrence) {
         info.revert();
+        alert("Repeating events: edit the series instead (no single-instance moves yet).");
         return;
       }
       await persistMovedEvent(info.event);
     },
+
     eventResize: async (info) => {
-      if (info.event.extendedProps?.isRecurringInstance) {
-        alert("Edit the repeating event to resize the whole series (single-instance edits not supported yet).");
+      const p = info.event.extendedProps || {};
+      if (p.isRepeatOccurrence) {
         info.revert();
+        alert("Repeating events: edit the series instead (no single-instance resizes yet).");
         return;
       }
       await persistMovedEvent(info.event);
@@ -439,83 +445,11 @@ function initCalendarUI() {
   });
 
   calendar.render();
-  calendar.changeView("dayGridMonth");
-  calendar.today();
+  hookMonthTitleClick();
+  attachSwipe(calendarEl);
 
-  // Swipe months (optional)
-  attachSwipeNavigation($("calendarWrap"));
-
-  // Month title click -> jump modal
-  bindMonthTitleClick();
-
-  on(todayBtn, "click", () => calendar?.today());
-
-  on(ownerFilter, "change", () => {
-    ownerFilterValue = ownerFilter.value || "all";
-    rebuildCalendarEvents();
-    renderUpcoming();
-    renderOutstanding();
-  });
-
-  on(listRangeSelect, "change", () => {
-    listRangeDays = Number(listRangeSelect.value || "7") || 7;
-    calendar.setOption("views", {
-      ...calendar.getOption("views"),
-      listRange: { type: "list", duration: { days: listRangeDays }, buttonText: "List" },
-      listAll: { type: "list", duration: { years: 5 } }
-    });
-    if (calendar.view.type === "listRange") calendar.changeView("listRange", calendar.getDate());
-  });
-
-  // Search UI (works whether you have date filters or not)
-  on(searchFiltersBtn, "click", () => searchFilters?.classList.toggle("hidden"));
-  on(clearDatesBtn, "click", () => {
-    if (searchFrom) searchFrom.value = "";
-    if (searchTo) searchTo.value = "";
-    searchFromValue = "";
-    searchToValue = "";
-    updateFiltersBtnState();
-    enterSearchModeIfNeeded();
-    rebuildCalendarEvents();
-    renderUpcoming();
-    renderOutstanding();
-  });
-
-  on(searchInput, "input", () => {
-    searchQuery = (searchInput.value || "").trim().toLowerCase();
-    enterSearchModeIfNeeded();
-    rebuildCalendarEvents();
-    renderUpcoming();
-    renderOutstanding();
-  });
-
-  on(searchFrom, "change", () => {
-    searchFromValue = (searchFrom.value || "").trim();
-    searchFilters?.classList.remove("hidden");
-    updateFiltersBtnState();
-    enterSearchModeIfNeeded();
-    rebuildCalendarEvents();
-    renderUpcoming();
-    renderOutstanding();
-  });
-
-  on(searchTo, "change", () => {
-    searchToValue = (searchTo.value || "").trim();
-    searchFilters?.classList.remove("hidden");
-    updateFiltersBtnState();
-    enterSearchModeIfNeeded();
-    rebuildCalendarEvents();
-    renderUpcoming();
-    renderOutstanding();
-  });
-
-  // Quick add chips (optional)
-  quickChips.forEach((btn) => {
-    on(btn, "click", () => openQuickAdd(btn.dataset.template || "general"));
-  });
-
-  on(fab, "click", () => {
-    const start = new Date();
+  fab?.addEventListener("click", () => {
+    const start = roundToNextHour(new Date());
     const end = new Date(start.getTime() + 60 * 60 * 1000);
     openEventModal({
       mode: "create",
@@ -523,150 +457,93 @@ function initCalendarUI() {
       start,
       end,
       allDay: false,
-      ownerKey: "both",
-      ownerLabel: "Both",
+      owner: "both",
+      ownerCustom: "",
       type: "general",
-      checklist: [],
+      repeat: "none",
+      repeatUntil: "",
       notes: "",
-      recurrence: { freq: "none", until: null }
+      checklist: []
     });
   });
 
-  // Event modal handlers
-  on(modalClose, "click", closeEventModal);
-  on(cancelBtn, "click", closeEventModal);
-  on(backdrop, "click", (e) => e.target === backdrop && closeEventModal());
-
-  on(evtOwner, "change", () => {
-    const isCustom = evtOwner.value === "custom";
-    ownerCustomWrap?.classList.toggle("hidden", !isCustom);
-    if (isCustom) setTimeout(() => evtOwnerCustom?.focus?.(), 50);
+  modalClose?.addEventListener("click", closeModal);
+  cancelBtn?.addEventListener("click", closeModal);
+  backdrop?.addEventListener("click", (e) => {
+    if (e.target === backdrop) closeModal();
   });
 
-  on(evtRepeat, "change", () => {
-    const isRepeating = evtRepeat.value !== "none";
-    repeatUntilWrap?.classList.toggle("hidden", !isRepeating);
-    if (!isRepeating && evtRepeatUntil) evtRepeatUntil.value = "";
+  evtAllDay?.addEventListener("change", () => {
+    preserveDatesOnAllDayToggle(!!evtAllDay.checked);
   });
 
-  on(evtType, "change", () => {
-    const type = evtType.value || "general";
-    if (currentChecklist.length > 0) {
-      const ok = confirm("Replace your current checklist with this type’s preset?");
-      if (!ok) return;
-    }
-    setChecklistPreset(type);
+  evtOwner?.addEventListener("change", () => {
+    const v = evtOwner.value;
+    ownerCustomWrap?.classList.toggle("hidden", v !== "custom");
+    if (v !== "custom" && evtOwnerCustom) evtOwnerCustom.value = "";
   });
 
-  on(addCheckItem, "click", () => {
-    currentChecklist.push({ text: "", done: false });
-    renderChecklist(checklistEl, currentChecklist, { allowRemove: true, onChange: () => {} });
+  evtRepeat?.addEventListener("change", () => {
+    const v = evtRepeat.value;
+    repeatUntilWrap?.classList.toggle("hidden", v === "none");
   });
 
-  on(evtAllDay, "change", () => {
-    // preserve entered values when toggling
-    const allDay = !!evtAllDay.checked;
-    const prevStart = evtStart?.value || "";
-    const prevEnd = evtEnd?.value || "";
-
-    evtStart.type = allDay ? "date" : "datetime-local";
-    evtEnd.type = allDay ? "date" : "datetime-local";
-
-    if (evtStart) evtStart.value = convertInputValue(prevStart, allDay);
-    if (evtEnd) evtEnd.value = prevEnd ? convertInputValue(prevEnd, allDay) : "";
+  evtType?.addEventListener("change", () => {
+    maybeAutofillChecklist(evtType.value);
   });
 
-  on(eventForm, "submit", async (e) => {
+  addCheckItemBtn?.addEventListener("click", () => {
+    addChecklistItemUI(checklistEl, { text: "", done: false }, true);
+  });
+
+  eventForm?.addEventListener("submit", async (e) => {
     e.preventDefault();
-    await handleSaveEvent();
+    await handleSave();
   });
 
-  on(deleteBtn, "click", async () => {
-    if (!editingEventId) return;
+  deleteBtn?.addEventListener("click", async () => {
+    if (!editingDocId) return;
     if (!confirm("Delete this event?")) return;
-    await deleteDoc(doc(db, "events", editingEventId));
-    closeEventModal();
+    await deleteDoc(doc(db, "events", editingDocId));
+    closeModal();
   });
 
-  // Jump modal handlers
-  on(jumpClose, "click", closeJumpModal);
-  on(jumpCancel, "click", closeJumpModal);
-  on(jumpBackdrop, "click", (e) => e.target === jumpBackdrop && closeJumpModal());
-  on(jumpGoBtn, "click", () => {
-    if (!calendar) return;
-    const m = Number(jumpMonthSelect?.value ?? 0);
-    const y = Number(jumpYearSelect?.value ?? new Date().getFullYear());
-    calendar.gotoDate(new Date(y, m, 1));
+  taskClose?.addEventListener("click", closeTaskModal);
+  taskDone?.addEventListener("click", closeTaskModal);
+  taskBackdrop?.addEventListener("click", (e) => {
+    if (e.target === taskBackdrop) closeTaskModal();
+  });
+  taskAddItem?.addEventListener("click", () => {
+    addChecklistItemUI(taskChecklist, { text: "", done: false }, true);
+  });
+
+  jumpClose?.addEventListener("click", closeJumpModal);
+  jumpCancel?.addEventListener("click", closeJumpModal);
+  jumpBackdrop?.addEventListener("click", (e) => {
+    if (e.target === jumpBackdrop) closeJumpModal();
+  });
+  jumpGoBtn?.addEventListener("click", () => {
+    const month = Number(jumpMonthSelect?.value ?? 0);
+    const year = Number(jumpYearSelect?.value ?? new Date().getFullYear());
+    calendar?.gotoDate(new Date(year, month, 1));
     closeJumpModal();
   });
 
-  // Outstanding paging
-  on(outPrev, "click", () => {
-    outPageIdx = Math.max(0, outPageIdx - 1);
-    renderOutstanding();
-  });
-  on(outNext, "click", () => {
-    outPageIdx += 1;
-    renderOutstanding();
-  });
-
-  // Checklist-focused modal handlers
-  on(taskClose, "click", closeTaskModal);
-  on(taskDone, "click", closeTaskModal);
-  on(taskBackdrop, "click", (e) => e.target === taskBackdrop && closeTaskModal());
-  on(taskAddItem, "click", () => {
-    taskChecklist.push({ text: "", done: false });
-    renderTaskChecklist();
-  });
+  populateYearSelect();
 }
 
-/* ---------------- Search mode helpers ---------------- */
-function updateFiltersBtnState() {
-  const active = !!(searchFromValue || searchToValue);
-  searchFiltersBtn?.classList.toggle("is-active", active);
+function hookMonthTitleClick() {
+  const title = document.querySelector(".fc-toolbar-title");
+  if (!title) return;
+  title.style.cursor = "pointer";
+  title.title = "Jump to month";
+  title.onclick = () => openJumpModalFromCalendar();
 }
 
-function enterSearchModeIfNeeded() {
-  if (!calendar) return;
-  const hasText = !!searchQuery;
-  const hasRange = !!(searchFromValue || searchToValue);
-
-  if (hasText || hasRange) {
-    if (!preSearchView) {
-      preSearchView = calendar.view.type;
-      preSearchDate = calendar.getDate();
-    }
-    if (hasText && !hasRange) calendar.changeView("listAll");
-    else calendar.changeView("listRange");
-  } else {
-    if (preSearchView) {
-      calendar.changeView(preSearchView);
-      if (preSearchDate) calendar.gotoDate(preSearchDate);
-    }
-    preSearchView = null;
-    preSearchDate = null;
-  }
-}
-
-/* ---------------- Month title click -> jump ---------------- */
-function populateYearSelect(centerYear) {
-  if (!jumpYearSelect) return;
-  jumpYearSelect.innerHTML = "";
-  const start = centerYear - 10;
-  const end = centerYear + 10;
-  for (let y = start; y <= end; y++) {
-    const opt = document.createElement("option");
-    opt.value = String(y);
-    opt.textContent = String(y);
-    jumpYearSelect.appendChild(opt);
-  }
-}
-
-function openJumpModal() {
+function openJumpModalFromCalendar() {
   if (!calendar) return;
   const d = calendar.getDate();
   if (jumpMonthSelect) jumpMonthSelect.value = String(d.getMonth());
-  populateYearSelect(d.getFullYear());
   if (jumpYearSelect) jumpYearSelect.value = String(d.getFullYear());
   jumpBackdrop?.classList.remove("hidden");
 }
@@ -675,607 +552,388 @@ function closeJumpModal() {
   jumpBackdrop?.classList.add("hidden");
 }
 
-function bindMonthTitleClick() {
-  const titleEl = document.querySelector(".fc .fc-toolbar-title");
-  if (!titleEl) return;
-  if (titleEl.dataset.boundJump === "1") return;
-  titleEl.dataset.boundJump = "1";
-  titleEl.style.cursor = "pointer";
-  titleEl.title = "Tap to jump to a month";
-  titleEl.addEventListener("pointerup", (e) => {
-    e.preventDefault();
-    openJumpModal();
-  });
+function populateYearSelect() {
+  if (!jumpYearSelect) return;
+  const now = new Date().getFullYear();
+  const years = [];
+  for (let y = now - 5; y <= now + 10; y++) years.push(y);
+  jumpYearSelect.innerHTML = years.map(y => `<option value="${y}">${y}</option>`).join("");
+  jumpYearSelect.value = String(now);
 }
 
-/* ---------------- Swipe navigation ---------------- */
-function attachSwipeNavigation(targetEl) {
-  if (!targetEl) return;
-
-  let sx = 0, sy = 0;
-  let tracking = false;
-  let locked = false;
-
-  const MIN_X = 40;
-  const MIN_LOCK = 12;
-  const MAX_Y = 80;
-
-  targetEl.addEventListener("touchstart", (e) => {
+function attachSwipe(el) {
+  let sx = 0, sy = 0, st = 0;
+  el.addEventListener("touchstart", (e) => {
     if (!e.touches || e.touches.length !== 1) return;
-    tracking = true;
-    locked = false;
     sx = e.touches[0].clientX;
     sy = e.touches[0].clientY;
+    st = Date.now();
   }, { passive: true });
 
-  targetEl.addEventListener("touchmove", (e) => {
-    if (!tracking || !e.touches || e.touches.length !== 1) return;
-    const dx = e.touches[0].clientX - sx;
-    const dy = e.touches[0].clientY - sy;
-    if (!locked && Math.abs(dx) > MIN_LOCK && Math.abs(dy) < MAX_Y) locked = true;
-    if (locked) e.preventDefault();
-  }, { passive: false });
+  el.addEventListener("touchend", (e) => {
+    const dt = Date.now() - st;
+    if (dt > 650) return;
 
-  targetEl.addEventListener("touchend", (e) => {
-    if (!tracking || !e.changedTouches || e.changedTouches.length !== 1) return;
-    tracking = false;
+    const touch = e.changedTouches?.[0];
+    if (!touch) return;
+    const dx = touch.clientX - sx;
+    const dy = touch.clientY - sy;
 
-    const ex = e.changedTouches[0].clientX;
-    const ey = e.changedTouches[0].clientY;
-    const dx = ex - sx;
-    const dy = ey - sy;
+    if (Math.abs(dx) < 60) return;
+    if (Math.abs(dy) > 45) return;
 
-    if (Math.abs(dx) >= MIN_X && Math.abs(dy) <= MAX_Y) {
-      if (dx < 0) calendar?.next();
-      else calendar?.prev();
-    }
+    if (dx < 0) calendar?.next();
+    else calendar?.prev();
   }, { passive: true });
 }
 
-/* ---------------- Data filtering ---------------- */
-function passesOwnerFilter(ownerKey) {
-  if (ownerFilterValue === "all") return true;
-  return (ownerKey || "both") === ownerFilterValue;
+// ---------- Rendering ----------
+function renderCalendarFromCache() {
+  if (!calendar) return;
+
+  calendar.removeAllEvents();
+  for (const e of getVisibleEvents()) calendar.addEvent(e);
+
+  const searchActive = isSearchActive();
+  if (!searchActive && calendar.view?.type === "listCustom") {
+    calendar.changeView("dayGridMonth");
+  }
 }
 
-function passesSearchFilter(e) {
-  const hasText = !!searchQuery;
-  const hasRange = !!(searchFromValue || searchToValue);
-  if (!hasText && !hasRange) return true;
+function renderPanels() {
+  renderUpcoming();
+  renderOutstanding();
+}
 
-  if (hasText) {
-    const t = (e.title || "").toLowerCase();
-    const n = (e.notes || "").toLowerCase();
-    if (!(t.includes(searchQuery) || n.includes(searchQuery))) return false;
+function getVisibleEvents() {
+  let list = expandedEvents.slice();
+  list = list.filter((e) => matchOwnerFilter(e));
+  list = list.filter((e) => matchSearch(e));
+
+  const bounds = getSearchBounds();
+  if (bounds) {
+    const { from, to } = bounds;
+    list = list.filter((e) => {
+      const s = new Date(e.start).getTime();
+      if (from && s < from.getTime()) return false;
+      if (to && s > to.getTime()) return false;
+      return true;
+    });
   }
 
-  if (hasRange && e.start) {
-    const startDay = new Date(e.start).toISOString().slice(0, 10);
-    if (searchFromValue && startDay < searchFromValue) return false;
-    if (searchToValue && startDay > searchToValue) return false;
+  return list;
+}
+
+function shouldShowEvent(fcEvent) {
+  const p = fcEvent.extendedProps || {};
+  const owner = normalizeOwner(p.owner);
+
+  if (ownerFilterValue && ownerFilterValue !== "all") {
+    if (ownerFilterValue !== owner) return false;
+  }
+
+  if (searchText) {
+    const hay = `${fcEvent.title} ${p.notes || ""} ${p.type || ""} ${p.ownerCustom || ""}`.toLowerCase();
+    if (!hay.includes(searchText.toLowerCase())) return false;
+  }
+
+  const bounds = getSearchBounds();
+  if (bounds) {
+    const s = fcEvent.start ? fcEvent.start.getTime() : 0;
+    if (bounds.from && s < bounds.from.getTime()) return false;
+    if (bounds.to && s > bounds.to.getTime()) return false;
   }
 
   return true;
 }
 
-/* ---------------- Recurrence expansion ---------------- */
-function normalizeRecurrence(r) {
-  const freq = r?.freq || "none";
-  const until = r?.until || null;
-  return { freq, until };
+function matchOwnerFilter(e) {
+  if (!ownerFilterValue || ownerFilterValue === "all") return true;
+  return normalizeOwner(e.extendedProps?.owner) === ownerFilterValue;
 }
 
-function addInterval(date, freq) {
-  const d = new Date(date);
-  if (freq === "daily") d.setDate(d.getDate() + 1);
-  else if (freq === "weekly") d.setDate(d.getDate() + 7);
-  else if (freq === "monthly") d.setMonth(d.getMonth() + 1);
-  else if (freq === "yearly") d.setFullYear(d.getFullYear() + 1);
-  return d;
+function matchSearch(e) {
+  if (!searchText) return true;
+  const p = e.extendedProps || {};
+  const hay = `${e.title} ${p.notes || ""} ${p.type || ""} ${p.ownerCustom || ""}`.toLowerCase();
+  return hay.includes(searchText.toLowerCase());
 }
 
-function expandRecurringEvent(base, rangeStart, rangeEnd) {
-  const rec = normalizeRecurrence(base.recurrence);
-  if (rec.freq === "none") return [];
+function getSearchBounds() {
+  const fromVal = searchFrom?.value || "";
+  const toVal = searchTo?.value || "";
+  if (!fromVal && !toVal) return null;
 
-  const baseStart = new Date(base.start);
-  const baseEnd = base.end ? new Date(base.end) : null;
-  const durationMs = baseEnd ? (baseEnd.getTime() - baseStart.getTime()) : 0;
-  const untilDate = rec.until ? new Date(rec.until + "T23:59:59") : null;
+  const from = fromVal ? new Date(fromVal + "T00:00:00") : null;
+  const to = toVal ? new Date(toVal + "T23:59:59") : null;
+  return { from, to };
+}
 
-  const out = [];
-  let cur = new Date(baseStart);
+function isSearchActive() {
+  const b = getSearchBounds();
+  return !!(searchText || b);
+}
 
-  let guard = 0;
-  while (cur < rangeStart && guard++ < 5000) {
-    cur = addInterval(cur, rec.freq);
-    if (untilDate && cur > untilDate) return out;
+function applySearchAndFilters(switchToListIfSearching) {
+  searchText = (searchInput?.value || "").trim();
+
+  renderCalendarFromCache();
+  renderPanels();
+
+  if (switchToListIfSearching && isSearchActive()) {
+    openListView();
   }
-
-  guard = 0;
-  while (cur < rangeEnd && guard++ < 5000) {
-    if (!untilDate || cur <= untilDate) {
-      const occStart = new Date(cur);
-      const occEnd = baseEnd ? new Date(occStart.getTime() + durationMs) : null;
-      out.push({ start: occStart, end: occEnd, seriesId: base.id });
-    } else break;
-    cur = addInterval(cur, rec.freq);
-  }
-  return out;
 }
 
-/* ---------------- Calendar event normalization ---------------- */
-function checklistProgress(checklist) {
-  if (!Array.isArray(checklist) || checklist.length === 0) return null;
-  const total = checklist.length;
-  let done = 0;
-  for (const item of checklist) if (item?.done) done++;
-  return { done, total };
-}
-
-function normalizeForCalendar(e, overrides = {}) {
-  const ownerKey = ownerKeyOf(e);
-  const style = OWNER_STYLE[ownerKey] || OWNER_STYLE.both;
-
-  const checklist = Array.isArray(e.checklist) ? e.checklist : [];
-  const prog = checklistProgress(checklist);
-  const title = prog ? `${e.title || ""} (${prog.done}/${prog.total})` : (e.title || "");
-
-  return {
-    id: overrides.id || e.id,
-    title: title || "(untitled)",
-    start: overrides.start || e.start,
-    end: overrides.end || (e.end || undefined),
-    allDay: !!e.allDay,
-    backgroundColor: style.backgroundColor,
-    borderColor: style.borderColor,
-    textColor: style.textColor,
-    editable: !overrides.isRecurringInstance,
-    extendedProps: {
-      ownerKey,
-      ownerLabel: e.ownerLabel || ownerLabelOf(e),
-      notes: e.notes || "",
-      type: e.type || "general",
-      checklist,
-      recurrence: e.recurrence || { freq: "none", until: null },
-      isRecurringInstance: !!overrides.isRecurringInstance,
-      seriesId: overrides.seriesId || null
-    }
-  };
-}
-
-function rebuildCalendarEvents() {
+function openListView() {
   if (!calendar) return;
 
-  calendar.removeAllEvents();
+  const days = Number(listRangeSelect?.value || 7);
+  calendar.setOption("views", {
+    listCustom: { type: "list", duration: { days }, buttonText: "List" }
+  });
 
-  const rs = currentRange?.start ? new Date(currentRange.start) : null;
-  const re = currentRange?.end ? new Date(currentRange.end) : null;
+  calendar.changeView("listCustom");
 
-  for (const e of rawEvents) {
-    if (!e.start) continue;
-    const ok = ownerKeyOf(e);
-    if (!passesOwnerFilter(ok)) continue;
-    if (!passesSearchFilter(e)) continue;
+  const bounds = getSearchBounds();
+  if (bounds?.from) calendar.gotoDate(bounds.from);
+  else calendar.gotoDate(new Date());
+}
 
-    const rec = normalizeRecurrence(e.recurrence);
-    if (rec.freq !== "none" && rs && re) {
-      const occs = expandRecurringEvent({ ...e, id: e.id }, rs, re);
-      for (const occ of occs) {
-        const occId = `${occ.seriesId}__${occ.start.toISOString()}`;
-        calendar.addEvent(
-          normalizeForCalendar(e, {
-            id: occId,
-            start: occ.start.toISOString(),
-            end: occ.end ? occ.end.toISOString() : undefined,
-            isRecurringInstance: true,
-            seriesId: occ.seriesId
-          })
-        );
-      }
-    } else {
-      calendar.addEvent(normalizeForCalendar(e));
+// ---------- Upcoming ----------
+function renderUpcoming() {
+  if (!upcomingListEl) return;
+
+  const now = new Date();
+  const todayStart = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 0, 0, 0, 0);
+
+  let list = expandedEvents.slice();
+  list = list.filter(matchOwnerFilter);
+  list = list.filter(matchSearch);
+
+  const upcoming = [];
+  for (const e of list) {
+    const start = new Date(e.start);
+    const end = e.end ? new Date(e.end) : null;
+    const isAllDay = !!e.allDay;
+
+    if (isAllDay) {
+      if (start.getTime() >= todayStart.getTime()) upcoming.push(e);
+      continue;
+    }
+
+    if (start.toDateString() === now.toDateString()) {
+      const endTime = end ? end.getTime() : start.getTime();
+      if (endTime >= now.getTime()) upcoming.push(e);
+    } else if (start.getTime() > now.getTime()) {
+      upcoming.push(e);
     }
   }
-}
 
-/* ---------------- Upcoming + Outstanding panels ---------------- */
-function isSameLocalDate(a, b) {
-  return a.getFullYear() === b.getFullYear() &&
-         a.getMonth() === b.getMonth() &&
-         a.getDate() === b.getDate();
-}
+  upcoming.sort((a, b) => new Date(a.start).getTime() - new Date(b.start).getTime());
 
-function formatWhen(e) {
-  const start = new Date(e.start);
-  const end = e.end ? new Date(e.end) : null;
-
-  if (e.allDay) {
-    return start.toLocaleDateString([], { weekday: "short", month: "short", day: "numeric" }) + " (all day)";
-  }
-
-  const s = start.toLocaleString([], { weekday: "short", month: "short", day: "numeric", hour: "numeric", minute: "2-digit" });
-  if (!end) return s;
-  const e2 = end.toLocaleTimeString([], { hour: "numeric", minute: "2-digit" });
-  return `${s}–${e2}`;
-}
-
-function shouldIncludeInUpcoming(e, now) {
-  const start = new Date(e.start);
-  const end = e.end ? new Date(e.end) : null;
-
-  // include all-day events today
-  if (e.allDay && isSameLocalDate(start, now)) return true;
-
-  // include future or ongoing timed events
-  if (start >= now) return true;
-  if (end && end >= now) return true;
-
-  return false;
-}
-
-function hasOutstandingChecklist(e) {
-  const list = Array.isArray(e.checklist) ? e.checklist : [];
-  return list.length > 0 && list.some((x) => x && !x.done);
-}
-
-function panelItemHtml(e) {
-  const ok = ownerKeyOf(e);
-  const label = ownerLabelOf(e);
-  const when = formatWhen(e);
-  const prog = checklistProgress(Array.isArray(e.checklist) ? e.checklist : []);
-  const progText = prog ? `${prog.done}/${prog.total}` : "";
-
-  const safe = (s) => String(s).replace(/[&<>"']/g, (c) => ({
-    "&": "&amp;", "<": "&lt;", ">": "&gt;", "\"": "&quot;", "'": "&#39;"
-  }[c]));
-
-  return `
-    <div class="panel-item owner-${safe(ok)}" data-id="${safe(e.id)}">
-      <div class="panel-left">
-        <div class="panel-titleline">
-          <span class="owner-pill ${safe(ok)}">${safe(label)}</span>
-          <div class="panel-titletext">${safe(e.title || "(untitled)")}</div>
-        </div>
-        <div class="panel-meta tiny muted">${safe(when)}</div>
-      </div>
-      <div class="prog">${progText ? safe(progText) : ""}</div>
-    </div>
-  `;
-}
-
-function renderUpcoming() {
-  if (!upcomingList) return;
-  const now = new Date();
-
-  const filtered = rawEvents
-    .filter((e) => e.start)
-    .filter((e) => passesOwnerFilter(ownerKeyOf(e)) && passesSearchFilter(e))
-    .filter((e) => shouldIncludeInUpcoming(e, now))
-    .sort((a, b) => new Date(a.start) - new Date(b.start))
-    .slice(0, 5);
-
-  if (!filtered.length) {
-    upcomingList.textContent = "No upcoming events.";
+  const top = upcoming.slice(0, 5);
+  if (top.length === 0) {
+    upcomingListEl.textContent = "No upcoming events.";
     return;
   }
 
-  upcomingList.innerHTML = filtered.map(panelItemHtml).join("");
-
-  // click -> normal edit modal
-  upcomingList.querySelectorAll(".panel-item").forEach((el) => {
-    on(el, "click", () => {
-      const id = el.getAttribute("data-id");
-      const ev = rawEvents.find((x) => x.id === id);
-      if (ev) openEventModalFromRaw(ev);
+  upcomingListEl.innerHTML = top.map(renderPanelCardHTML).join("");
+  upcomingListEl.querySelectorAll("[data-open-id]").forEach((el) => {
+    el.addEventListener("click", () => {
+      const id = el.getAttribute("data-open-id");
+      const occ = el.getAttribute("data-occ");
+      openFromPanel(id, occ, false);
     });
   });
 }
+
+// ---------- Outstanding ----------
+outPrev?.addEventListener("click", () => {
+  outstandingPage = Math.max(1, outstandingPage - 1);
+  renderOutstanding();
+});
+outNext?.addEventListener("click", () => {
+  outstandingPage += 1;
+  renderOutstanding();
+});
 
 function renderOutstanding() {
-  if (!outstandingList) return;
+  if (!outstandingListEl || !outPage) return;
 
-  const outstanding = rawEvents
-    .filter((e) => e.start)
-    .filter((e) => passesOwnerFilter(ownerKeyOf(e)) && passesSearchFilter(e))
-    .filter((e) => hasOutstandingChecklist(e))
-    .sort((a, b) => new Date(a.start) - new Date(b.start));
+  let list = expandedEvents.slice();
+  list = list.filter(matchOwnerFilter);
+  list = list.filter(matchSearch);
 
-  const totalPages = Math.max(1, Math.ceil(outstanding.length / OUT_PAGE_SIZE));
-  if (outPageIdx > totalPages - 1) outPageIdx = totalPages - 1;
+  const withUnchecked = list.filter((e) => {
+    const items = e.extendedProps?.checklist || [];
+    return Array.isArray(items) && items.some(it => !it.done);
+  });
 
-  const start = outPageIdx * OUT_PAGE_SIZE;
-  const page = outstanding.slice(start, start + OUT_PAGE_SIZE);
+  withUnchecked.sort((a, b) => new Date(a.start).getTime() - new Date(b.start).getTime());
 
-  if (outPage) outPage.textContent = `Page ${outPageIdx + 1} / ${totalPages}`;
-  if (outPrev) outPrev.disabled = outPageIdx === 0;
-  if (outNext) outNext.disabled = outPageIdx >= totalPages - 1;
+  const totalPages = Math.max(1, Math.ceil(withUnchecked.length / OUT_PAGE_SIZE));
+  outstandingPage = Math.min(outstandingPage, totalPages);
 
-  if (!page.length) {
-    outstandingList.textContent = "No outstanding checklist items 🎉";
+  const startIdx = (outstandingPage - 1) * OUT_PAGE_SIZE;
+  const pageItems = withUnchecked.slice(startIdx, startIdx + OUT_PAGE_SIZE);
+
+  outPage.textContent = `Page ${outstandingPage} / ${totalPages}`;
+
+  if (pageItems.length === 0) {
+    outstandingListEl.textContent = "No outstanding checklist items 🎉";
     return;
   }
 
-  outstandingList.innerHTML = page.map(panelItemHtml).join("");
-
-  // click -> checklist-focused modal
-  outstandingList.querySelectorAll(".panel-item").forEach((el) => {
-    on(el, "click", () => {
-      const id = el.getAttribute("data-id");
-      const ev = rawEvents.find((x) => x.id === id);
-      if (ev) openTaskModal(ev);
+  outstandingListEl.innerHTML = pageItems.map(renderPanelCardHTMLWithProgress).join("");
+  outstandingListEl.querySelectorAll("[data-open-id]").forEach((el) => {
+    el.addEventListener("click", () => {
+      const id = el.getAttribute("data-open-id");
+      const occ = el.getAttribute("data-occ");
+      openFromPanel(id, occ, true);
     });
   });
 }
 
-/* ---------------- Quick add templates ---------------- */
-function openQuickAdd(kind) {
-  const now = new Date();
-  const start = new Date(now);
-  const end = new Date(now);
+function openFromPanel(sourceId, occurrenceStartISO, checklistView) {
+  const docData = rawDocs.find(d => d.id === sourceId);
+  if (!docData) return;
 
-  let title = "New event";
-  let allDay = false;
-  let type = "general";
-  let checklist = [];
+  const occStart = occurrenceStartISO ? new Date(occurrenceStartISO) : (docData.start ? new Date(docData.start) : null);
 
-  if (kind === "dinner") {
-    title = "Dinner";
-    start.setHours(19, 0, 0, 0);
-    end.setHours(20, 30, 0, 0);
-  } else if (kind === "groceries") {
-    title = "Grocery run";
-    start.setDate(start.getDate() + 1);
-    start.setHours(17, 0, 0, 0);
-    end.setTime(start.getTime() + 60 * 60 * 1000);
-  } else if (kind === "weekend") {
-    title = "Weekend plan";
-    const d = new Date(start);
-    const day = d.getDay();
-    const daysUntilSat = (6 - day + 7) % 7 || 7;
-    d.setDate(d.getDate() + daysUntilSat);
-    d.setHours(10, 0, 0, 0);
-    start.setTime(d.getTime());
-    end.setTime(d.getTime() + 90 * 60 * 1000);
-    type = "party";
-    checklist = (CHECKLIST_PRESETS.party || []).map((t) => ({ text: t, done: false }));
-  } else if (kind === "reminder") {
-    title = "Reminder";
-    allDay = true;
-    start.setHours(0, 0, 0, 0);
-    end.setHours(0, 0, 0, 0);
-    checklist = [{ text: "Do the thing", done: false }];
-  }
-
-  openEventModal({
-    mode: "create",
-    title,
-    start,
-    end,
-    allDay,
-    ownerKey: "both",
-    ownerLabel: "Both",
-    type,
-    checklist,
-    notes: "",
-    recurrence: { freq: "none", until: null }
-  });
-}
-
-/* ---------------- Event modal ---------------- */
-function convertInputValue(value, allDay) {
-  if (!value) return "";
-  if (allDay) return value.includes("T") ? value.split("T")[0] : value;
-  if (!value.includes("T")) return `${value}T09:00`;
-  return value;
-}
-
-function toInputValue(dateObj, allDay) {
-  if (!(dateObj instanceof Date)) dateObj = new Date(dateObj);
-  const pad = (n) => String(n).padStart(2, "0");
-  const y = dateObj.getFullYear();
-  const m = pad(dateObj.getMonth() + 1);
-  const d = pad(dateObj.getDate());
-  if (allDay) return `${y}-${m}-${d}`;
-  const hh = pad(dateObj.getHours());
-  const mm = pad(dateObj.getMinutes());
-  return `${y}-${m}-${d}T${hh}:${mm}`;
-}
-
-function fromInputValue(value, allDay) {
-  if (allDay) {
-    const [y, m, d] = value.split("-").map(Number);
-    return new Date(y, m - 1, d, 0, 0, 0, 0);
-  }
-  return new Date(value);
-}
-
-function setChecklistPreset(type) {
-  const preset = CHECKLIST_PRESETS[type] || [];
-  currentChecklist = preset.map((t) => ({ text: t, done: false }));
-  renderChecklist(checklistEl, currentChecklist, { allowRemove: true, onChange: () => {} });
-}
-
-function renderChecklist(container, list, { allowRemove, onChange }) {
-  if (!container) return;
-  container.innerHTML = "";
-
-  if (!Array.isArray(list) || list.length === 0) {
-    const empty = document.createElement("div");
-    empty.className = "tiny muted";
-    empty.textContent = "No items yet.";
-    container.appendChild(empty);
-    return;
-  }
-
-  list.forEach((item, idx) => {
-    const row = document.createElement("div");
-    row.className = "check-item";
-
-    const cb = document.createElement("input");
-    cb.type = "checkbox";
-    cb.checked = !!item.done;
-    on(cb, "change", () => {
-      list[idx].done = cb.checked;
-      onChange?.();
+  if (checklistView) {
+    openTaskModal(docData, occStart);
+  } else {
+    openEventModal({
+      mode: "edit",
+      id: sourceId,
+      occurrenceStart: occStart,
+      title: docData.title || "",
+      start: docData.start ? new Date(docData.start) : occStart,
+      end: docData.end ? new Date(docData.end) : null,
+      allDay: !!docData.allDay,
+      owner: normalizeOwner(docData.owner),
+      ownerCustom: docData.ownerCustom || "",
+      type: docData.type || "general",
+      repeat: docData.repeat || "none",
+      repeatUntil: docData.repeatUntil || "",
+      notes: docData.notes || "",
+      checklist: Array.isArray(docData.checklist) ? docData.checklist : []
     });
-
-    const text = document.createElement("input");
-    text.type = "text";
-    text.value = item.text || "";
-    text.placeholder = "Checklist item…";
-    on(text, "input", () => {
-      list[idx].text = text.value;
-      onChange?.();
-    });
-
-    const remove = document.createElement("button");
-    remove.type = "button";
-    remove.className = "btn btn-ghost remove";
-    remove.textContent = "✕";
-    remove.disabled = !allowRemove;
-    remove.style.opacity = allowRemove ? "1" : "0.35";
-    on(remove, "click", () => {
-      if (!allowRemove) return;
-      list.splice(idx, 1);
-      onChange?.();
-      renderChecklist(container, list, { allowRemove, onChange });
-    });
-
-    row.appendChild(cb);
-    row.appendChild(text);
-    row.appendChild(remove);
-    container.appendChild(row);
-  });
-}
-
-function ownerFromInputs() {
-  const ownerKey = evtOwner?.value || "both";
-  if (ownerKey === "custom") {
-    const label = (evtOwnerCustom?.value || "").trim();
-    return { ownerKey: "custom", ownerLabel: label || "Other" };
   }
-  if (ownerKey === "hanry") return { ownerKey: "hanry", ownerLabel: "hanry" };
-  if (ownerKey === "karena") return { ownerKey: "karena", ownerLabel: "Karena" };
-  return { ownerKey: "both", ownerLabel: "Both" };
 }
 
-function buildRecurrenceFromForm() {
-  const freq = evtRepeat?.value || "none";
-  if (freq === "none") return { freq: "none", until: null };
-  const until = (evtRepeatUntil?.value || "").trim();
-  return { freq, until: until || null };
-}
-
+// ---------- Event modal ----------
 function openEventModal(payload) {
   const isEdit = payload.mode === "edit";
-  editingEventId = isEdit ? payload.id : null;
 
-  modalTitle && (modalTitle.textContent = isEdit ? "Edit event" : "New event");
+  editingDocId = isEdit ? payload.id : null;
+  editingSourceId = isEdit ? payload.id : null;
+  editingOccurrenceStart = payload.occurrenceStart || null;
+
+  if (modalTitle) modalTitle.textContent = isEdit ? "Edit event" : "New event";
   deleteBtn?.classList.toggle("hidden", !isEdit);
 
   if (evtTitle) evtTitle.value = payload.title ?? "";
   if (evtAllDay) evtAllDay.checked = !!payload.allDay;
 
-  if (evtStart) evtStart.type = payload.allDay ? "date" : "datetime-local";
-  if (evtEnd) evtEnd.type = payload.allDay ? "date" : "datetime-local";
-
-  if (evtStart) evtStart.value = toInputValue(payload.start, !!payload.allDay);
-  if (evtEnd) evtEnd.value = payload.end ? toInputValue(payload.end, !!payload.allDay) : "";
-
-  if (evtOwner) evtOwner.value = payload.ownerKey || "both";
-  const isCustom = (payload.ownerKey || "both") === "custom";
-  ownerCustomWrap?.classList.toggle("hidden", !isCustom);
-  if (evtOwnerCustom) evtOwnerCustom.value = isCustom ? (payload.ownerLabel || "") : "";
+  const owner = normalizeOwner(payload.owner);
+  if (evtOwner) evtOwner.value = owner;
+  ownerCustomWrap?.classList.toggle("hidden", owner !== "custom");
+  if (evtOwnerCustom) evtOwnerCustom.value = payload.ownerCustom || "";
 
   if (evtType) evtType.value = payload.type || "general";
+
+  if (evtRepeat) evtRepeat.value = payload.repeat || "none";
+  repeatUntilWrap?.classList.toggle("hidden", (payload.repeat || "none") === "none");
+  if (evtRepeatUntil) evtRepeatUntil.value = payload.repeatUntil || "";
+
+  setDateTimeInputs(!!payload.allDay, payload.start, payload.end);
+
+  renderChecklistUI(checklistEl, payload.checklist || []);
   if (evtNotes) evtNotes.value = payload.notes || "";
 
-  const rec = normalizeRecurrence(payload.recurrence);
-  if (evtRepeat) evtRepeat.value = rec.freq || "none";
-  repeatUntilWrap?.classList.toggle("hidden", (evtRepeat?.value || "none") === "none");
-  if (evtRepeatUntil) evtRepeatUntil.value = rec.until ? rec.until : "";
-
-  currentChecklist = Array.isArray(payload.checklist) ? payload.checklist : [];
-  renderChecklist(checklistEl, currentChecklist, { allowRemove: true, onChange: () => {} });
-
   backdrop?.classList.remove("hidden");
-  setTimeout(() => evtTitle?.focus?.(), 50);
+  evtTitle?.focus();
 }
 
-function openEventModalFromRaw(raw) {
-  openEventModal({
-    mode: "edit",
-    id: raw.id,
-    title: raw.title || "",
-    start: new Date(raw.start),
-    end: raw.end ? new Date(raw.end) : null,
-    allDay: !!raw.allDay,
-    ownerKey: ownerKeyOf(raw),
-    ownerLabel: ownerLabelOf(raw),
-    type: raw.type || "general",
-    checklist: Array.isArray(raw.checklist) ? raw.checklist : [],
-    notes: raw.notes || "",
-    recurrence: normalizeRecurrence(raw.recurrence)
-  });
-}
-
-function closeEventModal() {
-  editingEventId = null;
-  currentChecklist = [];
+function closeModal() {
+  editingDocId = null;
+  editingSourceId = null;
+  editingOccurrenceStart = null;
   backdrop?.classList.add("hidden");
 }
 
-async function handleSaveEvent() {
+function setDateTimeInputs(isAllDay, startDate, endDate) {
+  if (!evtStart || !evtEnd) return;
+
+  evtStart.type = isAllDay ? "date" : "datetime-local";
+  evtEnd.type = isAllDay ? "date" : "datetime-local";
+
+  evtStart.value = toInputValue(startDate, isAllDay);
+  evtEnd.value = endDate ? toInputValue(endDate, isAllDay) : "";
+}
+
+function preserveDatesOnAllDayToggle(isAllDayNow) {
+  if (!evtStart || !evtEnd) return;
+
+  const prevStartVal = evtStart.value;
+  const prevEndVal = evtEnd.value;
+
+  const wasAllDay = evtStart.type === "date";
+  const startDate = prevStartVal ? fromInputValue(prevStartVal, wasAllDay) : new Date();
+  const endDate = prevEndVal ? fromInputValue(prevEndVal, wasAllDay) : null;
+
+  setDateTimeInputs(isAllDayNow, startDate, endDate);
+}
+
+async function handleSave() {
   const title = (evtTitle?.value || "").trim();
   if (!title) return;
 
   const allDay = !!evtAllDay?.checked;
-  const { ownerKey, ownerLabel } = ownerFromInputs();
 
-  if (ownerKey === "custom" && (!ownerLabel || ownerLabel === "Other")) {
-    alert("Please type a name for 'Other…'.");
-    evtOwnerCustom?.focus?.();
-    return;
-  }
+  const owner = normalizeOwner(evtOwner?.value || "both");
+  const ownerCustom = owner === "custom" ? (evtOwnerCustom?.value || "").trim() : "";
 
   const type = evtType?.value || "general";
   const notes = (evtNotes?.value || "").trim();
-  const recurrence = buildRecurrenceFromForm();
 
-  const start = fromInputValue(evtStart?.value || "", allDay);
-  const end = (evtEnd?.value || "") ? fromInputValue(evtEnd.value, allDay) : null;
+  const repeat = evtRepeat?.value || "none";
+  const repeatUntil = repeat !== "none" ? (evtRepeatUntil?.value || "") : "";
+
+  const start = fromInputValue(evtStart?.value, allDay);
+  const end = evtEnd?.value ? fromInputValue(evtEnd.value, allDay) : null;
 
   if (end && end.getTime() < start.getTime()) {
     alert("End must be after start.");
     return;
   }
 
-  const checklist = (currentChecklist || [])
-    .map((x) => ({ text: (x.text || "").trim(), done: !!x.done }))
-    .filter((x) => x.text.length);
+  const checklist = readChecklistUI(checklistEl);
 
   const payload = {
     title,
     allDay,
-    ownerKey,
-    ownerLabel,
+    owner,
+    ownerCustom,
     type,
     notes,
     checklist,
-    recurrence,
+    repeat,
+    repeatUntil,
     start: start.toISOString(),
     end: end ? end.toISOString() : null,
     updatedAt: serverTimestamp()
   };
 
-  if (editingEventId) {
-    await updateDoc(doc(db, "events", editingEventId), payload);
+  if (editingDocId) {
+    await updateDoc(doc(db, "events", editingDocId), payload);
   } else {
     await addDoc(eventsCol, { ...payload, createdAt: serverTimestamp() });
   }
 
-  closeEventModal();
+  closeModal();
 }
 
 async function persistMovedEvent(fcEvent) {
@@ -1288,89 +946,314 @@ async function persistMovedEvent(fcEvent) {
   await updateDoc(doc(db, "events", fcEvent.id), patch);
 }
 
-function openEditModalFromEvent(event) {
-  // If this is a recurring instance, we edit the SERIES doc instead
-  const seriesId = event.extendedProps?.seriesId || event.id;
-  const raw = rawEvents.find((x) => x.id === seriesId);
-  if (!raw) return;
-  openEventModalFromRaw(raw);
-}
+// ---------- Task modal ----------
+let taskDocId = null;
 
-/* ---------------- Checklist-focused modal (fast checking) ---------------- */
-function openTaskModal(e) {
-  taskEventId = e.id;
-  taskChecklist = Array.isArray(e.checklist)
-    ? e.checklist.map((x) => ({ text: (x?.text || ""), done: !!x?.done }))
-    : [];
+function openTaskModal(docData, occurrenceStart) {
+  taskDocId = docData.id;
 
-  renderTaskMeta(e);
-  renderTaskChecklist();
+  const when = formatWhenForPanel({
+    start: occurrenceStart || (docData.start ? new Date(docData.start) : null),
+    end: docData.end ? new Date(docData.end) : null,
+    allDay: !!docData.allDay
+  });
+
+  const owner = normalizeOwner(docData.owner);
+  const ownerLabel = owner === "custom" ? (docData.ownerCustom || "Other") : owner;
+
+  if (taskMeta) taskMeta.textContent = `${docData.title || ""} — ${when} — ${ownerLabel}`;
+
+  renderChecklistUI(taskChecklist, Array.isArray(docData.checklist) ? docData.checklist : []);
 
   taskBackdrop?.classList.remove("hidden");
+
+  taskChecklist?.addEventListener("change", taskAutoSaveHandler, { once: true });
+  taskChecklist?.addEventListener("blur", taskAutoSaveHandler, { once: true, capture: true });
+}
+
+async function taskAutoSaveHandler() {
+  if (!taskDocId) return;
+  const checklist = readChecklistUI(taskChecklist);
+  await updateDoc(doc(db, "events", taskDocId), { checklist, updatedAt: serverTimestamp() });
+  taskChecklist?.addEventListener("change", taskAutoSaveHandler, { once: true });
+  taskChecklist?.addEventListener("blur", taskAutoSaveHandler, { once: true, capture: true });
 }
 
 function closeTaskModal() {
-  taskEventId = null;
-  taskChecklist = [];
+  taskDocId = null;
   taskBackdrop?.classList.add("hidden");
 }
 
-function renderTaskMeta(e) {
-  if (!taskMeta) return;
+// ---------- Checklist UI helpers ----------
+function renderChecklistUI(container, items) {
+  if (!container) return;
+  const safe = Array.isArray(items) ? items : [];
+  container.innerHTML = "";
+  for (const it of safe) addChecklistItemUI(container, it, false);
+}
 
-  const prog = checklistProgress(taskChecklist);
-  const progText = prog ? `${prog.done}/${prog.total}` : "";
+function addChecklistItemUI(container, item, focus) {
+  if (!container) return;
+  const wrap = document.createElement("div");
+  wrap.className = "checkitem";
 
-  const safe = (s) => String(s).replace(/[&<>"']/g, (c) => ({
-    "&": "&amp;", "<": "&lt;", ">": "&gt;", "\"": "&quot;", "'": "&#39;"
-  }[c]));
+  const cb = document.createElement("input");
+  cb.type = "checkbox";
+  cb.checked = !!item.done;
 
-  taskMeta.innerHTML = `
-    <div class="line">
-      <div class="title">${safe(e.title || "(untitled)")}</div>
-      <div class="prog">${progText ? safe(progText) : ""}</div>
-    </div>
-    <div class="line">
-      <span class="owner-pill ${safe(ownerKeyOf(e))}">${safe(ownerLabelOf(e))}</span>
-      <div class="tiny muted" style="text-align:right;">${safe(formatWhen(e))}</div>
+  const input = document.createElement("input");
+  input.type = "text";
+  input.value = item.text || "";
+  input.placeholder = "Checklist item…";
+
+  const del = document.createElement("button");
+  del.type = "button";
+  del.className = "btn btn-ghost";
+  del.textContent = "✕";
+  del.style.width = "44px";
+  del.style.padding = "10px 0";
+
+  del.addEventListener("click", () => wrap.remove());
+
+  wrap.appendChild(cb);
+  wrap.appendChild(input);
+  wrap.appendChild(del);
+
+  container.appendChild(wrap);
+
+  if (focus) input.focus();
+}
+
+function readChecklistUI(container) {
+  if (!container) return [];
+  const rows = Array.from(container.querySelectorAll(".checkitem"));
+  return rows.map((row) => {
+    const cb = row.querySelector('input[type="checkbox"]');
+    const input = row.querySelector('input[type="text"]');
+    return { text: (input?.value || "").trim(), done: !!cb?.checked };
+  }).filter(it => it.text.length > 0);
+}
+
+function maybeAutofillChecklist(type) {
+  if (!checklistEl) return;
+  const current = readChecklistUI(checklistEl);
+  if (current.length > 0) return;
+  const preset = CHECKLIST_PRESETS[type] || [];
+  if (preset.length === 0) return;
+  renderChecklistUI(checklistEl, preset.map(t => ({ text: t, done: false })));
+}
+
+// ---------- Normalize docs + expand repeats ----------
+function normalizeDocs(docs) {
+  return docs.map((d) => {
+    const owner = normalizeOwner(d.owner);
+    const start = d.start ? new Date(d.start) : null;
+    const end = d.end ? new Date(d.end) : null;
+
+    return {
+      id: d.id,
+      title: d.title || "",
+      start,
+      end,
+      allDay: !!d.allDay,
+      owner,
+      ownerCustom: d.ownerCustom || "",
+      type: d.type || "general",
+      notes: d.notes || "",
+      checklist: Array.isArray(d.checklist) ? d.checklist : [],
+      repeat: d.repeat || "none",
+      repeatUntil: d.repeatUntil || ""
+    };
+  }).filter(d => d.start instanceof Date && !isNaN(d.start));
+}
+
+function expandRepeats(norm) {
+  const horizonDays = 240;
+  const now = new Date();
+  const horizon = new Date(now.getTime() + horizonDays * 24 * 60 * 60 * 1000);
+
+  const out = [];
+  for (const d of norm) {
+    const style = OWNER_STYLE[d.owner] || OWNER_STYLE.custom;
+
+    const base = {
+      sourceId: d.id,
+      owner: d.owner,
+      ownerCustom: d.ownerCustom,
+      type: d.type,
+      notes: d.notes,
+      checklist: d.checklist
+    };
+
+    const repeat = d.repeat || "none";
+    if (repeat === "none") {
+      out.push(makeFcEvent({
+        id: d.id,
+        title: d.title,
+        start: d.start,
+        end: d.end,
+        allDay: d.allDay,
+        style,
+        extra: { ...base, isRepeatOccurrence: false }
+      }));
+      continue;
+    }
+
+    const until = d.repeatUntil ? new Date(d.repeatUntil + "T23:59:59") : horizon;
+    const stop = until.getTime() < horizon.getTime() ? until : horizon;
+
+    let cur = new Date(d.start);
+    let count = 0;
+
+    while (cur.getTime() <= stop.getTime() && count < 400) {
+      const occStart = new Date(cur);
+      const durMs = d.end ? (new Date(d.end).getTime() - new Date(d.start).getTime()) : 0;
+      const occEndAdj = d.end ? new Date(occStart.getTime() + durMs) : null;
+
+      const occId = `${d.id}__${occStart.toISOString().slice(0,10)}`;
+
+      out.push(makeFcEvent({
+        id: occId,
+        title: d.title,
+        start: occStart,
+        end: occEndAdj,
+        allDay: d.allDay,
+        style,
+        extra: { ...base, isRepeatOccurrence: true }
+      }));
+
+      cur = advanceRepeat(cur, repeat);
+      count++;
+    }
+  }
+
+  return out;
+}
+
+function advanceRepeat(date, repeat) {
+  const d = new Date(date);
+  if (repeat === "daily") d.setDate(d.getDate() + 1);
+  else if (repeat === "weekly") d.setDate(d.getDate() + 7);
+  else if (repeat === "monthly") d.setMonth(d.getMonth() + 1);
+  else if (repeat === "yearly") d.setFullYear(d.getFullYear() + 1);
+  else d.setDate(d.getDate() + 1);
+  return d;
+}
+
+function makeFcEvent({ id, title, start, end, allDay, style, extra }) {
+  return {
+    id,
+    title,
+    start: start.toISOString(),
+    end: end ? end.toISOString() : undefined,
+    allDay: !!allDay,
+    backgroundColor: style.bg,
+    borderColor: style.border,
+    textColor: "#e9ecf1",
+    extendedProps: extra
+  };
+}
+
+// ---------- Panel card rendering ----------
+function renderPanelCardHTML(e) {
+  const p = e.extendedProps || {};
+  const owner = normalizeOwner(p.owner);
+  const ownerLabel = owner === "custom" ? (p.ownerCustom || "Other") : owner;
+
+  const when = formatWhenForPanel({
+    start: new Date(e.start),
+    end: e.end ? new Date(e.end) : null,
+    allDay: !!e.allDay
+  });
+
+  const style = OWNER_STYLE[owner] || OWNER_STYLE.custom;
+  const pillColor = style.border;
+
+  return `
+    <div class="panel-card" data-open-id="${p.sourceId || e.id}" data-occ="${String(e.start)}" style="border-left: 5px solid ${pillColor}; cursor: pointer;">
+      <div style="display:flex; align-items:center; gap:10px; margin-bottom:6px;">
+        <span class="owner-pill">${escapeHtml(ownerLabel)}</span>
+        <strong style="font-size: 16px;">${escapeHtml(e.title || "")}</strong>
+      </div>
+      <div class="tiny muted">${escapeHtml(when)}</div>
     </div>
   `;
 }
 
-function renderTaskChecklist() {
-  const onChange = () => debouncedPersistTaskChecklist();
-  renderChecklist(taskChecklistEl, taskChecklist, { allowRemove: true, onChange });
+function renderPanelCardHTMLWithProgress(e) {
+  const p = e.extendedProps || {};
+  const items = Array.isArray(p.checklist) ? p.checklist : [];
+  const done = items.filter(i => i.done).length;
+  const total = items.length;
+  const pct = total ? Math.round((done / total) * 100) : 0;
 
-  // Keep meta progress fresh
-  if (taskEventId) {
-    const raw = rawEvents.find((x) => x.id === taskEventId);
-    if (raw) renderTaskMeta(raw);
+  return renderPanelCardHTML(e).replace(
+    "</div>\n    </div>",
+    ` <span class="progress-pill">${done}/${total} (${pct}%)</span></div>\n    </div>`
+  );
+}
+
+function formatWhenForPanel({ start, end, allDay }) {
+  if (!start) return "";
+  const optsDate = { weekday: "short", month: "short", day: "numeric" };
+  const optsTime = { hour: "numeric", minute: "2-digit" };
+
+  if (allDay) return `${start.toLocaleDateString(undefined, optsDate)} (all day)`;
+
+  const d = start.toLocaleDateString(undefined, optsDate);
+  const t1 = start.toLocaleTimeString(undefined, optsTime);
+  if (!end) return `${d} • ${t1}`;
+  const t2 = end.toLocaleTimeString(undefined, optsTime);
+  return `${d} • ${t1}–${t2}`;
+}
+
+// ---------- Date helpers ----------
+function toInputValue(dateObj, allDay) {
+  let d = dateObj;
+  if (!(d instanceof Date)) d = new Date(d);
+  if (isNaN(d)) d = new Date();
+
+  const pad = (n) => String(n).padStart(2, "0");
+  const y = d.getFullYear();
+  const m = pad(d.getMonth() + 1);
+  const day = pad(d.getDate());
+
+  if (allDay) return `${y}-${m}-${day}`;
+
+  const hh = pad(d.getHours());
+  const mm = pad(d.getMinutes());
+  return `${y}-${m}-${day}T${hh}:${mm}`;
+}
+
+function fromInputValue(value, allDay) {
+  if (!value) return new Date();
+  if (allDay) {
+    const [y, m, d] = value.split("-").map(Number);
+    return new Date(y, m - 1, d, 0, 0, 0, 0);
   }
+  return new Date(value);
 }
 
-function debouncedPersistTaskChecklist() {
-  if (!taskEventId) return;
-  if (taskPersistTimer) clearTimeout(taskPersistTimer);
-
-  taskPersistTimer = setTimeout(async () => {
-    try {
-      const cleaned = (taskChecklist || [])
-        .map((x) => ({ text: (x.text || "").trim(), done: !!x.done }))
-        .filter((x) => x.text.length);
-
-      await updateDoc(doc(db, "events", taskEventId), {
-        checklist: cleaned,
-        updatedAt: serverTimestamp()
-      });
-    } catch (err) {
-      console.error(err);
-    }
-  }, 450);
+function roundToNextHour(d) {
+  const x = new Date(d);
+  x.setMinutes(0, 0, 0);
+  x.setHours(x.getHours() + 1);
+  return x;
 }
 
-/* ---------------- Boot Firestore + calendar ---------------- */
+// ---------- Escape ----------
+function escapeHtml(s) {
+  return String(s)
+    .replaceAll("&", "&amp;")
+    .replaceAll("<", "&lt;")
+    .replaceAll(">", "&gt;")
+    .replaceAll('"', "&quot;")
+    .replaceAll("'", "&#039;");
+}
+
+// ---------- Start immediately ----------
 initApp().catch((err) => {
   console.error(err);
-  statusEl && (statusEl.textContent = "Sync: error");
+  if (statusEl) statusEl.textContent = "Sync: error";
   alert("Firebase failed to initialize. Check firebaseConfig + Firestore rules.");
 });
