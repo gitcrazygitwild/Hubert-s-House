@@ -427,3 +427,16 @@ function fromInputValue(value, allDay) {
   // datetime-local parses as local time when using new Date("YYYY-MM-DDTHH:mm")
   return new Date(value);
 }
+
+// Start Firebase + calendar immediately on page load
+initApp().catch((err) => {
+  console.error(err);
+  alert("Firebase failed to initialize.");
+});
+
+const logoutBtn = document.getElementById("logoutBtn");
+
+logoutBtn.addEventListener("click", () => {
+  lock();
+});
+
