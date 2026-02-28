@@ -5,16 +5,9 @@
   <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
   <title>Mack Calendar</title>
 
-  <!-- FullCalendar -->
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.11/index.global.min.css">
-
-  <!-- IMPORTANT: cache-bust -->
-  <link rel="stylesheet" href="./styles.css?v=20260227_final" />
+  <link rel="stylesheet" href="./styles.css?v=20260227_checklist" />
 </head>
-
-<link rel="stylesheet" href="/hubertshouse/styles.css?v=1">
-<script type="module" src="/hubertshouse/app.js?v=1"></script>
-
 <body>
 
   <!-- Gate overlay (blocks everything until unlocked) -->
@@ -49,8 +42,8 @@
         <span id="status" class="pill">Sync: connecting…</span>
       </div>
       <div class="actions">
-        <button id="todayBtn" class="btn btn-ghost">Today</button>
-        <button id="logoutBtn" class="btn btn-ghost">Lock</button>
+        <button id="todayBtn" class="btn btn-ghost" type="button">Today</button>
+        <button id="logoutBtn" class="btn btn-ghost" type="button">Lock</button>
       </div>
     </header>
 
@@ -58,7 +51,7 @@
       <div id="calendar"></div>
     </div>
 
-    <button id="fab" class="fab" aria-label="Add event">＋</button>
+    <button id="fab" class="fab" type="button" aria-label="Add event">＋</button>
   </div>
 
   <!-- Event modal -->
@@ -91,14 +84,34 @@
           <span>All day</span>
         </label>
 
-        <label class="field">
-          <span>Who</span>
-          <select id="evtOwner">
-            <option value="his">His</option>
-            <option value="hers">Hers</option>
-            <option value="both">Both</option>
-          </select>
-        </label>
+        <div class="row">
+          <label class="field">
+            <span>Who</span>
+            <select id="evtOwner">
+              <option value="his">His</option>
+              <option value="hers">Hers</option>
+              <option value="both">Both</option>
+            </select>
+          </label>
+
+          <label class="field">
+            <span>Type</span>
+            <select id="evtType">
+              <option value="general">General</option>
+              <option value="wedding">Wedding</option>
+              <option value="trip">Trip</option>
+              <option value="appointment">Appointment</option>
+              <option value="party">Party</option>
+            </select>
+          </label>
+        </div>
+
+        <div class="field">
+          <span>Checklist</span>
+          <div id="checklist" class="checklist"></div>
+          <button id="addCheckItem" type="button" class="btn btn-ghost" style="margin-top:8px;">+ Add item</button>
+          <div class="tiny muted" style="margin-top:8px;">Tip: choose a Type to get a preset checklist.</div>
+        </div>
 
         <label class="field">
           <span>Notes</span>
@@ -116,8 +129,6 @@
   </div>
 
   <script src="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.11/index.global.min.js"></script>
-
-  <!-- IMPORTANT: must be module (Firebase imports) + cache-bust -->
-  <script type="module" src="./app.js?v=20260227_final"></script>
+  <script type="module" src="./app.js?v=20260227_checklist"></script>
 </body>
 </html>
