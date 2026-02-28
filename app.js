@@ -1,6 +1,5 @@
-// Mack Calendar — full features + checklist presets + checklist progress
-// Gate: case-insensitive password + remember device (localStorage)
-// Owners: hanry / Karena / Both / custom name
+// Hubert’s House — shared calendar (Firebase sync) + gate + mobile + checklist presets
+// Extras: swipe month navigation + month/year picker + owner filter chips
 
 import { initializeApp } from "https://www.gstatic.com/firebasejs/12.9.0/firebase-app.js";
 import {
@@ -27,8 +26,8 @@ const firebaseConfig = {
 };
 
 // ---------- Gate ----------
-const PASSWORD = "mack";
-const LS_UNLOCK = "mack_calendar_unlocked";
+const PASSWORD = "mack"; // case-insensitive
+const LS_UNLOCK = "huberts_house_unlocked";
 
 const gate = document.getElementById("gate");
 const gateForm = document.getElementById("gateForm");
@@ -69,9 +68,61 @@ document.getElementById("logoutBtn")?.addEventListener("click", () => {
   showGate();
 });
 
-// ---------- Top buttons ----------
+// ---------- Top buttons + jump ----------
 const todayBtn = document.getElementById("todayBtn");
 const statusEl = document.getElementById("status");
+const jumpMonth = document.getElementById("jumpMonth");
+const jumpGo = document.getElementById("jumpGo");
+
+// ---------- Filters (dealer’s choice enhancement) ----------
+const filterChips = Array.from(document.querySelectorAll(".chip[data-owner]"));
+const filtersAllBtn = document.getElementById("filtersAll");
+const filtersNoneBtn = document.getElementById("filtersNone");
+const activeOwners = new Set(["hanry", "karena", "both", "custom"]);
+
+function setChipActive(owner, isActive) {
+  const chip = filterChips.find((c) => c.dataset.owner === owner);
+  if (!chip) return;
+  chip.classList.toggle("active", isActive);
+}
+
+function applyFiltersToCalendar() {
+  if (!calendar) return;
+
+  // Hide/show by ownerKey using FullCalendar’s API
+  calendar.getEvents().forEach((ev) => {
+    const ok = activeOwners.has(ev.extendedProps?.ownerKey || "both");
+    ev.setProp("display", ok ? "auto" : "none");
+  });
+}
+
+filterChips.forEach((chip) => {
+  chip.addEventListener("click", () => {
+    const owner = chip.dataset.owner;
+    const isActive = chip.classList.contains("active");
+
+    if (isActive) activeOwners.delete(owner);
+    else activeOwners.add(owner);
+
+    chip.classList.toggle("active", !isActive);
+    applyFiltersToCalendar();
+  });
+});
+
+filtersAllBtn?.addEventListener("click", () => {
+  ["hanry", "karena", "both", "custom"].forEach((o) => {
+    activeOwners.add(o);
+    setChipActive(o, true);
+  });
+  applyFiltersToCalendar();
+});
+filtersNoneBtn?.addEventListener("click", () => {
+  ["hanry", "karena", "both", "custom"].forEach((o) => {
+    activeOwners.delete(o);
+    setChipActive(o, false);
+  });
+  applyFiltersToCalendar();
+});
 
 // ---------- Modal elements ----------
 const backdrop = document.getElementById("modalBackdrop");
@@ -102,11 +153,19 @@ backdrop?.classList.add("hidden");
 
 // ---------- Owner colors ----------
 const OWNER_STYLE = {
-  hanry: { backgroundColor: "rgba(122,162,255,0.35)", borderColor: "rgba(122,162,255,0.85)", textColor: "#e9ecf1" },
-  karena:{ backgroundColor: "rgba(255,107,107,0.28)", borderColor: "rgba(255,107,107,0.85)", textColor: "#e9ecf1" },
-  both:  { backgroundColor: "rgba(116,217,155,0.28)", borderColor: "rgba(116,217,155,0.85)", textColor: "#e9ecf1" },
-  custom:{ backgroundColor: "rgba(186,140,255,0.25)", borderColor: "rgba(186,140,255,0.75)", textColor: "#e9ecf1" }
+  hanry:  { backgroundColor: "rgba(122,162,255,0.35)", borderColor: "rgba(122,162,255,0.85)", textColor: "#e9ecf1" },
+  karena: { backgroundColor: "rgba(255,107,107,0.28)", borderColor: "rgba(255,107,107,0.85)", textColor: "#e9ecf1" },
+  both:   { backgroundColor: "rgba(116,217,155,0.28)", borderColor: "rgba(116,217,155,0.85)", textColor: "#e9ecf1" },
+  custom: { backgroundColor: "rgba(186,140,255,0.25)", borderColor: "rgba(186,140,255,0.75)", textColor: "#e9ecf1" }
 };
+
+function mapLegacyOwner(owner) {
+  if (!owner) return null;
+  if (owner === "his") return "hanry";
+  if (owner === "hers") return "karena";
+  if (owner === "both") return "both";
+  return null;
+}
 
 // ---------- Checklist presets ----------
 const CHECKLIST_PRESETS = {
@@ -169,6 +228,9 @@ async function initApp() {
     calendar.removeAllEvents();
     for (const e of events) calendar.addEvent(normalizeEventForCalendar(e));
 
+    // apply filters after load
+    applyFiltersToCalendar();
+
     statusEl.textContent = "Sync: live";
   }, (err) => {
     console.error(err);
@@ -222,6 +284,26 @@ function initCalendarUI() {
   calendar.render();
 
   todayBtn?.addEventListener("click", () => calendar.today());
+
+  // Jump month/year
+  jumpGo?.addEventListener("click", () => {
+    const v = jumpMonth?.value; // "YYYY-MM"
+    if (!v) return;
+    const [y, m] = v.split("-").map(Number);
+    if (!y || !m) return;
+    calendar.gotoDate(new Date(y, m - 1, 1));
+  });
+
+  // Keep month picker synced with calendar view
+  calendar.on("datesSet", (info) => {
+    const d = info.start; // start of visible range
+    const y = d.getFullYear();
+    const m = String(d.getMonth() + 1).padStart(2, "0");
+    if (jumpMonth) jumpMonth.value = `${y}-${m}`;
+  });
+
+  // Swipe navigation (left/right)
+  attachSwipeNavigation(calendarEl);
 
   fab?.addEventListener("click", () => {
     const start = new Date();
@@ -292,6 +374,41 @@ function initCalendarUI() {
   });
 }
 
+function attachSwipeNavigation(targetEl) {
+  let startX = 0;
+  let startY = 0;
+  let tracking = false;
+
+  // threshold tuned for iPhone
+  const MIN_X = 45;
+  const MAX_Y = 60;
+
+  targetEl.addEventListener("touchstart", (e) => {
+    if (!e.touches || e.touches.length !== 1) return;
+    tracking = true;
+    startX = e.touches[0].clientX;
+    startY = e.touches[0].clientY;
+  }, { passive: true });
+
+  targetEl.addEventListener("touchend", (e) => {
+    if (!tracking) return;
+    tracking = false;
+    if (!e.changedTouches || e.changedTouches.length !== 1) return;
+
+    const endX = e.changedTouches[0].clientX;
+    const endY = e.changedTouches[0].clientY;
+
+    const dx = endX - startX;
+    const dy = endY - startY;
+
+    // mostly horizontal swipe
+    if (Math.abs(dx) >= MIN_X && Math.abs(dy) <= MAX_Y) {
+      if (dx < 0) calendar.next();
+      else calendar.prev();
+    }
+  }, { passive: true });
+}
+
 function openCreateModalFromSelection(info) {
   const start = info.start;
   let end = info.end || null;
@@ -347,18 +464,17 @@ function openModal(payload) {
   evtStart.value = toInputValue(payload.start, evtAllDay.checked);
   evtEnd.value = payload.end ? toInputValue(payload.end, evtAllDay.checked) : "";
 
-  // Owner handling
+  // Owner
   evtOwner.value = payload.ownerKey || "both";
   const isCustom = evtOwner.value === "custom";
   ownerCustomWrap?.classList.toggle("hidden", !isCustom);
-  evtOwnerCustom.value = isCustom ? (payload.ownerLabel || "") : "";
+  if (evtOwnerCustom) evtOwnerCustom.value = isCustom ? (payload.ownerLabel || "") : "";
 
   evtType.value = payload.type || "general";
   evtNotes.value = payload.notes || "";
 
   currentChecklist = Array.isArray(payload.checklist) ? payload.checklist : [];
 
-  // If creating and checklist empty and type has preset, prefill
   if (!isEdit && currentChecklist.length === 0 && evtType.value !== "general") {
     setChecklistPreset(evtType.value);
   } else {
@@ -447,7 +563,7 @@ function ownerFromInputs() {
   const ownerKey = evtOwner.value || "both";
 
   if (ownerKey === "custom") {
-    const label = (evtOwnerCustom.value || "").trim();
+    const label = (evtOwnerCustom?.value || "").trim();
     return { ownerKey: "custom", ownerLabel: label || "Other" };
   }
 
@@ -463,10 +579,9 @@ async function handleSave() {
   const allDay = evtAllDay.checked;
   const { ownerKey, ownerLabel } = ownerFromInputs();
 
-  // If custom selected, require a real name (so fill-in isn't useless)
   if (ownerKey === "custom" && (!ownerLabel || ownerLabel === "Other")) {
     alert("Please type a name for 'Other…'.");
-    evtOwnerCustom.focus();
+    evtOwnerCustom?.focus?.();
     return;
   }
 
@@ -527,7 +642,7 @@ function checklistProgress(checklist) {
 }
 
 function normalizeEventForCalendar(e) {
-  const ownerKey = e.ownerKey || "both";
+  const ownerKey = e.ownerKey || mapLegacyOwner(e.owner) || "both";
   const style = OWNER_STYLE[ownerKey] || OWNER_STYLE.both;
 
   const checklist = Array.isArray(e.checklist) ? e.checklist : [];
@@ -547,7 +662,7 @@ function normalizeEventForCalendar(e) {
     textColor: style.textColor,
     extendedProps: {
       ownerKey,
-      ownerLabel: e.ownerLabel || (ownerKey === "karena" ? "Karena" : ownerKey === "hanry" ? "hanry" : "Both"),
+      ownerLabel: e.ownerLabel || (ownerKey === "karena" ? "Karena" : ownerKey === "hanry" ? "hanry" : ownerKey === "custom" ? "Other" : "Both"),
       type: e.type || "general",
       notes: e.notes || "",
       checklist
