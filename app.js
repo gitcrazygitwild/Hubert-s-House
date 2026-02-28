@@ -1,5 +1,5 @@
 // Mack Calendar — full features + checklist presets + checklist progress
-// Password required EVERY visit (no remembering; not real security)
+// Gate: case-insensitive password + remember device option (localStorage)
 
 import { initializeApp } from "https://www.gstatic.com/firebasejs/12.9.0/firebase-app.js";
 import {
@@ -26,20 +26,40 @@ const firebaseConfig = {
 };
 
 // ---------- Gate ----------
-const PASSWORD = "Mack";
+const PASSWORD = "mack"; // store lowercase
+const LS_UNLOCK = "mack_calendar_unlocked";
+
 const gate = document.getElementById("gate");
 const gateForm = document.getElementById("gateForm");
 const gateInput = document.getElementById("gateInput");
+const rememberDevice = document.getElementById("rememberDevice");
 
-// gate starts visible by default
-gate?.classList.remove("hidden");
+function showGate() {
+  gate?.classList.remove("hidden");
+  // small delay helps iOS focus after overlay shows
+  setTimeout(() => gateInput?.focus?.(), 50);
+}
+
+function hideGate() {
+  gate?.classList.add("hidden");
+}
+
+function isRemembered() {
+  return localStorage.getItem(LS_UNLOCK) === "1";
+}
+
+// On load: if remembered, skip gate
+if (isRemembered()) hideGate();
+else showGate();
 
 gateForm?.addEventListener("submit", (e) => {
   e.preventDefault();
-  const pw = (gateInput.value || "").trim();
+  const pw = (gateInput.value || "").trim().toLowerCase();
   if (pw === PASSWORD) {
-    gate.classList.add("hidden");
+    if (rememberDevice?.checked) localStorage.setItem(LS_UNLOCK, "1");
+    else localStorage.removeItem(LS_UNLOCK);
     gateInput.value = "";
+    hideGate();
   } else {
     gateInput.value = "";
     gateInput.focus();
@@ -48,8 +68,8 @@ gateForm?.addEventListener("submit", (e) => {
 });
 
 document.getElementById("logoutBtn")?.addEventListener("click", () => {
-  gate.classList.remove("hidden");
-  gateInput?.focus?.();
+  localStorage.removeItem(LS_UNLOCK);
+  showGate();
 });
 
 // ---------- Top buttons ----------
@@ -203,7 +223,6 @@ function initCalendarUI() {
   // All-day toggle preserves values
   evtAllDay?.addEventListener("change", () => {
     const allDay = evtAllDay.checked;
-
     const prevStart = evtStart.value;
     const prevEnd = evtEnd.value;
 
@@ -214,11 +233,17 @@ function initCalendarUI() {
     evtEnd.value = prevEnd ? convertInputValue(prevEnd, allDay) : "";
   });
 
-  // If user selects a type and checklist is empty, auto-fill preset
+  // Type selection: apply preset (confirm if overwriting existing checklist)
   evtType?.addEventListener("change", () => {
-    if (!currentChecklist.length) setChecklistPreset(evtType.value);
+    const nextType = evtType.value;
+    if (currentChecklist.length > 0) {
+      const ok = confirm("Replace your current checklist with the preset for this type?");
+      if (!ok) return;
+    }
+    setChecklistPreset(nextType);
   });
 
+  // Add checklist item (manual)
   addCheckItemBtn?.addEventListener("click", () => {
     currentChecklist.push({ text: "", done: false });
     renderChecklist();
@@ -278,7 +303,6 @@ function openModal(payload) {
   modalTitle.textContent = isEdit ? "Edit event" : "New event";
   deleteBtn.classList.toggle("hidden", !isEdit);
 
-  // Default end +1h for timed create with no end
   if (!isEdit && !payload.allDay && !payload.end) {
     payload.end = new Date(payload.start.getTime() + 60 * 60 * 1000);
   }
@@ -296,11 +320,12 @@ function openModal(payload) {
   evtNotes.value = payload.notes || "";
 
   currentChecklist = Array.isArray(payload.checklist) ? payload.checklist : [];
-  renderChecklist();
 
-  // If creating and empty checklist and type has preset, prefill
-  if (!isEdit && !currentChecklist.length && evtType.value !== "general") {
+  // If creating and checklist empty and type has preset, prefill
+  if (!isEdit && currentChecklist.length === 0 && evtType.value !== "general") {
     setChecklistPreset(evtType.value);
+  } else {
+    renderChecklist();
   }
 
   backdrop.classList.remove("hidden");
@@ -333,6 +358,9 @@ function setChecklistPreset(type) {
 }
 
 function renderChecklist() {
+  // Null-safe: if HTML didn't update for some reason, don't crash the whole app
+  if (!checklistEl) return;
+
   checklistEl.innerHTML = "";
 
   if (!currentChecklist.length) {
@@ -463,7 +491,7 @@ function normalizeEventForCalendar(e) {
       notes: e.notes || "",
       checklist
     },
-    // keep base title for editing so we don't double-append progress
+    // Keep base title for editing so we don't double-append progress
     titleBase
   };
 }
