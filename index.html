@@ -181,5 +181,47 @@
 
   <script src="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.11/index.global.min.js"></script>
   <script type="module" src="./app.js?v=20260227_huberts_house_v2"></script>
+<!-- Jump-to-month modal -->
+<div id="jumpBackdrop" class="modal-backdrop hidden" role="dialog" aria-modal="true">
+  <div class="modal">
+    <div class="modal-header">
+      <div class="modal-title">Jump to month</div>
+      <button id="jumpClose" class="btn btn-icon" type="button" aria-label="Close">✕</button>
+    </div>
+
+    <div class="modal-body">
+      <div class="row">
+        <label class="field">
+          <span>Month</span>
+          <select id="jumpMonthSelect">
+            <option value="0">January</option>
+            <option value="1">February</option>
+            <option value="2">March</option>
+            <option value="3">April</option>
+            <option value="4">May</option>
+            <option value="5">June</option>
+            <option value="6">July</option>
+            <option value="7">August</option>
+            <option value="8">September</option>
+            <option value="9">October</option>
+            <option value="10">November</option>
+            <option value="11">December</option>
+          </select>
+        </label>
+
+        <label class="field">
+          <span>Year</span>
+          <input id="jumpYearInput" type="number" min="2000" max="2100" />
+        </label>
+      </div>
+
+      <div class="modal-actions">
+        <div class="spacer"></div>
+        <button id="jumpCancel" class="btn btn-ghost" type="button">Cancel</button>
+        <button id="jumpGoBtn" class="btn btn-primary" type="button">Go</button>
+      </div>
+    </div>
+  </div>
+</div>
 </body>
 </html>
