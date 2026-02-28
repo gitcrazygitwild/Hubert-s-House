@@ -1,4 +1,4 @@
-// Mack Calendar — full features
+// Mack Calendar — full features + checklist presets + checklist progress
 // Password required EVERY visit (no remembering; not real security)
 
 import { initializeApp } from "https://www.gstatic.com/firebasejs/12.9.0/firebase-app.js";
@@ -47,8 +47,7 @@ gateForm?.addEventListener("submit", (e) => {
   }
 });
 
-const logoutBtn = document.getElementById("logoutBtn");
-logoutBtn?.addEventListener("click", () => {
+document.getElementById("logoutBtn")?.addEventListener("click", () => {
   gate.classList.remove("hidden");
   gateInput?.focus?.();
 });
@@ -70,7 +69,11 @@ const evtStart = document.getElementById("evtStart");
 const evtEnd = document.getElementById("evtEnd");
 const evtAllDay = document.getElementById("evtAllDay");
 const evtOwner = document.getElementById("evtOwner");
+const evtType = document.getElementById("evtType");
 const evtNotes = document.getElementById("evtNotes");
+
+const checklistEl = document.getElementById("checklist");
+const addCheckItemBtn = document.getElementById("addCheckItem");
 
 const fab = document.getElementById("fab");
 
@@ -82,6 +85,39 @@ const OWNER_STYLE = {
   hers: { backgroundColor: "rgba(255,107,107,0.28)", borderColor: "rgba(255,107,107,0.85)", textColor: "#e9ecf1" },
   both: { backgroundColor: "rgba(116,217,155,0.28)", borderColor: "rgba(116,217,155,0.85)", textColor: "#e9ecf1" }
 };
+
+// ---------- Checklist presets ----------
+const CHECKLIST_PRESETS = {
+  wedding: [
+    "RSVP",
+    "Book travel",
+    "Book hotel",
+    "Buy gift",
+    "Outfit",
+    "Transportation plan"
+  ],
+  trip: [
+    "Book travel",
+    "Book lodging",
+    "Packing list",
+    "House/pet plan",
+    "Itinerary highlights"
+  ],
+  appointment: [
+    "Add questions",
+    "Bring documents/ID",
+    "Arrive 10 min early"
+  ],
+  party: [
+    "Confirm time/location",
+    "Bring something (food/drink)",
+    "Gift (if needed)",
+    "Transportation plan"
+  ],
+  general: []
+};
+
+let currentChecklist = []; // [{text, done}]
 
 // ---------- App state ----------
 let db, eventsCol, calendar;
@@ -139,7 +175,7 @@ function initCalendarUI() {
       const start = new Date(info.date);
       start.setHours(9, 0, 0, 0);
       const end = new Date(start.getTime() + 60 * 60 * 1000);
-      openModal({ mode: "create", title: "", start, end, allDay: false, owner: "both", notes: "" });
+      openModal({ mode: "create", title: "", start, end, allDay: false, owner: "both", type: "general", checklist: [], notes: "" });
     },
 
     select: (info) => openCreateModalFromSelection(info),
@@ -157,14 +193,14 @@ function initCalendarUI() {
   fab?.addEventListener("click", () => {
     const start = new Date();
     const end = new Date(start.getTime() + 60 * 60 * 1000);
-    openModal({ mode: "create", title: "", start, end, allDay: false, owner: "both", notes: "" });
+    openModal({ mode: "create", title: "", start, end, allDay: false, owner: "both", type: "general", checklist: [], notes: "" });
   });
 
   modalClose?.addEventListener("click", closeModal);
   cancelBtn?.addEventListener("click", closeModal);
   backdrop?.addEventListener("click", (e) => { if (e.target === backdrop) closeModal(); });
 
-  // IMPORTANT FIX: all-day toggle preserves date/time values
+  // All-day toggle preserves values
   evtAllDay?.addEventListener("change", () => {
     const allDay = evtAllDay.checked;
 
@@ -176,6 +212,16 @@ function initCalendarUI() {
 
     evtStart.value = convertInputValue(prevStart, allDay);
     evtEnd.value = prevEnd ? convertInputValue(prevEnd, allDay) : "";
+  });
+
+  // If user selects a type and checklist is empty, auto-fill preset
+  evtType?.addEventListener("change", () => {
+    if (!currentChecklist.length) setChecklistPreset(evtType.value);
+  });
+
+  addCheckItemBtn?.addEventListener("click", () => {
+    currentChecklist.push({ text: "", done: false });
+    renderChecklist();
   });
 
   eventForm?.addEventListener("submit", async (e) => {
@@ -203,6 +249,8 @@ function openCreateModalFromSelection(info) {
     end,
     allDay: info.allDay,
     owner: "both",
+    type: "general",
+    checklist: [],
     notes: ""
   });
 }
@@ -212,11 +260,13 @@ function openEditModalFromEvent(event) {
   openModal({
     mode: "edit",
     id: event.id,
-    title: event.title || "",
+    title: event.titleBase || event.title || "",
     start: event.start,
     end: event.end || null,
     allDay: event.allDay,
     owner: data.owner || "both",
+    type: data.type || "general",
+    checklist: Array.isArray(data.checklist) ? data.checklist : [],
     notes: data.notes || ""
   });
 }
@@ -228,21 +278,30 @@ function openModal(payload) {
   modalTitle.textContent = isEdit ? "Edit event" : "New event";
   deleteBtn.classList.toggle("hidden", !isEdit);
 
-  // If creating a timed event without end, default +1h
+  // Default end +1h for timed create with no end
   if (!isEdit && !payload.allDay && !payload.end) {
     payload.end = new Date(payload.start.getTime() + 60 * 60 * 1000);
   }
 
   evtTitle.value = payload.title ?? "";
-  evtAllDay.checked = !!payload.allDay;
 
+  evtAllDay.checked = !!payload.allDay;
   setDateTimeInputMode(evtAllDay.checked);
 
   evtStart.value = toInputValue(payload.start, evtAllDay.checked);
   evtEnd.value = payload.end ? toInputValue(payload.end, evtAllDay.checked) : "";
 
   evtOwner.value = payload.owner || "both";
+  evtType.value = payload.type || "general";
   evtNotes.value = payload.notes || "";
+
+  currentChecklist = Array.isArray(payload.checklist) ? payload.checklist : [];
+  renderChecklist();
+
+  // If creating and empty checklist and type has preset, prefill
+  if (!isEdit && !currentChecklist.length && evtType.value !== "general") {
+    setChecklistPreset(evtType.value);
+  }
 
   backdrop.classList.remove("hidden");
   evtTitle.focus();
@@ -250,6 +309,7 @@ function openModal(payload) {
 
 function closeModal() {
   editingEventId = null;
+  currentChecklist = [];
   backdrop.classList.add("hidden");
 }
 
@@ -265,12 +325,67 @@ function convertInputValue(value, allDay) {
   return value;
 }
 
+// ---------- Checklist UI ----------
+function setChecklistPreset(type) {
+  const preset = CHECKLIST_PRESETS[type] || [];
+  currentChecklist = preset.map((t) => ({ text: t, done: false }));
+  renderChecklist();
+}
+
+function renderChecklist() {
+  checklistEl.innerHTML = "";
+
+  if (!currentChecklist.length) {
+    const empty = document.createElement("div");
+    empty.className = "tiny muted";
+    empty.textContent = "No items yet.";
+    checklistEl.appendChild(empty);
+    return;
+  }
+
+  currentChecklist.forEach((item, idx) => {
+    const row = document.createElement("div");
+    row.className = "check-item";
+
+    const cb = document.createElement("input");
+    cb.type = "checkbox";
+    cb.checked = !!item.done;
+    cb.addEventListener("change", () => {
+      currentChecklist[idx].done = cb.checked;
+    });
+
+    const text = document.createElement("input");
+    text.type = "text";
+    text.value = item.text || "";
+    text.placeholder = "Checklist item…";
+    text.addEventListener("input", () => {
+      currentChecklist[idx].text = text.value;
+    });
+
+    const remove = document.createElement("button");
+    remove.type = "button";
+    remove.className = "btn btn-ghost remove";
+    remove.textContent = "✕";
+    remove.addEventListener("click", () => {
+      currentChecklist.splice(idx, 1);
+      renderChecklist();
+    });
+
+    row.appendChild(cb);
+    row.appendChild(text);
+    row.appendChild(remove);
+    checklistEl.appendChild(row);
+  });
+}
+
+// ---------- Save / Update ----------
 async function handleSave() {
   const title = evtTitle.value.trim();
   if (!title) return;
 
   const allDay = evtAllDay.checked;
   const owner = evtOwner.value;
+  const type = evtType.value;
   const notes = evtNotes.value.trim();
 
   const start = fromInputValue(evtStart.value, allDay);
@@ -281,10 +396,16 @@ async function handleSave() {
     return;
   }
 
+  const checklist = (currentChecklist || [])
+    .map((x) => ({ text: (x.text || "").trim(), done: !!x.done }))
+    .filter((x) => x.text.length);
+
   const payload = {
     title,
     allDay,
     owner,
+    type,
+    checklist,
     notes,
     start: start.toISOString(),
     end: end ? end.toISOString() : null,
@@ -310,21 +431,44 @@ async function persistMovedEvent(fcEvent) {
   await updateDoc(doc(db, "events", fcEvent.id), patch);
 }
 
+// ---------- Checklist progress + event normalization ----------
+function checklistProgress(checklist) {
+  if (!Array.isArray(checklist) || checklist.length === 0) return null;
+  const total = checklist.length;
+  let done = 0;
+  for (const item of checklist) if (item && item.done) done++;
+  return { done, total };
+}
+
 function normalizeEventForCalendar(e) {
   const style = OWNER_STYLE[e.owner] || OWNER_STYLE.both;
+  const checklist = Array.isArray(e.checklist) ? e.checklist : [];
+  const prog = checklistProgress(checklist);
+
+  const titleBase = e.title || "";
+  const titleWithProgress = prog ? `${titleBase} (${prog.done}/${prog.total})` : titleBase;
+
   return {
     id: e.id,
-    title: e.title,
+    title: titleWithProgress,
     start: e.start,
     end: e.end || undefined,
     allDay: !!e.allDay,
     backgroundColor: style.backgroundColor,
     borderColor: style.borderColor,
     textColor: style.textColor,
-    extendedProps: { owner: e.owner || "both", notes: e.notes || "" }
+    extendedProps: {
+      owner: e.owner || "both",
+      type: e.type || "general",
+      notes: e.notes || "",
+      checklist
+    },
+    // keep base title for editing so we don't double-append progress
+    titleBase
   };
 }
 
+// ---------- Date helpers ----------
 function toInputValue(dateObj, allDay) {
   if (!(dateObj instanceof Date)) dateObj = new Date(dateObj);
   const pad = (n) => String(n).padStart(2, "0");
