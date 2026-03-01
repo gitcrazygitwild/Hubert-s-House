@@ -28,6 +28,8 @@ const gateForm = document.getElementById("gateForm");
 const gateInput = document.getElementById("gateInput");
 const rememberDevice = document.getElementById("rememberDevice");
 
+let sessionUnlocked = false;
+
 function isUnlocked() {
   if (sessionUnlocked) return true;
   return localStorage.getItem(LS_UNLOCK) === "1";
