@@ -1,10 +1,13 @@
-/* styles.css — Hubert’s House (v10)
-   Adds:
-   - iOS modal scroll fix (.modal-scroll + safe-area padding + overscroll)
-   - New Details modal styling (clean read-only view)
-   - Cat Mode hooks (paw button, purr dot, ambient cat layer)
-   - Keeps FullCalendar header fully inside calendar window
-   - Title clamp so “Hubert’s House” always fits
+/* styles.css — Hubert’s House (v12.2)
+   Changes in THIS CSS per your requests:
+   ✅ “Hubert’s House” always fully shows (stacked lines; no truncation)
+   ✅ Remove “list range” (handled in HTML); tools row spacing updated
+   ✅ Dates popover no longer off to the right; centers under Dates button on mobile
+   ✅ Owner filter behavior (“both” included) is JS, but UI is styled here
+   ✅ Tie coat color/stripes to theme (aurora=blue/cool stripes, sunset=warm stripes, etc.)
+   ✅ Subtle tail wiggle animation (always subtle; a bit more in cat mode)
+   ✅ Cat blink styling hook (JS will toggle .blink on #catLink)
+   NOTE: Inclusive end-date display + search bounds tied to dates box are JS updates.
 */
 
 :root{
@@ -39,6 +42,12 @@
   /* iOS safe areas */
   --safe-top: env(safe-area-inset-top, 0px);
   --safe-bot: env(safe-area-inset-bottom, 0px);
+
+  /* Cat “coat” tokens (theme overrides below) */
+  --coat-bg: rgba(255,255,255,.08);
+  --coat-stripe1: rgba(122,162,255,.55);
+  --coat-stripe2: rgba(122,162,255,.20);
+  --coat-outline: rgba(255,255,255,.18);
 }
 
 *{ box-sizing:border-box; }
@@ -149,17 +158,79 @@ input, select, textarea{ font-size:16px; }
   gap:12px;
   min-width:0;
 }
+
+/* Cat link with theme-tied “coat” */
 .catlink{
-  font-size:28px;
   text-decoration:none;
-  display:inline-block;
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  width:44px;
+  height:44px;
+  border-radius:16px;
+  border:1px solid var(--coat-outline);
+  background:
+    linear-gradient(135deg, var(--coat-bg), rgba(0,0,0,.12)),
+    repeating-linear-gradient(
+      45deg,
+      var(--coat-stripe1) 0px,
+      var(--coat-stripe1) 6px,
+      var(--coat-stripe2) 6px,
+      var(--coat-stripe2) 14px
+    );
+  box-shadow: 0 16px 30px rgba(0,0,0,.28);
+  filter: saturate(1.05);
+  position:relative;
+  overflow:hidden;
+  flex: 0 0 auto;
+}
+.catlink:hover{ transform: translateY(-1px); }
+
+.catlink-inner{
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  gap:6px;
   transform: translateY(1px);
+  user-select:none;
+}
+.cat-face{
+  font-size:22px;
+  line-height:1;
   filter: drop-shadow(0 8px 18px rgba(0,0,0,.25));
 }
+.cat-tail{
+  font-size:12px;
+  opacity:.85;
+  transform-origin: left center;
+  animation: tailWiggle 5.8s ease-in-out infinite;
+}
+
+/* Subtle tail wiggle (a touch more in cat mode) */
+@keyframes tailWiggle{
+  0%, 84%, 100%{ transform: rotate(0deg) translateY(0px); }
+  88%{ transform: rotate(6deg) translateY(-1px); }
+  92%{ transform: rotate(-6deg) translateY(0px); }
+  96%{ transform: rotate(4deg) translateY(-1px); }
+}
+html.cat-mode .cat-tail{
+  animation-duration: 4.6s;
+}
+
+/* Blink hook: JS toggles #catLink.blink briefly */
+#catLink.blink .cat-face{
+  transform: scaleY(0.18);
+  filter: drop-shadow(0 6px 14px rgba(0,0,0,.25));
+}
+#catLink.blink .catlink-inner{
+  transform: translateY(2px);
+}
+
+/* Ensure title always fully visible (stacked) */
 .brand-stack{
   display:flex;
   flex-direction:column;
-  gap:6px;
+  gap:4px;
   min-width:0;
 }
 .brand-title-row{
@@ -173,9 +244,9 @@ input, select, textarea{ font-size:16px; }
   font-weight: 950;
   letter-spacing: .2px;
   line-height: 1.05;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
+  white-space: normal;      /* allow wrap */
+  overflow: visible;        /* no ellipsis */
+  text-overflow: unset;
   max-width: min(62vw, 520px);
   font-size: clamp(16px, 3.2vw, 20px);
 }
@@ -186,33 +257,12 @@ input, select, textarea{ font-size:16px; }
   filter: drop-shadow(0 10px 18px rgba(0,0,0,.30));
 }
 
-/* Enhancement: purr dot */
-.purr-dot{
-  width:10px;
-  height:10px;
-  border-radius:999px;
-  background: rgba(255,255,255,.22);
-  border:1px solid rgba(255,255,255,.26);
-  box-shadow: 0 0 0 3px rgba(255,255,255,.05);
-}
-html.purr-on .purr-dot{
-  background: rgba(116,217,155,.85);
-  border-color: rgba(116,217,155,.65);
-  box-shadow: 0 0 0 3px rgba(116,217,155,.18), 0 10px 18px rgba(0,0,0,.25);
-  animation: purrPulse 1.2s ease-in-out infinite;
-}
-@keyframes purrPulse{
-  0%,100%{ transform:scale(1); opacity:.95; }
-  50%{ transform:scale(1.12); opacity:1; }
-}
-
 .top-actions{
   display:flex;
   gap:10px;
   align-items:center;
   flex-shrink:0;
 }
-
 #themeBtn{
   width:46px;
   padding:8px 0;
@@ -229,6 +279,7 @@ html.purr-on .purr-dot{
   align-items:center;
   flex-wrap:wrap;
 }
+
 .search-shell{
   position:relative;
   flex: 1 1 260px;
@@ -270,16 +321,21 @@ html.purr-on .purr-dot{
   display:flex;
   align-items:center;
   gap:10px;
+  flex: 0 0 auto;
 }
 .search-filters-btn.is-active{
   box-shadow:0 0 0 3px rgba(122,162,255,.18);
   border-color: rgba(122,162,255,.55);
 }
+
+/* Key fix: popover is centered UNDER the Dates button, not pushed off-screen */
 .search-filters{
   position:absolute;
-  right:0;
+  left:50%;
+  transform: translateX(-50%);
   top:44px;
-  width:min(420px, 92vw);
+  width: min(420px, 92vw);
+  max-width: calc(100vw - 24px);
   padding:12px;
   border-radius:18px;
   background: rgba(0,0,0,.34);
@@ -312,6 +368,7 @@ html.purr-on .purr-dot{
 
 /* ---------- Calendar tools ---------- */
 #calendarWrap{ margin-top:10px; }
+
 .calendar-tools{
   display:flex;
   justify-content:space-between;
@@ -319,13 +376,32 @@ html.purr-on .purr-dot{
   gap:10px;
   margin-bottom:10px;
 }
+
+/* 3 columns: nav / owner / spacer (keeps layout stable without list range) */
 .tools-left{
   width:100%;
   display:grid;
-  grid-template-columns:auto 1fr 1fr;
+  grid-template-columns: auto 1fr auto;
   gap:10px;
   align-items:center;
 }
+
+/* Nav arrows chunk */
+.nav-arrows{
+  display:flex;
+  gap:8px;
+  align-items:center;
+}
+.nav-arrows .btn{
+  padding:8px 12px;
+  border-radius:16px;
+}
+#prevBtn, #nextBtn{
+  width:44px;
+  padding:8px 0;
+}
+
+/* Owner filter */
 .mini-label{
   display:flex;
   align-items:center;
@@ -397,7 +473,6 @@ html.purr-on .purr-dot{
   gap: 8px;
   flex-wrap: wrap;
 }
-
 .fc .fc-toolbar-chunk{
   display:flex;
   align-items:center;
@@ -512,12 +587,15 @@ html.purr-on .purr-dot{
   background: rgba(255,255,255,.06);
   white-space: nowrap;
 }
-
-.details-title{
-  font-family: var(--font-display);
+.progress-pill{
+  margin-left:auto;
+  font-size: 11px;
   font-weight: 950;
-  font-size: 18px;
-  letter-spacing: .2px;
+  padding: 4px 9px;
+  border-radius: 999px;
+  border: 1px solid rgba(255,255,255,.14);
+  background: rgba(0,0,0,.18);
+  color: rgba(238,241,247,.92);
 }
 
 /* ---------- FAB ---------- */
@@ -587,8 +665,6 @@ input:focus, select:focus, textarea:focus{
   padding-top: calc(14px + var(--safe-top));
   padding-bottom: calc(14px + var(--safe-bot));
   z-index:9998;
-
-  /* prevent body behind from scrolling weirdly */
   overscroll-behavior: contain;
 }
 
@@ -620,7 +696,6 @@ input:focus, select:focus, textarea:focus{
 }
 
 .modal-scroll{
-  /* Key: scrolling happens inside here */
   overflow:auto;
   -webkit-overflow-scrolling: touch;
   overscroll-behavior: contain;
@@ -652,6 +727,10 @@ input:focus, select:focus, textarea:focus{
   border-radius: 18px;
 }
 .details-title{
+  font-family: var(--font-display);
+  font-weight: 950;
+  font-size: 18px;
+  letter-spacing: .2px;
   margin-top: 8px;
   margin-bottom: 4px;
 }
@@ -748,37 +827,24 @@ input:focus, select:focus, textarea:focus{
 .gate-remember input{ width:auto; }
 
 /* ---------- Cat mode ambient layer ---------- */
-./* ---------- Cat mode ambient layer ---------- */
 .cat-layer{
   position: fixed;
   inset: 0;
   pointer-events: none;
-  overflow: hidden;        /* important */
-  display: none;           /* important */
-  z-index: 5;              /* above background + cards */
-  opacity: 1;              /* let each paw control its own opacity */
-  /* mix-blend-mode: screen;  <-- remove for now (can re-add later) */
+  overflow: hidden;
+  display: none;
+  z-index: 5;
+  opacity: 1;
 }
-
 html.cat-mode .cat-layer{
   display: block !important;
 }
+html.cat-mode .sparkle-badge{
+  animation: sparkleWiggle 1.8s ease-in-out infinite;
 }
-html.cat-mode .cat-layer{ display:block !important; }
-html.cat-mode body{ }
-html.cat-mode .sparkle-badge{ animation: sparkleWiggle 1.8s ease-in-out infinite; }
 @keyframes sparkleWiggle{
   0%,100%{ transform: rotate(0deg); }
   50%{ transform: rotate(10deg); }
-}
-
-/* Optional: subtle pawprint background via CSS (JS can also inject floating paws) */
-html.cat-mode body{
-  background:
-    radial-gradient(circle at 20% 20%, var(--blob1), transparent 48%),
-    radial-gradient(circle at 75% 55%, var(--blob2), transparent 52%),
-    radial-gradient(circle at 40% 85%, var(--blob3), transparent 55%),
-    linear-gradient(180deg, var(--bg), var(--bg2));
 }
 
 /* ---------- Theme variants (dice sets data-theme) ---------- */
@@ -787,24 +853,44 @@ html.cat-mode body{
   --blob1: rgba(122,162,255,.45);
   --blob2: rgba(255,107,107,.28);
   --blob3: rgba(116,217,155,.25);
+
+  --coat-bg: rgba(10,18,38,.60);
+  --coat-stripe1: rgba(122,162,255,.62);   /* cool blue */
+  --coat-stripe2: rgba(116,217,155,.22);   /* mint hint */
+  --coat-outline: rgba(122,162,255,.30);
 }
 :root[data-theme="sunset"]{
   --accent:#ff6b6b;
   --blob1: rgba(255,107,107,.38);
   --blob2: rgba(255,194,107,.26);
   --blob3: rgba(122,162,255,.20);
+
+  --coat-bg: rgba(40,12,10,.52);
+  --coat-stripe1: rgba(255,107,107,.62);   /* warm red */
+  --coat-stripe2: rgba(255,194,107,.30);   /* amber */
+  --coat-outline: rgba(255,194,107,.26);
 }
 :root[data-theme="mint"]{
   --accent:#74d99b;
   --blob1: rgba(116,217,155,.32);
   --blob2: rgba(122,162,255,.22);
   --blob3: rgba(255,107,107,.18);
+
+  --coat-bg: rgba(10,28,22,.54);
+  --coat-stripe1: rgba(116,217,155,.58);
+  --coat-stripe2: rgba(122,162,255,.22);
+  --coat-outline: rgba(116,217,155,.26);
 }
 :root[data-theme="grape"]{
   --accent:#bb86fc;
   --blob1: rgba(187,134,252,.30);
   --blob2: rgba(122,162,255,.22);
   --blob3: rgba(116,217,155,.16);
+
+  --coat-bg: rgba(22,10,34,.54);
+  --coat-stripe1: rgba(187,134,252,.60);
+  --coat-stripe2: rgba(122,162,255,.20);
+  --coat-outline: rgba(187,134,252,.26);
 }
 :root[data-theme="mono"]{
   --accent:#cfd6e6;
@@ -812,17 +898,43 @@ html.cat-mode body{
   --blob2: rgba(255,255,255,.10);
   --blob3: rgba(255,255,255,.08);
   --card: rgba(22, 24, 30, .70);
+
+  --coat-bg: rgba(0,0,0,.20);
+  --coat-stripe1: rgba(255,255,255,.16);
+  --coat-stripe2: rgba(255,255,255,.06);
+  --coat-outline: rgba(255,255,255,.18);
 }
 
 /* ---------- Mobile tweaks ---------- */
 @media (max-width:720px){
   .search-row{ align-items:stretch; }
-  .search-filters{ right:auto; left:0; }
+  .search-shell{ min-width: 0; }
+
+  /* Make Dates button full-height-ish */
+  .search-filters-wrap{ width: 100%; }
+  .search-filters-btn{ width: 100%; }
+
+  /* Popover centers under button and uses full width if needed */
+  .search-filters{
+    left: 50%;
+    transform: translateX(-50%);
+    width: min(520px, 94vw);
+    max-width: calc(100vw - 24px);
+  }
   .search-filters .row{ grid-template-columns: 1fr; }
+
   .fc .fc-button{ padding: 7px 9px; border-radius: 13px; }
   .fc .fc-toolbar-title{ font-size: 17px; }
 
-  /* iOS: anchor modal to bottom sheet style for comfort */
+  /* Tools row stacks nicely */
+  .tools-left{
+    grid-template-columns: 1fr;
+    gap:10px;
+  }
+  .nav-arrows{ justify-content: space-between; }
+  .mini-label{ gap:12px; }
+
+  /* iOS: bottom sheet style for modals */
   .modal-backdrop{ align-items:flex-end; }
   .modal{
     width:100%;
@@ -831,4 +943,9 @@ html.cat-mode body{
     max-height: 86vh;
   }
   .row{ grid-template-columns:1fr; }
+}
+
+/* Reduced motion */
+@media (prefers-reduced-motion: reduce){
+  .btn, .fc-event, .cat-tail, .sparkle-badge{ transition:none !important; animation:none !important; }
 }
