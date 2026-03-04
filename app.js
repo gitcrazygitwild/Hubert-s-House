@@ -936,23 +936,54 @@ function renderUpdates() {
   
   function maybeShowUpdatesModal(html, recent) {
   // respect “don’t show”
-  
-   if ((localStorage.getItem(LS_UPDATES_HIDE) || "0") === "1") return;
+  if ((localStorage.getItem(LS_UPDATES_HIDE) || "0") === "1") return;
 
-if (updatesModalShownThisLoad) return;
+  // only once per page load
+  if (updatesModalShownThisLoad) return;
 
-  // only show if something new since last seen
   const lastSeenMs = Number(localStorage.getItem(LS_UPDATES_LASTSEEN) || "0");
-  const newest = recent?.[0]?.createdAt ? recent[0].createdAt.getTime() : 0;
 
-  if (!newest) return;
-  if (newest <= lastSeenMs) return;
+  // newest createdAt among items in our "recent" list
+  const newestMs = recent?.[0]?.createdAt ? recent[0].createdAt.getTime() : 0;
 
-  // show once per page load when there’s truly something new
-  openUpdatesModal(html);
-updatesModalShownThisLoad = true;
-  // update last seen to newest
-  localStorage.setItem(LS_UPDATES_LASTSEEN, String(newest));
+  // IMPORTANT: advance last-seen on every render (so "last visit" is real),
+  // even if there are no new items.
+  if (newestMs && newestMs > lastSeenMs) {
+    // Build popup content = ONLY items newer than lastSeen
+    const onlyNew = recent.filter(r => r.createdAt && r.createdAt.getTime() > lastSeenMs);
+
+    if (onlyNew.length) {
+      const newHtml = onlyNew.map(d => {
+        const ownerLabel = d.owner === "custom" ? (d.ownerCustom || "Other") : d.owner;
+        const when = d.start ? formatWhenForPanel({ start: d.start, end: null, allDay: false }) : "—";
+        const style = OWNER_STYLE[d.owner] || OWNER_STYLE.custom;
+
+        return `
+          <div class="panel-card" style="border-left: 5px solid ${style.border};">
+            <div style="display:flex; align-items:center; gap:10px; margin-bottom:6px;">
+              <span class="owner-pill">${escapeHtml(ownerLabel)}</span>
+              <strong style="font-size:16px;">${escapeHtml(d.title)}</strong>
+            </div>
+            <div class="tiny muted">${escapeHtml(when)}</div>
+            <div class="tiny muted">Added: ${escapeHtml(d.createdAt.toLocaleString())}</div>
+          </div>
+        `;
+      }).join("");
+
+      openUpdatesModal(newHtml);
+      updatesModalShownThisLoad = true;
+    }
+
+    // After deciding whether to show, record newest as last seen
+    localStorage.setItem(LS_UPDATES_LASTSEEN, String(newestMs));
+    return;
+  }
+
+  // If nothing is newer, still mark "visited now" so next time is truly "since last visit"
+  // (prevents old items from triggering later if clocks/timestamps resolve late)
+  if (!lastSeenMs) {
+    localStorage.setItem(LS_UPDATES_LASTSEEN, String(Date.now()));
+  }
 }
   
 
