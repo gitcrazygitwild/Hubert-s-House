@@ -269,6 +269,15 @@ const outPrev = document.getElementById("outPrev");
 const outNext = document.getElementById("outNext");
 const outPage = document.getElementById("outPage");
 
+function closeUpdatesModal() {
+  updatesBackdrop?.classList.add("hidden");
+}
+
+function openUpdatesModal(html) {
+  if (updatesModalList) updatesModalList.innerHTML = html || "No new events.";
+  updatesBackdrop?.classList.remove("hidden");
+}
+
 // ---------- Colors / owners ----------
 const OWNER_STYLE = {
   hanry:  { bg: "rgba(122,162,255,0.35)", border: "rgba(122,162,255,0.85)" },
@@ -634,14 +643,6 @@ updatesBackdrop?.addEventListener("click", (e) => {
     addChecklistItemUI(taskChecklist, { text: "", done: false }, true);
   });
 
-function closeUpdatesModal() {
-  updatesBackdrop?.classList.add("hidden");
-}
-
-function openUpdatesModal(html) {
-  if (updatesModalList) updatesModalList.innerHTML = html || "No new events.";
-  updatesBackdrop?.classList.remove("hidden");
-}
 
 
   // Jump modal
