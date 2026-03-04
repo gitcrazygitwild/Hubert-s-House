@@ -1,3 +1,16 @@
+<!-- index.html — Hubert’s House (v12-ish HTML refresh)
+  WHAT THIS HTML FIXES (from your list):
+  ✅ “Hubert’s House” fully shows (stacked lines)
+  ✅ Removes “list range” control (no listRangeSelect in DOM)
+  ✅ Calendar arrows are in that space (prev/today/next are in tools row)
+  ✅ Dates popover won’t render off to the right (wrapped + anchored under Dates button)
+  ✅ Adds markup hooks for:
+     - theme-tied coat/stripes (aurora/sunset/etc)  (CSS/JS will drive)
+     - subtle tail wiggle (CSS)
+     - occasional blink in cat mode (JS toggles a class)
+  NOTE: The “end date inclusive”, search/list-range logic, owner-both logic are JS changes (you said HTML first).
+-->
+
 <!doctype html>
 <html lang="en">
 <head>
@@ -54,22 +67,42 @@
       <div class="topbar-row">
 
         <div class="brand">
-          <!-- Cat link stays a link; JS will swap emoji + “coat-*” classes for color/stripe vibe -->
-          <a class="catlink coat-1" href="https://gitcrazygitwild.github.io/Flapurr/" target="_blank" rel="noopener">🐈‍⬛</a>
+          <!-- Cat link stays a link.
+               Hooks added:
+               - .catlink-inner / .cat-face / .cat-tail for tail wiggle
+               - .coat-hook for theme-tied stripes (CSS will style by [data-theme])
+               - JS can add/remove .blink (cat mode only) to squint the face -->
+          <a
+            class="catlink coat-hook"
+            id="catLink"
+            href="https://gitcrazygitwild.github.io/Flapurr/"
+            target="_blank"
+            rel="noopener"
+            aria-label="Open Flapurr"
+          >
+            <span class="catlink-inner" aria-hidden="true">
+              <span class="cat-face">🐈‍⬛</span>
+              <span class="cat-tail">〰️</span>
+            </span>
+          </a>
 
           <!-- Title always fully visible (stacked) -->
-          <div class="brand-title-stack" aria-label="Hubert’s House">
-            <div class="brand-title">Hubert’s</div>
-            <div class="brand-title">House</div>
+          <div class="brand-stack" aria-label="Hubert’s House">
+            <div class="brand-title-row">
+              <div class="brand-title">Hubert’s</div>
+            </div>
+            <div class="brand-title-row">
+              <div class="brand-title">House</div>
+            </div>
           </div>
 
           <!-- Optional tiny sparkle badge -->
-          <span id="sparkleBadge" class="sparkle-badge" title="meow">✨</span>
+          <span id="sparkleBadge" class="sparkle-badge" title="meow" aria-hidden="true">✨</span>
         </div>
 
         <div class="top-actions">
-          <button id="catModeBtn" class="btn btn-ghost" type="button" title="Cat mode">🐾</button>
-          <button id="themeBtn" class="btn btn-ghost" type="button" title="Randomize theme">🎲</button>
+          <button id="catModeBtn" class="btn btn-ghost" type="button" title="Cat mode" aria-label="Cat mode">🐾</button>
+          <button id="themeBtn" class="btn btn-ghost" type="button" title="Randomize theme" aria-label="Randomize theme">🎲</button>
           <button id="logoutBtn" class="btn btn-ghost" type="button" title="Lock / reset">Log out</button>
         </div>
 
@@ -77,43 +110,58 @@
     </header>
 
     <!-- =========================
-         SEARCH + DATE FILTER (centered popover)
+         SEARCH + DATE FILTER
+         IMPORTANT: wrapper class matches your JS click-outside logic:
+         JS looks for:  searchFilters.closest(".search-filters-wrap")
     ========================== -->
-    <div class="search-wrap">
-
+    <div class="search-row-wrap">
       <div class="search-row">
+
         <div class="search-shell">
           <input id="searchInput" class="search" type="search" placeholder="Search events…" autocomplete="off" />
           <button id="searchClearBtn" class="search-clear" type="button" aria-label="Clear search">×</button>
         </div>
 
-        <button id="searchFiltersBtn" class="btn btn-ghost search-filters-btn" type="button" title="Filter by dates">Dates</button>
-      </div>
+        <!-- Anchor the popover to THIS wrap so it doesn't fly off-screen on mobile -->
+        <div class="search-filters-wrap">
+          <button
+            id="searchFiltersBtn"
+            class="btn btn-ghost search-filters-btn"
+            type="button"
+            title="Filter by dates"
+            aria-haspopup="dialog"
+            aria-expanded="false"
+          >
+            Dates
+          </button>
 
-      <!-- Date filter popover (NOT off to the right; CSS centers it under search row) -->
-      <div id="searchFilters" class="search-filters hidden" role="dialog" aria-label="Date filter">
-        <div class="search-filters-title">Search date range</div>
+          <!-- Date filter popover -->
+          <div id="searchFilters" class="search-filters hidden" role="dialog" aria-label="Date filter">
+            <div class="search-filters-title">Search date range</div>
 
-        <div class="row">
-          <label class="field">
-            <span>From</span>
-            <input id="searchFrom" class="search-date" type="date" />
-          </label>
-          <label class="field">
-            <span>To</span>
-            <input id="searchTo" class="search-date" type="date" />
-          </label>
+            <div class="row">
+              <label class="field">
+                <span>From</span>
+                <input id="searchFrom" class="search-date" type="date" />
+              </label>
+              <label class="field">
+                <span>To</span>
+                <input id="searchTo" class="search-date" type="date" />
+              </label>
+            </div>
+
+            <div class="modal-actions" style="margin-top:10px;">
+              <button id="clearDatesBtn" class="btn btn-ghost" type="button">Clear</button>
+              <div class="spacer"></div>
+              <button id="closeSearchFiltersBtn" class="btn btn-primary" type="button">Done</button>
+            </div>
+
+            <div class="tiny muted" style="margin-top:8px;">
+              Tip: Search + Dates work together. Leave dates blank to search all.
+            </div>
+          </div>
         </div>
 
-        <div class="modal-actions" style="margin-top:10px;">
-          <button id="clearDatesBtn" class="btn btn-ghost" type="button">Clear</button>
-          <div class="spacer"></div>
-          <button id="closeSearchFiltersBtn" class="btn btn-primary" type="button">Done</button>
-        </div>
-
-        <div class="tiny muted" style="margin-top:8px;">
-          Tip: Search + Dates work together. Leave dates blank to search all.
-        </div>
       </div>
     </div>
 
@@ -126,8 +174,7 @@
       <div class="calendar-tools">
         <div class="tools-left">
 
-          <!-- Arrows + Today -->
-          <div class="nav-arrows">
+          <div class="nav-arrows" aria-label="Calendar navigation">
             <button id="prevBtn" class="btn btn-ghost" type="button" aria-label="Previous month">‹</button>
             <button id="todayBtn" class="btn btn-ghost" type="button">Today</button>
             <button id="nextBtn" class="btn btn-ghost" type="button" aria-label="Next month">›</button>
@@ -144,6 +191,9 @@
               <option value="custom">Other</option>
             </select>
           </label>
+
+          <!-- NOTE: List range removed by request (no listRangeSelect in DOM) -->
+          <div></div>
 
         </div>
       </div>
@@ -250,7 +300,6 @@
         <button id="modalClose" class="btn btn-icon" type="button" aria-label="Close">✕</button>
       </div>
 
-      <!-- iOS scroll fix: scroll container -->
       <div id="editScroll" class="modal-scroll">
         <form id="eventForm" class="modal-body">
 
@@ -391,7 +440,6 @@
 
       <div class="modal-scroll">
         <div class="modal-body">
-
           <div class="row">
             <label class="field">
               <span>Month</span>
@@ -422,7 +470,6 @@
             <button id="jumpCancel" class="btn btn-ghost" type="button">Cancel</button>
             <button id="jumpGoBtn" class="btn btn-primary" type="button">Go</button>
           </div>
-
         </div>
       </div>
     </div>
