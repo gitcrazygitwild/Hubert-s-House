@@ -1683,6 +1683,8 @@ function escapeHtml(s) {
 
 // ---------- Start ----------
 initApp().catch((err) => {
-  console.error(err);
-  alert("Firebase failed to initialize. Check firebaseConfig + Firestore rules.");
+  console.error("INIT FAIL:", err);
+  const msg =
+    (err && (err.code || err.name)) ? `${err.code || err.name}: ${err.message || err}` : String(err);
+  alert("Firebase init failed:\n" + msg);
 });
