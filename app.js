@@ -873,6 +873,7 @@ function renderPanels() {
 }
 
 function renderUpdates() {
+  openUpdatesModal("<div class='tiny muted'>Test popup ✅</div>");
   if (!updatesListEl) return;
 
   const now = new Date();
