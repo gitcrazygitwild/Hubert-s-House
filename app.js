@@ -61,6 +61,8 @@ gateForm?.addEventListener("submit", (e) => {
   }
 });
 
+let updatesModalShownThisLoad = false;
+
 // Show/hide gate immediately
 if (isUnlocked()) gate?.classList.add("hidden");
 else gate?.classList.remove("hidden");
@@ -934,6 +936,8 @@ function renderUpdates() {
   function maybeShowUpdatesModal(html, recent) {
   // respect “don’t show”
   if ((localStorage.getItem(LS_UPDATES_HIDE) || "0") === "1") return;
+
+if (updatesModalShownThisLoad) return;
 
   // only show if something new since last seen
   const lastSeenMs = Number(localStorage.getItem(LS_UPDATES_LASTSEEN) || "0");
