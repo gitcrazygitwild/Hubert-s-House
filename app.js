@@ -253,6 +253,18 @@ const jumpYearSelect = document.getElementById("jumpYearSelect");
 // Panels
 const upcomingListEl = document.getElementById("upcomingList");
 const outstandingListEl = document.getElementById("outstandingList");
+// Updates (panel + modal)
+const updatesListEl = document.getElementById("updatesList");
+
+const updatesBackdrop = document.getElementById("updatesBackdrop");
+const updatesClose = document.getElementById("updatesClose");
+const updatesDone = document.getElementById("updatesDone");
+const updatesModalList = document.getElementById("updatesModalList");
+const updatesDontShow = document.getElementById("updatesDontShow");
+
+const LS_UPDATES_HIDE = "huberts_house_updates_hide_v1";
+const LS_UPDATES_LASTSEEN = "huberts_house_updates_lastseen_v1";
+
 const outPrev = document.getElementById("outPrev");
 const outNext = document.getElementById("outNext");
 const outPage = document.getElementById("outPage");
@@ -516,6 +528,15 @@ function initUIHooks() {
   nextBtn?.addEventListener("click", () => calendar?.next());
   todayBtn?.addEventListener("click", () => calendar?.today());
 
+updatesClose?.addEventListener("click", closeUpdatesModal);
+updatesDone?.addEventListener("click", () => {
+  if (updatesDontShow?.checked) localStorage.setItem(LS_UPDATES_HIDE, "1");
+  closeUpdatesModal();
+});
+updatesBackdrop?.addEventListener("click", (e) => {
+  if (e.target === updatesBackdrop) closeUpdatesModal();
+});
+
   // Search debounce
   let t = null;
   searchInput?.addEventListener("input", () => {
@@ -610,6 +631,16 @@ function initUIHooks() {
   taskAddItem?.addEventListener("click", () => {
     addChecklistItemUI(taskChecklist, { text: "", done: false }, true);
   });
+
+function closeUpdatesModal() {
+  updatesBackdrop?.classList.add("hidden");
+}
+
+function openUpdatesModal(html) {
+  if (updatesModalList) updatesModalList.innerHTML = html || "No new events.";
+  updatesBackdrop?.classList.remove("hidden");
+}
+
 
   // Jump modal
   jumpClose?.addEventListener("click", closeJumpModal);
@@ -833,6 +864,91 @@ function renderCalendarFromCache() {
 function renderPanels() {
   renderUpcoming();
   renderOutstanding();
+  renderUpdates();
+}
+
+function renderUpdates() {
+  if (!updatesListEl) return;
+
+  const now = new Date();
+  const cutoff = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
+
+  // Use rawDocs so we’re truly “added recently”, not just repeats
+  const recent = rawDocs
+    .map(d => {
+      const createdAt =
+        d.createdAt?.toDate ? d.createdAt.toDate() :
+        d.createdAt instanceof Date ? d.createdAt :
+        d.createdAt ? new Date(d.createdAt) : null;
+
+      return {
+        id: d.id,
+        title: d.title || "",
+        start: d.start ? new Date(d.start) : null,
+        owner: normalizeOwner(d.owner),
+        ownerCustom: d.ownerCustom || "",
+        type: d.type || "general",
+        notes: d.notes || "",
+        checklist: Array.isArray(d.checklist) ? d.checklist : [],
+        createdAt
+      };
+    })
+    .filter(x => x.createdAt && x.createdAt >= cutoff)
+    .sort((a,b) => b.createdAt.getTime() - a.createdAt.getTime())
+    .slice(0, 12);
+
+  if (!recent.length) {
+    updatesListEl.textContent = "No new events in the last 7 days.";
+    return;
+  }
+
+  const html = recent.map(d => {
+    const ownerLabel = d.owner === "custom" ? (d.ownerCustom || "Other") : d.owner;
+    const when = d.start ? formatWhenForPanel({ start: d.start, end: null, allDay: false }) : "—";
+    const style = OWNER_STYLE[d.owner] || OWNER_STYLE.custom;
+
+    return `
+      <div class="panel-card" data-open-id="${d.id}" style="border-left: 5px solid ${style.border}; cursor:pointer;">
+        <div style="display:flex; align-items:center; gap:10px; margin-bottom:6px;">
+          <span class="owner-pill">${escapeHtml(ownerLabel)}</span>
+          <strong style="font-size:16px;">${escapeHtml(d.title)}</strong>
+        </div>
+        <div class="tiny muted">${escapeHtml(when)}</div>
+        <div class="tiny muted">Added: ${escapeHtml(d.createdAt.toLocaleString())}</div>
+      </div>
+    `;
+  }).join("");
+
+  updatesListEl.innerHTML = html;
+
+  updatesListEl.querySelectorAll("[data-open-id]").forEach((el) => {
+    el.addEventListener("click", () => {
+      const id = el.getAttribute("data-open-id");
+      openFromPanel(id, null, false);
+    });
+  });
+  
+  function maybeShowUpdatesModal(html, recent) {
+  // respect “don’t show”
+  if ((localStorage.getItem(LS_UPDATES_HIDE) || "0") === "1") return;
+
+  // only show if something new since last seen
+  const lastSeenMs = Number(localStorage.getItem(LS_UPDATES_LASTSEEN) || "0");
+  const newest = recent?.[0]?.createdAt ? recent[0].createdAt.getTime() : 0;
+
+  if (!newest) return;
+  if (newest <= lastSeenMs) return;
+
+  // show once per page load when there’s truly something new
+  openUpdatesModal(html);
+
+  // update last seen to newest
+  localStorage.setItem(LS_UPDATES_LASTSEEN, String(newest));
+}
+  
+
+  // Also prep modal content + maybe show it
+  maybeShowUpdatesModal(html, recent);
 }
 
 // NOTE: We filter by *event start* for search bounds.
