@@ -306,8 +306,7 @@ import {
   onSnapshot,
   query,
   orderBy,
-  serverTimestamp,
-  getDocs
+  serverTimestamp
 } from "https://www.gstatic.com/firebasejs/12.9.0/firebase-firestore.js";
 
 const firebaseConfig = {
@@ -323,38 +322,7 @@ const firebaseConfig = {
 let db, eventsCol;
 let calendar;
 
-async function backfillCreatedAtFromStartOnce() {
-  if (!db || !eventsCol) return;
 
-  // Safety: set this to true only when you're ready to run it.
-  const RUN = true;
-  if (!RUN) return;
-
-  const snap = await getDocs(eventsCol);
-
-  let touched = 0;
-  let skipped = 0;
-
-  for (const d of snap.docs) {
-    const data = d.data();
-
-    // Already has createdAt? skip.
-    if (data.createdAt) { skipped++; continue; }
-
-    // Use start as the createdAt fallback.
-    // If start is missing/bad, skip.
-    const start = data.start ? new Date(data.start) : null;
-    if (!start || isNaN(start)) { skipped++; continue; }
-
-    await updateDoc(doc(db, "events", d.id), {
-      createdAt: start
-    });
-
-    touched++;
-  }
-
-  alert(`Backfill complete ✅ Updated ${touched}, skipped ${skipped}. Now REMOVE the migration snippet.`);
-}
 
 // In-memory cache from Firestore
 let rawDocs = [];         // [{id,...data}]
