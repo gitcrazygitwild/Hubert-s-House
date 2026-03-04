@@ -165,23 +165,18 @@ input, select, textarea{ font-size:16px; }
   display:inline-flex;
   align-items:center;
   justify-content:center;
-  width:44px;
-  height:44px;
-  border-radius:16px;
-  border:1px solid var(--coat-outline);
-  background:
-    linear-gradient(135deg, var(--coat-bg), rgba(0,0,0,.12)),
-    repeating-linear-gradient(
-      45deg,
-      var(--coat-stripe1) 0px,
-      var(--coat-stripe1) 6px,
-      var(--coat-stripe2) 6px,
-      var(--coat-stripe2) 14px
-    );
-  box-shadow: 0 16px 30px rgba(0,0,0,.28);
-  filter: saturate(1.05);
-  position:relative;
-  overflow:hidden;
+
+  /* no tile */
+  width:auto;
+  height:auto;
+  padding:0;
+
+  border:none;
+  background:transparent;
+  box-shadow:none;
+  overflow:visible;
+  filter:none;
+
   flex: 0 0 auto;
 }
 .catlink:hover{ transform: translateY(-1px); }
