@@ -604,6 +604,19 @@ updatesBackdrop?.addEventListener("click", (e) => {
     preserveDatesOnAllDayToggle(!!evtAllDay.checked);
   });
 
+// Start/end guardrails
+evtStart?.addEventListener("change", () => {
+  // When you pick a new start, end should jump to that start (or clamp if needed)
+  clampEndToStart({ alsoFillIfBlank: true });
+});
+
+evtEnd?.addEventListener("change", () => {
+  // If user tries to set end before start, clamp it back
+  clampEndToStart({ alsoFillIfBlank: false });
+});
+
+
+
   evtOwner?.addEventListener("change", () => {
     const v = evtOwner.value;
     ownerCustomWrap?.classList.toggle("hidden", v !== "custom");
@@ -1264,6 +1277,8 @@ function openEventModal(payload) {
   if (evtRepeatUntil) evtRepeatUntil.value = payload.repeatUntil || "";
 
   setDateTimeInputs(!!payload.allDay, payload.start, payload.end);
+clampEndToStart({ alsoFillIfBlank: true });
+
 
   renderChecklistUI(checklistEl, payload.checklist || []);
   if (evtNotes) evtNotes.value = payload.notes || "";
@@ -1278,6 +1293,38 @@ function closeModal() {
   editingDocId = null;
   editingOccurrenceStart = null;
   backdrop?.classList.add("hidden");
+}
+
+function setEndMinFromStart() {
+  if (!evtStart || !evtEnd) return;
+  // Works for both type="date" and type="datetime-local"
+  evtEnd.min = evtStart.value || "";
+}
+
+// Ensure end >= start. If end is blank or before start, set end = start.
+function clampEndToStart({ alsoFillIfBlank = true } = {}) {
+  if (!evtStart || !evtEnd) return;
+
+  const allDay = (evtStart.type === "date");
+  const sVal = evtStart.value;
+  if (!sVal) return;
+
+  setEndMinFromStart();
+
+  const eVal = evtEnd.value;
+
+  // If end is empty, optionally fill it to match start
+  if (!eVal) {
+    if (alsoFillIfBlank) evtEnd.value = sVal;
+    return;
+  }
+
+  const s = fromInputValue(sVal, allDay);
+  const e = fromInputValue(eVal, allDay);
+
+  if (e.getTime() < s.getTime()) {
+    evtEnd.value = sVal;
+  }
 }
 
 function setDateTimeInputs(isAllDay, startDate, endDate) {
@@ -1301,6 +1348,9 @@ function preserveDatesOnAllDayToggle(isAllDayNow) {
   const endDate = prevEndVal ? fromInputValue(prevEndVal, wasAllDay) : null;
 
   setDateTimeInputs(isAllDayNow, startDate, endDate);
+
+  // NEW: after changing input types, re-apply min + clamp
+  clampEndToStart({ alsoFillIfBlank: true });
 }
 
 detailsEditBtn?.addEventListener("click", () => {
