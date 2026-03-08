@@ -93,34 +93,39 @@
     <header class="topbar">
       <div class="topbar-row">
 
-        <div class="brand">
-          <!-- Cat link stays a link.
-               Hooks added:
-               - .catlink-inner / .cat-face / .cat-tail for tail wiggle
-               - .coat-hook for theme-tied stripes (CSS will style by [data-theme])
-               - JS can add/remove .blink (cat mode only) to squint the face -->
-          <a
-            class="catlink coat-hook"
-            id="catLink"
-            href="https://gitcrazygitwild.github.io/Flapurr/"
-            target="_blank"
-            rel="noopener"
-            aria-label="Open Flapurr"
-          >
-            <span class="catlink-inner" aria-hidden="true">
-              <span class="cat-face">🐈‍⬛</span>
-            </span>
-          </a>
+<div class="brand">
+  <a
+    class="catlink coat-hook"
+    id="catLink"
+    href="https://gitcrazygitwild.github.io/Flapurr/"
+    target="_blank"
+    rel="noopener"
+    aria-label="Open Flapurr"
+  >
+    <span class="catlink-inner" aria-hidden="true">
+      <span class="cat-face">🐈‍⬛</span>
+    </span>
+  </a>
 
-          <!-- Title always fully visible (stacked) -->
-          <div class="brand-stack" aria-label="Hubert’s House">
-            <div class="brand-title-row">
-              <div class="brand-title">Hubert’s</div>
-            </div>
-            <div class="brand-title-row">
-              <div class="brand-title">House</div>
-            </div>
-          </div>
+  <a
+    class="weatherlink"
+    id="weatherLink"
+    href="https://gitcrazygitwild.github.io/Miateorology/"
+    target="_blank"
+    rel="noopener"
+    aria-label="Open weather site"
+    title="Open Miateorology"
+  >
+    ⛈️
+  </a>
+
+  <div class="brand-stack" aria-label="Hubert’s House">
+    <div class="brand-title-row brand-title-row--center">
+      <div class="brand-title">Hubert’s</div>
+    </div>
+    <div class="brand-title-row brand-title-row--center">
+      <div class="brand-title">House</div>
+    </div>
 
           <!-- Optional tiny sparkle badge -->
           <span id="sparkleBadge" class="sparkle-badge" title="meow" aria-hidden="true">✨</span>
