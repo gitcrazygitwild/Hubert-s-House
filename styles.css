@@ -264,25 +264,35 @@ html.cat-mode .cat-tail{
 .brand-stack{
   display:flex;
   flex-direction:column;
-  gap:4px;
+  align-items:center;
+  gap:2px;
   min-width:0;
+  text-align:center;
 }
+
 .brand-title-row{
   display:flex;
   align-items:center;
-  gap:8px;
+  justify-content:center;
   min-width:0;
+  width:100%;
 }
+
+.brand-title-row--center{
+  justify-content:center;
+}
+
 .brand-title{
   font-family: var(--font-display);
   font-weight: 950;
   letter-spacing: .2px;
   line-height: 1.05;
-  white-space: normal;      /* allow wrap */
-  overflow: visible;        /* no ellipsis */
+  white-space: normal;
+  overflow: visible;
   text-overflow: unset;
   max-width: min(62vw, 520px);
   font-size: clamp(16px, 3.2vw, 20px);
+  text-align:center;
 }
 
 .sparkle-badge{
