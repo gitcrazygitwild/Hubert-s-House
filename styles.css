@@ -580,7 +580,48 @@ html.cat-mode .cat-tail{
   padding: 2px 6px !important;
   margin: 2px 2px !important;
   transition: transform .14s ease, box-shadow .14s ease;
+  text-align: left !important;
 }
+
+/* Month view: keep timed events left-aligned inside the day cell */
+.fc-dayGridMonth-view .fc-daygrid-event,
+.fc-dayGridMonth-view .fc-daygrid-dot-event{
+  justify-content: flex-start !important;
+  text-align: left !important;
+  width: 100%;
+  margin-left: 0 !important;
+  margin-right: 0 !important;
+}
+
+/* Event inner content should start at the left edge */
+.fc-dayGridMonth-view .fc-event-main,
+.fc-dayGridMonth-view .fc-event-main-frame{
+  display: flex !important;
+  justify-content: flex-start !important;
+  align-items: center;
+  text-align: left !important;
+  width: 100%;
+}
+
+/* Time + title stay on the left and truncate nicely */
+.fc-dayGridMonth-view .fc-event-time,
+.fc-dayGridMonth-view .fc-event-title{
+  text-align: left !important;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* Dot events especially need the left anchor */
+.fc-dayGridMonth-view .fc-daygrid-dot-event .fc-event-title,
+.fc-dayGridMonth-view .fc-daygrid-dot-event .fc-event-time{
+  margin-left: 0 !important;
+}
+
+.fc-dayGridMonth-view .fc-daygrid-day-events{
+  margin: 0 2px;
+}
+
 .fc-event:hover{
   transform: scale(1.04);
   box-shadow: 0 12px 22px rgba(0,0,0,.34);
