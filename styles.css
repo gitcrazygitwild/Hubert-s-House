@@ -1087,10 +1087,11 @@ html.cat-mode .sparkle-badge{
 }
 
 .fc-dot{
-  width:8px;
-  height:8px;
-  border-radius:50%;
-  background: currentColor;
+  width: 10px;
+  height: 10px;
+  border-radius: 999px;
+  display: inline-block;
+  flex: 0 0 auto;
 }
 
 .fc-time{
