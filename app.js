@@ -681,7 +681,7 @@ function initCalendarUI() {
   const calendarEl = document.getElementById("calendar");
   if (!calendarEl) return;
 
-  calendar = new FullCalendar.Calendar(calendarEl, {
+calendar = new FullCalendar.Calendar(calendarEl, {
   initialView: "dayGridMonth",
   headerToolbar: {
     left: "",
@@ -706,11 +706,11 @@ function initCalendarUI() {
   },
 
   selectable: true,
-    editable: true,
-    nowIndicator: true,
-    height: "auto",
-    longPressDelay: 350,
-    selectLongPressDelay: 350,
+  editable: true,
+  nowIndicator: true,
+  height: "auto",
+  longPressDelay: 350,
+  selectLongPressDelay: 350,
 
     datesSet: () => hookMonthTitleClick(),
 
