@@ -689,21 +689,21 @@ calendar = new FullCalendar.Calendar(calendarEl, {
     right: "dayGridMonth,timeGridWeek,timeGridDay,listCustom"
   },
 
-  views: {
-    dayGridMonth: {
-      eventDisplay: "block",
-      displayEventTime: true,
-      eventTimeFormat: {
-        hour: "numeric",
-        meridiem: "narrow"
-      }
-    },
-    listCustom: {
-      type: "list",
-      duration: { days: 14 },
-      buttonText: "List"
+views: {
+  dayGridMonth: {
+    eventDisplay: "auto",
+    displayEventTime: true,
+    eventTimeFormat: {
+      hour: "numeric",
+      meridiem: "narrow"
     }
   },
+  listCustom: {
+    type: "list",
+    duration: { days: 14 },
+    buttonText: "List"
+  }
+},
 
   selectable: true,
   editable: true,
