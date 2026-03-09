@@ -50,27 +50,6 @@
   --coat-outline: rgba(255,255,255,.18);
 }
 
-/* Month view: left-align dot events */
-.fc-dayGridMonth-view .fc-daygrid-dot-event{
-  justify-content: flex-start !important;
-  text-align: left !important;
-}
-
-/* Make sure the title starts right after the dot */
-.fc-dayGridMonth-view .fc-event-title{
-  text-align: left !important;
-}
-
-/* Ensure the harness itself isn't centering */
-.fc-dayGridMonth-view .fc-daygrid-event-harness{
-  display: flex;
-  justify-content: flex-start;
-}
-
-.fc-daygrid-dot-event .fc-event-title{
-  margin-left: 4px;
-}
-
 *{ box-sizing:border-box; }
 html,body{ height:100%; }
 body{
@@ -1019,4 +998,42 @@ html.cat-mode .sparkle-badge{
 /* Reduced motion */
 @media (prefers-reduced-motion: reduce){
   .btn, .fc-event, .cat-tail, .sparkle-badge{ transition:none !important; animation:none !important; }
+}
+
+/* ---------- Month view: iOS-style event pills ---------- */
+
+/* Stop using dot layout */
+.fc-dayGridMonth-view .fc-daygrid-dot-event{
+  display:block !important;
+  padding:0 !important;
+}
+
+/* Turn events into rounded chips */
+.fc-dayGridMonth-view .fc-event{
+  display:block !important;
+  border-radius:12px !important;
+  padding:2px 6px !important;
+  margin:2px 2px !important;
+  font-size:11px;
+  line-height:1.2;
+  text-align:left !important;
+}
+
+/* Hide the dot indicator */
+.fc-dayGridMonth-view .fc-event-dot{
+  display:none !important;
+}
+
+/* Title formatting */
+.fc-dayGridMonth-view .fc-event-title{
+  white-space:nowrap;
+  overflow:hidden;
+  text-overflow:ellipsis;
+  display:block;
+}
+
+/* Make events fill width nicely */
+.fc-dayGridMonth-view .fc-daygrid-event-harness{
+  margin-left:0 !important;
+  margin-right:0 !important;
 }
