@@ -50,6 +50,27 @@
   --coat-outline: rgba(255,255,255,.18);
 }
 
+/* Month view: left-align dot events */
+.fc-dayGridMonth-view .fc-daygrid-dot-event{
+  justify-content: flex-start !important;
+  text-align: left !important;
+}
+
+/* Make sure the title starts right after the dot */
+.fc-dayGridMonth-view .fc-event-title{
+  text-align: left !important;
+}
+
+/* Ensure the harness itself isn't centering */
+.fc-dayGridMonth-view .fc-daygrid-event-harness{
+  display: flex;
+  justify-content: flex-start;
+}
+
+.fc-daygrid-dot-event .fc-event-title{
+  margin-left: 4px;
+}
+
 *{ box-sizing:border-box; }
 html,body{ height:100%; }
 body{
