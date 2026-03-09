@@ -519,7 +519,7 @@ html.cat-mode .cat-tail{
   display: block;
 }
 
-/* Timed events: stack time over title */
+/* Month view: timed events on one compact line */
 .fc-dayGridMonth-view .fc-daygrid-dot-event{
   display: block !important;
   padding: 2px 6px !important;
@@ -527,38 +527,53 @@ html.cat-mode .cat-tail{
 
 .fc-dayGridMonth-view .fc-daygrid-dot-event .fc-event-main{
   display: flex;
-  flex-direction: column;
-  align-items: flex-start;
-  gap: 1px;
+  align-items: center;
+  gap: 4px;
   min-width: 0;
 }
 
-/* Smaller font for timed events */
+/* Time: compact and small */
 .fc-dayGridMonth-view .fc-daygrid-dot-event .fc-event-time{
-  display: block !important;
+  display: inline-block !important;
+  flex: 0 0 auto;
   font-size: 9px;
   line-height: 1.05;
   font-weight: 800;
   opacity: 0.92;
   white-space: nowrap;
-  overflow: hidden;
-  text-overflow: clip;
 }
 
+/* Title: takes remaining width */
 .fc-dayGridMonth-view .fc-daygrid-dot-event .fc-event-title{
   display: block;
+  min-width: 0;
   font-size: 10px;
   line-height: 1.05;
   font-weight: 800;
   white-space: nowrap;
   overflow: hidden;
-  text-overflow: clip; /* remove the ... */
-  max-width: 100%;
+  text-overflow: clip;
+  position: relative;
 }
 
-/* Hide the colored dot now that time uses the first row */
+/* Hide the colored dot */
 .fc-dayGridMonth-view .fc-event-dot{
   display: none !important;
+}
+
+.fc-dayGridMonth-view .fc-daygrid-dot-event .fc-event-title::after{
+  content: "";
+  position: absolute;
+  right: 0;
+  top: 0;
+  width: 14px;
+  height: 100%;
+  pointer-events: none;
+  background: linear-gradient(
+    to right,
+    rgba(10,14,28,0),
+    rgba(10,14,28,1)
+  );
 }
 
 /* ---------- FullCalendar tweaks ---------- */
