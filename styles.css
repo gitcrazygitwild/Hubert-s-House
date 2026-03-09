@@ -664,7 +664,7 @@ html.cat-mode .cat-tail{ animation-duration:4.6s; }
   position: absolute;
   right: 0;
   top: 0;
-  width: 0px;
+  width: 3px;
   height: 100%;
   pointer-events: none;
   background: linear-gradient(to right, rgba(10,14,28,0), rgba(10,14,28,1));
