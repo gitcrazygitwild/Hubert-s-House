@@ -560,7 +560,7 @@ html.cat-mode .cat-tail{ animation-duration:4.6s; }
   backdrop-filter: blur(6px);
 }
 
-/* TIMED EVENTS (dot + time first row, title second row) */
+/* TIMED EVENTS (dot + time on first row, title full-width on second row) */
 .fc-dayGridMonth-view .fc-daygrid-dot-event{
   display: grid !important;
   grid-template-columns: auto 1fr !important;
@@ -568,34 +568,25 @@ html.cat-mode .cat-tail{ animation-duration:4.6s; }
   column-gap: 4px !important;
   row-gap: 0 !important;
   align-items: start !important;
+
   padding: 2px 4px !important;
   margin: 2px 2px !important;
   overflow: hidden !important;
+  width: 100% !important;
+  min-width: 0 !important;
 }
 
-/* dot */
+/* dot = top left */
 .fc-dayGridMonth-view .fc-daygrid-dot-event .fc-event-dot{
   grid-column: 1 !important;
   grid-row: 1 !important;
   margin: 3px 0 0 0 !important;
+  align-self: start !important;
 }
 
-/* right side wrapper */
-.fc-dayGridMonth-view .fc-daygrid-dot-event .fc-event-main{
-  grid-column: 2 !important;
-  grid-row: 1 / 3 !important;
-  min-width: 0 !important;
-  width: 100% !important;
-  display: grid !important;
-  grid-template-columns: 1fr !important;
-  grid-template-rows: auto auto !important;
-  row-gap: 0 !important;
-  align-items: start !important;
-}
-
-/* time row */
+/* time = top right */
 .fc-dayGridMonth-view .fc-daygrid-dot-event .fc-event-time{
-  grid-column: 1 !important;
+  grid-column: 2 !important;
   grid-row: 1 !important;
   display: block !important;
   font-size: 8px !important;
@@ -604,11 +595,18 @@ html.cat-mode .cat-tail{ animation-duration:4.6s; }
   white-space: nowrap !important;
   margin: 0 !important;
   padding: 0 !important;
+  min-width: 0 !important;
 }
 
-/* title wrapper */
+/* kill FC's inner wrappers so they don't shrink the title row */
+.fc-dayGridMonth-view .fc-daygrid-dot-event .fc-event-main,
+.fc-dayGridMonth-view .fc-daygrid-dot-event .fc-event-main-frame{
+  display: contents !important;
+}
+
+/* title wrapper spans full pill width */
 .fc-dayGridMonth-view .fc-daygrid-dot-event .fc-event-title-container{
-  grid-column: 1 !important;
+  grid-column: 1 / 3 !important;
   grid-row: 2 !important;
   display: block !important;
   width: 100% !important;
@@ -616,7 +614,7 @@ html.cat-mode .cat-tail{ animation-duration:4.6s; }
   overflow: hidden !important;
 }
 
-/* title */
+/* title text */
 .fc-dayGridMonth-view .fc-daygrid-dot-event .fc-event-title{
   display: block !important;
   width: 100% !important;
