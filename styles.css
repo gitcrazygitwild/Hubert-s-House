@@ -70,6 +70,24 @@ body{
 .muted{ color:var(--muted); }
 .tiny{ font-size:11px; color:var(--muted); }
 
+/* Month view only: hide the time label inside day cells */
+.fc-dayGridMonth-view .fc-event-time{
+  display:none !important;
+}
+
+/* Keep titles compact and clipped cleanly in month view */
+.fc-dayGridMonth-view .fc-event-title{
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  display: block;
+}
+
+/* Dot events in month view should start from the left */
+.fc-dayGridMonth-view .fc-daygrid-dot-event{
+  justify-content: flex-start !important;
+}
+
 /* Prevent iOS zoom on inputs (>=16px) */
 input, select, textarea{ font-size:16px; }
 
