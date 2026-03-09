@@ -1124,11 +1124,6 @@ html.cat-mode .sparkle-badge{
   );
 }
 
-/* Stop using dot layout */
-.fc-dayGridMonth-view .fc-daygrid-dot-event{
-  display:block !important;
-  padding:0 !important;
-}
 
 /* Turn events into rounded chips */
 .fc-dayGridMonth-view .fc-event{
