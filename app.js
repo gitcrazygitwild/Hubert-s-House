@@ -682,32 +682,30 @@ function initCalendarUI() {
   if (!calendarEl) return;
 
   calendar = new FullCalendar.Calendar(calendarEl, {
-    initialView: "dayGridMonth",
-    headerToolbar: {
-      left: "",
-      center: "title",
-      right: "dayGridMonth,timeGridWeek,timeGridDay,listCustom"
-    },
+  initialView: "dayGridMonth",
+  headerToolbar: {
+    left: "",
+    center: "title",
+    right: "dayGridMonth,timeGridWeek,timeGridDay,listCustom"
+  },
 
-    // List duration is dynamic; we override before switching to listCustom
   views: {
-  dayGridMonth: {
-    eventDisplay: "block",
-    displayEventTime: true,
-    eventTimeFormat: {
-      hour: "numeric",
-      meridiem: "narrow"
+    dayGridMonth: {
+      eventDisplay: "block",
+      displayEventTime: true,
+      eventTimeFormat: {
+        hour: "numeric",
+        meridiem: "narrow"
+      }
+    },
+    listCustom: {
+      type: "list",
+      duration: { days: 14 },
+      buttonText: "List"
     }
   },
-  listCustom: {
-    type: "list",
-    duration: { days: 14 },
-    buttonText: "List"
-  }
-},
-},
 
-    selectable: true,
+  selectable: true,
     editable: true,
     nowIndicator: true,
     height: "auto",
