@@ -503,32 +503,43 @@ html.cat-mode .cat-tail{
   overflow: hidden; /* key: keep toolbar buttons inside */
 }
 
-/* ---------- Month view: timed events ---------- */
+/* ---------- Month view event styling ---------- */
 
-.fc-dayGridMonth-view .fc-daygrid-dot-event{
+/* common chip look */
+.fc-dayGridMonth-view .fc-event{
+  border-radius: 12px !important;
   padding: 2px 6px !important;
   margin: 2px 2px !important;
   text-align: left !important;
   overflow: hidden !important;
+  box-shadow: 0 3px 6px rgba(0,0,0,.25);
+  backdrop-filter: blur(6px);
 }
 
-/* This is the real wrapper FullCalendar uses for time + title */
-.fc-dayGridMonth-view .fc-daygrid-dot-event .fc-event-main-frame{
-  display: flex !important;
-  align-items: flex-start !important;
-  gap: 4px !important;
+/* timed events: dot + time on top row, title below */
+.fc-dayGridMonth-view .fc-daygrid-dot-event{
+  display: block !important;
+}
+
+.fc-dayGridMonth-view .fc-daygrid-dot-event .fc-event-main{
+  display: grid !important;
+  grid-template-columns: auto auto 1fr !important;
+  grid-template-rows: auto auto !important;
+  column-gap: 4px !important;
+  row-gap: 1px !important;
+  align-items: start !important;
   min-width: 0 !important;
 }
 
-/* Dot */
 .fc-dayGridMonth-view .fc-daygrid-dot-event .fc-event-dot{
-  flex: 0 0 auto !important;
+  grid-column: 1;
+  grid-row: 1;
   margin: 3px 0 0 0 !important;
 }
 
-/* Time */
 .fc-dayGridMonth-view .fc-daygrid-dot-event .fc-event-time{
-  flex: 0 0 auto !important;
+  grid-column: 2;
+  grid-row: 1;
   font-size: 9px !important;
   line-height: 1.05 !important;
   font-weight: 800 !important;
@@ -537,15 +548,9 @@ html.cat-mode .cat-tail{
   padding: 0 !important;
 }
 
-/* Title container */
-.fc-dayGridMonth-view .fc-daygrid-dot-event .fc-event-title-container{
-  min-width: 0 !important;
-  flex: 1 1 auto !important;
-}
-
-/* Title */
 .fc-dayGridMonth-view .fc-daygrid-dot-event .fc-event-title{
-  display: block !important;
+  grid-column: 2 / 4;
+  grid-row: 2;
   font-size: 10px !important;
   line-height: 1.05 !important;
   font-weight: 800 !important;
@@ -553,22 +558,34 @@ html.cat-mode .cat-tail{
   overflow: hidden !important;
   text-overflow: clip !important;
   position: relative !important;
+  min-width: 0 !important;
 }
 
-/* ALL-DAY events: no ... , use fade */
+.fc-dayGridMonth-view .fc-daygrid-dot-event .fc-event-title::after{
+  content: "";
+  position: absolute;
+  right: 0;
+  top: 0;
+  width: 14px;
+  height: 100%;
+  pointer-events: none;
+  background: linear-gradient(to right, rgba(10,14,28,0), rgba(10,14,28,1));
+}
+
+/* all-day events: keep pill but fade title instead of ... */
 .fc-dayGridMonth-view .fc-daygrid-block-event .fc-event-main{
-  display: block;
+  display: block !important;
   position: relative;
   min-width: 0;
 }
 
 .fc-dayGridMonth-view .fc-daygrid-block-event .fc-event-title{
-  display: block;
-  min-width: 0;
-  white-space: nowrap;
-  overflow: hidden;
+  display: block !important;
+  white-space: nowrap !important;
+  overflow: hidden !important;
   text-overflow: clip !important;
-  position: relative;
+  position: relative !important;
+  min-width: 0 !important;
 }
 
 .fc-dayGridMonth-view .fc-daygrid-block-event .fc-event-title::after{
@@ -579,11 +596,7 @@ html.cat-mode .cat-tail{
   width: 14px;
   height: 100%;
   pointer-events: none;
-  background: linear-gradient(
-    to right,
-    rgba(10,14,28,0),
-    rgba(10,14,28,1)
-  );
+  background: linear-gradient(to right, rgba(10,14,28,0), rgba(10,14,28,1));
 }
 
 /* ---------- FullCalendar tweaks ---------- */
