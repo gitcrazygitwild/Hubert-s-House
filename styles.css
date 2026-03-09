@@ -1074,6 +1074,37 @@ html.cat-mode .sparkle-badge{
   .row{ grid-template-columns:1fr; }
 }
 
+.fc-custom-event{
+  display:grid;
+  grid-template-rows:auto auto;
+  width:100%;
+}
+
+.fc-row1{
+  display:flex;
+  align-items:center;
+  gap:4px;
+}
+
+.fc-dot{
+  width:8px;
+  height:8px;
+  border-radius:50%;
+  background: currentColor;
+}
+
+.fc-time{
+  font-size:8px;
+  font-weight:800;
+}
+
+.fc-title{
+  font-size:9px;
+  font-weight:800;
+  white-space:nowrap;
+  overflow:hidden;
+}
+
 /* ---------- Reduced motion ---------- */
 @media (prefers-reduced-motion: reduce){
   .btn, .fc-event, .cat-tail, .sparkle-badge{
