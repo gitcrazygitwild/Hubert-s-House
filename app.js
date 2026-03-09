@@ -691,8 +691,16 @@ function initCalendarUI() {
 
     // List duration is dynamic; we override before switching to listCustom
     views: {
-      listCustom: { type: "list", duration: { days: 14 }, buttonText: "List" }
-    },
+  dayGridMonth: {
+    eventDisplay: "block",
+    displayEventTime: false
+  },
+  listCustom: {
+    type: "list",
+    duration: { days: 14 },
+    buttonText: "List"
+  }
+},
 
     selectable: true,
     editable: true,
