@@ -1,14 +1,4 @@
-/* styles.css — Hubert’s House (v12.2)
-   Changes in THIS CSS per your requests:
-   ✅ “Hubert’s House” always fully shows (stacked lines; no truncation)
-   ✅ Remove “list range” (handled in HTML); tools row spacing updated
-   ✅ Dates popover no longer off to the right; centers under Dates button on mobile
-   ✅ Owner filter behavior (“both” included) is JS, but UI is styled here
-   ✅ Tie coat color/stripes to theme (aurora=blue/cool stripes, sunset=warm stripes, etc.)
-   ✅ Subtle tail wiggle animation (always subtle; a bit more in cat mode)
-   ✅ Cat blink styling hook (JS will toggle .blink on #catLink)
-   NOTE: Inclusive end-date display + search bounds tied to dates box are JS updates.
-*/
+/* styles.css — Hubert’s House (cleaned) */
 
 :root{
   --bg:#070b17;
@@ -39,11 +29,9 @@
   --shadow: 0 30px 70px rgba(0,0,0,.45);
   --shadow2: 0 18px 45px rgba(0,0,0,.35);
 
-  /* iOS safe areas */
   --safe-top: env(safe-area-inset-top, 0px);
   --safe-bot: env(safe-area-inset-bottom, 0px);
 
-  /* Cat “coat” tokens (theme overrides below) */
   --coat-bg: rgba(255,255,255,.08);
   --coat-stripe1: rgba(122,162,255,.55);
   --coat-stripe2: rgba(122,162,255,.20);
@@ -52,6 +40,7 @@
 
 *{ box-sizing:border-box; }
 html,body{ height:100%; }
+
 body{
   margin:0;
   font-family:var(--font-ui);
@@ -70,9 +59,6 @@ body{
 .muted{ color:var(--muted); }
 .tiny{ font-size:11px; color:var(--muted); }
 
-
-
-/* Prevent iOS zoom on inputs (>=16px) */
 input, select, textarea{ font-size:16px; }
 
 /* ---------- Layout ---------- */
@@ -99,7 +85,12 @@ input, select, textarea{ font-size:16px; }
   transform: translateY(-1px);
   box-shadow: 0 10px 18px rgba(0,0,0,.22);
 }
-.btn:disabled{ opacity:.45; cursor:default; transform:none; box-shadow:none; }
+.btn:disabled{
+  opacity:.45;
+  cursor:default;
+  transform:none;
+  box-shadow:none;
+}
 
 .btn-primary{
   background: var(--accent);
@@ -173,31 +164,25 @@ input, select, textarea{ font-size:16px; }
   filter: drop-shadow(0 8px 18px rgba(0,0,0,.25));
   transition: transform .12s ease, filter .12s ease;
 }
-
 .weatherlink:hover{
   transform: translateY(-1px);
   filter: drop-shadow(0 10px 20px rgba(0,0,0,.30));
 }
 
-/* Cat link with theme-tied “coat” */
 .catlink{
   text-decoration:none;
   display:inline-flex;
   align-items:center;
   justify-content:center;
-
-  /* no tile */
   width:auto;
   height:auto;
   padding:0;
-
   border:none;
   background:transparent;
   box-shadow:none;
   overflow:visible;
   filter:none;
-
-  flex: 0 0 auto;
+  flex:0 0 auto;
 }
 .catlink:hover{ transform: translateY(-1px); }
 
@@ -219,41 +204,22 @@ input, select, textarea{ font-size:16px; }
   height:6px;
   border-radius:6px;
   margin-left:4px;
-
-  background: linear-gradient(
-    90deg,
-    rgba(255,255,255,.35),
-    rgba(255,255,255,.15)
-  );
-
-  transform-origin: left center;
+  background: linear-gradient(90deg, rgba(255,255,255,.35), rgba(255,255,255,.15));
+  transform-origin:left center;
   animation: tailWiggle 5s ease-in-out infinite;
-
   box-shadow:
     0 1px 0 rgba(255,255,255,.15) inset,
     0 2px 6px rgba(0,0,0,.25);
 }
 
-/* Subtle tail wiggle (a touch more in cat mode) */
 @keyframes tailWiggle{
-  0%,100%{
-    transform: rotate(0deg);
-  }
-  25%{
-    transform: rotate(8deg);
-  }
-  50%{
-    transform: rotate(-10deg);
-  }
-  75%{
-    transform: rotate(6deg);
-  }
+  0%,100%{ transform: rotate(0deg); }
+  25%{ transform: rotate(8deg); }
+  50%{ transform: rotate(-10deg); }
+  75%{ transform: rotate(6deg); }
 }
-html.cat-mode .cat-tail{
-  animation-duration: 4.6s;
-}
+html.cat-mode .cat-tail{ animation-duration:4.6s; }
 
-/* Blink hook: JS toggles #catLink.blink briefly */
 #catLink.blink .cat-face{
   transform: scaleY(0.18);
   filter: drop-shadow(0 6px 14px rgba(0,0,0,.25));
@@ -262,7 +228,6 @@ html.cat-mode .cat-tail{
   transform: translateY(2px);
 }
 
-/* Ensure title always fully visible (stacked) */
 .brand-stack{
   display:flex;
   flex-direction:column;
@@ -271,7 +236,6 @@ html.cat-mode .cat-tail{
   min-width:0;
   text-align:center;
 }
-
 .brand-title-row{
   display:flex;
   align-items:center;
@@ -279,10 +243,7 @@ html.cat-mode .cat-tail{
   min-width:0;
   width:100%;
 }
-
-.brand-title-row--center{
-  justify-content:center;
-}
+.brand-title-row--center{ justify-content:center; }
 
 .brand-title{
   font-family: var(--font-display);
@@ -298,8 +259,8 @@ html.cat-mode .cat-tail{
 }
 
 .sparkle-badge{
-  font-size: 16px;
-  opacity: .95;
+  font-size:16px;
+  opacity:.95;
   filter: drop-shadow(0 10px 18px rgba(0,0,0,.30));
 }
 
@@ -328,8 +289,8 @@ html.cat-mode .cat-tail{
 
 .search-shell{
   position:relative;
-  flex: 1 1 260px;
-  min-width: 220px;
+  flex:1 1 260px;
+  min-width:220px;
 }
 .search{
   width:100%;
@@ -367,20 +328,19 @@ html.cat-mode .cat-tail{
   display:flex;
   align-items:center;
   gap:10px;
-  flex: 0 0 auto;
+  flex:0 0 auto;
 }
 .search-filters-btn.is-active{
   box-shadow:0 0 0 3px rgba(122,162,255,.18);
   border-color: rgba(122,162,255,.55);
 }
 
-/* Key fix: popover is centered UNDER the Dates button, not pushed off-screen */
 .search-filters{
   position:absolute;
   left:50%;
   transform: translateX(-50%);
   top:44px;
-  width: min(420px, 92vw);
+  width:min(420px, 92vw);
   max-width: calc(100vw - 24px);
   padding:12px;
   border-radius:18px;
@@ -392,11 +352,11 @@ html.cat-mode .cat-tail{
   z-index:60;
 }
 .search-filters-title{
-  font-weight: 950;
-  font-size: 12px;
+  font-weight:950;
+  font-size:12px;
   color: rgba(238,241,247,.78);
-  margin-bottom: 10px;
-  letter-spacing: .2px;
+  margin-bottom:10px;
+  letter-spacing:.2px;
 }
 .search-filters .row{
   display:grid;
@@ -423,16 +383,14 @@ html.cat-mode .cat-tail{
   margin-bottom:10px;
 }
 
-/* 3 columns: nav / owner / spacer (keeps layout stable without list range) */
 .tools-left{
   width:100%;
   display:grid;
-  grid-template-columns: auto 1fr auto;
+  grid-template-columns:auto 1fr auto;
   gap:10px;
   align-items:center;
 }
 
-/* Nav arrows chunk */
 .nav-arrows{
   display:flex;
   gap:8px;
@@ -447,7 +405,6 @@ html.cat-mode .cat-tail{
   padding:8px 0;
 }
 
-/* Owner filter */
 .mini-label{
   display:flex;
   align-items:center;
@@ -482,9 +439,14 @@ html.cat-mode .cat-tail{
   opacity:.98;
   flex-wrap:wrap;
 }
-.legend-inline .item{ display:flex; align-items:center; gap:6px; }
+.legend-inline .item{
+  display:flex;
+  align-items:center;
+  gap:6px;
+}
 .dot{
-  width:10px; height:10px;
+  width:10px;
+  height:10px;
   border-radius:50%;
   display:inline-block;
   opacity:.95;
@@ -494,117 +456,13 @@ html.cat-mode .cat-tail{
 .dot-both{ background:#74d99b; }
 .dot-custom{ background:#bb86fc; }
 
-/* ---------- Calendar shell (contain FC header) ---------- */
+/* ---------- Calendar shell ---------- */
 #calendar{
   border: 1px solid rgba(255,255,255,.18);
   border-radius: 18px;
   padding: 10px;
   background: rgba(0,0,0,.10);
-  overflow: hidden; /* key: keep toolbar buttons inside */
-}
-
-/* ---------- Month view event styling ---------- */
-
-/* common chip look */
-.fc-dayGridMonth-view .fc-event{
-  border-radius: 12px !important;
-  padding: 2px 6px !important;
-  margin: 2px 2px !important;
-  text-align: left !important;
-  overflow: hidden !important;
-  box-shadow: 0 3px 6px rgba(0,0,0,.25);
-  backdrop-filter: blur(6px);
-}
-
-/* timed events: dot + time on top row, title below */
-.fc-dayGridMonth-view .fc-daygrid-dot-event{
-  display: block !important;
-}
-
-.fc-dayGridMonth-view .fc-daygrid-dot-event{
-  display: block !important;
-}
-
-.fc-dayGridMonth-view .fc-daygrid-dot-event .fc-event-main-frame{
-  display: grid !important;
-  grid-template-columns: auto auto 1fr !important;
-  grid-template-rows: auto auto !important;
-  column-gap: 4px !important;
-  row-gap: 1px !important;
-  align-items: start !important;
-  min-width: 0 !important;
-}
-
-.fc-dayGridMonth-view .fc-daygrid-dot-event .fc-event-dot{
-  grid-column: 1 !important;
-  grid-row: 1 !important;
-  margin: 3px 0 0 0 !important;
-}
-
-.fc-dayGridMonth-view .fc-daygrid-dot-event .fc-event-time{
-  grid-column: 2 !important;
-  grid-row: 1 !important;
-  font-size: 9px !important;
-  line-height: 1.05 !important;
-  font-weight: 800 !important;
-  white-space: nowrap !important;
-  margin: 0 !important;
-  padding: 0 !important;
-}
-
-.fc-dayGridMonth-view .fc-daygrid-dot-event .fc-event-title-container{
-  grid-column: 2 / 4 !important;
-  grid-row: 2 !important;
-  min-width: 0 !important;
-}
-
-.fc-dayGridMonth-view .fc-daygrid-dot-event .fc-event-title{
-  font-size: 10px !important;
-  line-height: 1.05 !important;
-  font-weight: 800 !important;
-  white-space: nowrap !important;
-  overflow: hidden !important;
-  text-overflow: clip !important;
-  position: relative !important;
-  min-width: 0 !important;
-}
-
-.fc-dayGridMonth-view .fc-daygrid-dot-event .fc-event-title::after{
-  content: "";
-  position: absolute;
-  right: 0;
-  top: 0;
-  width: 14px;
-  height: 100%;
-  pointer-events: none;
-  background: linear-gradient(to right, rgba(10,14,28,0), rgba(10,14,28,1));
-}
-
-/* all-day events: keep pill but fade title instead of ... */
-.fc-dayGridMonth-view .fc-daygrid-block-event .fc-event-main{
-  display: block !important;
-  position: relative;
-  min-width: 0;
-}
-
-.fc-dayGridMonth-view .fc-daygrid-block-event .fc-event-title{
-  display: block !important;
-  white-space: nowrap !important;
-  overflow: hidden !important;
-  text-overflow: clip !important;
-  position: relative !important;
-  min-width: 0 !important;
-}
-
-.fc-dayGridMonth-view .fc-daygrid-block-event .fc-event-title::after{
-  content: "";
-  position: absolute;
-  right: 0;
-  top: 0;
-  width: 14px;
-  height: 100%;
-  pointer-events: none;
-  background: linear-gradient(to right, rgba(10,14,28,0), rgba(10,14,28,1));
+  overflow: hidden;
 }
 
 /* ---------- FullCalendar tweaks ---------- */
@@ -626,11 +484,9 @@ html.cat-mode .cat-tail{
 .fc .fc-toolbar-chunk{
   display:flex;
   align-items:center;
-  gap: 8px;
-  min-width: 0;
+  gap:8px;
+  min-width:0;
 }
-
-/* Center title chunk */
 .fc .fc-toolbar-chunk:nth-child(2){
   flex: 1 1 100%;
   justify-content: center;
@@ -646,8 +502,6 @@ html.cat-mode .cat-tail{
   padding: 2px 6px;
   width: 100%;
 }
-
-/* Keep right buttons inside and centered */
 .fc .fc-toolbar-chunk:last-child{
   flex: 1 1 100%;
   justify-content: center;
@@ -688,12 +542,111 @@ html.cat-mode .cat-tail{
   transition: transform .14s ease, box-shadow .14s ease;
   text-align: left !important;
 }
-
-
-
 .fc-event:hover{
   transform: scale(1.04);
   box-shadow: 0 12px 22px rgba(0,0,0,.34);
+}
+
+/* ---------- Month view event styling ---------- */
+
+/* Common chip look */
+.fc-dayGridMonth-view .fc-event{
+  border-radius: 12px !important;
+  padding: 2px 6px !important;
+  margin: 2px 2px !important;
+  text-align: left !important;
+  overflow: hidden !important;
+  box-shadow: 0 3px 6px rgba(0,0,0,.25);
+  backdrop-filter: blur(6px);
+}
+
+/* TIMED EVENTS
+   Force dot-event wrapper to stay flex so dot + time can sit on same row */
+.fc-dayGridMonth-view .fc-daygrid-dot-event{
+  display:flex !important;
+  align-items:flex-start !important;
+  gap:4px !important;
+}
+
+/* Dot */
+.fc-dayGridMonth-view .fc-daygrid-dot-event .fc-event-dot{
+  flex:0 0 auto !important;
+  margin: 3px 0 0 0 !important;
+}
+
+/* Right-side content area */
+.fc-dayGridMonth-view .fc-daygrid-dot-event .fc-event-main{
+  flex:1 1 auto !important;
+  min-width:0 !important;
+  display:grid !important;
+  grid-template-columns:auto 1fr !important;
+  grid-template-rows:auto auto !important;
+  column-gap:4px !important;
+  row-gap:1px !important;
+  align-items:start !important;
+}
+
+/* Time on same row as dot */
+.fc-dayGridMonth-view .fc-daygrid-dot-event .fc-event-time{
+  grid-column:1;
+  grid-row:1;
+  font-size:9px !important;
+  line-height:1.05 !important;
+  font-weight:800 !important;
+  white-space:nowrap !important;
+  margin:0 !important;
+  padding:0 !important;
+}
+
+/* Title below time */
+.fc-dayGridMonth-view .fc-daygrid-dot-event .fc-event-title{
+  grid-column:1 / 3;
+  grid-row:2;
+  font-size:10px !important;
+  line-height:1.05 !important;
+  font-weight:800 !important;
+  white-space:nowrap !important;
+  overflow:hidden !important;
+  text-overflow:clip !important;
+  position:relative !important;
+  min-width:0 !important;
+}
+
+/* Fade for timed titles */
+.fc-dayGridMonth-view .fc-daygrid-dot-event .fc-event-title::after{
+  content:"";
+  position:absolute;
+  right:0;
+  top:0;
+  width:14px;
+  height:100%;
+  pointer-events:none;
+  background: linear-gradient(to right, rgba(10,14,28,0), rgba(10,14,28,1));
+}
+
+/* ALL-DAY EVENTS */
+.fc-dayGridMonth-view .fc-daygrid-block-event .fc-event-main{
+  display:block !important;
+  position:relative;
+  min-width:0;
+}
+.fc-dayGridMonth-view .fc-daygrid-block-event .fc-event-title{
+  display:block !important;
+  white-space:nowrap !important;
+  overflow:hidden !important;
+  text-overflow:clip !important;
+  position:relative !important;
+  min-width:0 !important;
+}
+.fc-dayGridMonth-view .fc-daygrid-block-event .fc-event-title::after{
+  content:"";
+  position:absolute;
+  right:0;
+  top:0;
+  width:14px;
+  height:100%;
+  pointer-events:none;
+  background: linear-gradient(to right, rgba(10,14,28,0), rgba(10,14,28,1));
 }
 
 /* ---------- Panels ---------- */
@@ -719,10 +672,10 @@ html.cat-mode .cat-tail{
   gap:10px;
 }
 .panel-card{
-  padding: 12px 12px;
-  border: 1px solid rgba(255,255,255,.12);
+  padding:12px 12px;
+  border:1px solid rgba(255,255,255,.12);
   background: rgba(0,0,0,.18);
-  border-radius: 18px;
+  border-radius:18px;
   cursor:pointer;
   transition: transform .12s ease, background .12s ease, box-shadow .12s ease;
 }
@@ -733,21 +686,21 @@ html.cat-mode .cat-tail{
 }
 
 .owner-pill{
-  font-size: 11px;
-  font-weight: 950;
-  padding: 4px 9px;
-  border-radius: 999px;
-  border: 1px solid rgba(255,255,255,.16);
+  font-size:11px;
+  font-weight:950;
+  padding:4px 9px;
+  border-radius:999px;
+  border:1px solid rgba(255,255,255,.16);
   background: rgba(255,255,255,.06);
-  white-space: nowrap;
+  white-space:nowrap;
 }
 .progress-pill{
   margin-left:auto;
-  font-size: 11px;
-  font-weight: 950;
-  padding: 4px 9px;
-  border-radius: 999px;
-  border: 1px solid rgba(255,255,255,.14);
+  font-size:11px;
+  font-weight:950;
+  padding:4px 9px;
+  border-radius:999px;
+  border:1px solid rgba(255,255,255,.14);
   background: rgba(0,0,0,.18);
   color: rgba(238,241,247,.92);
 }
@@ -769,7 +722,10 @@ html.cat-mode .cat-tail{
   z-index: 9996;
   transition: transform .12s ease, filter .12s ease;
 }
-.fab:hover{ transform: scale(1.08); filter: brightness(1.05); }
+.fab:hover{
+  transform: scale(1.08);
+  filter: brightness(1.05);
+}
 
 /* ---------- Inputs ---------- */
 input, select, textarea{
@@ -807,7 +763,7 @@ input:focus, select:focus, textarea:focus{
 }
 .check input{ width:auto; }
 
-/* ---------- Modals (iOS FIX) ---------- */
+/* ---------- Modals ---------- */
 .modal-backdrop{
   position:fixed;
   inset:0;
@@ -815,7 +771,7 @@ input:focus, select:focus, textarea:focus{
   display:flex;
   align-items:center;
   justify-content:center;
-  padding: 14px;
+  padding:14px;
   padding-top: calc(14px + var(--safe-top));
   padding-bottom: calc(14px + var(--safe-bot));
   z-index:9998;
@@ -823,15 +779,15 @@ input:focus, select:focus, textarea:focus{
 }
 
 .modal{
-  width: min(620px, 100%);
+  width:min(620px, 100%);
   border-radius: var(--radius);
   padding:16px;
   background: var(--card);
-  border: 1px solid var(--border);
+  border:1px solid var(--border);
   backdrop-filter: blur(18px);
   -webkit-backdrop-filter: blur(18px);
   box-shadow: var(--shadow);
-  max-height: min(86vh, 780px);
+  max-height:min(86vh, 780px);
   display:flex;
   flex-direction:column;
 }
@@ -845,8 +801,8 @@ input:focus, select:focus, textarea:focus{
 }
 .modal-title{
   font-family: var(--font-display);
-  font-weight: 950;
-  font-size: 18px;
+  font-weight:950;
+  font-size:18px;
 }
 
 .modal-scroll{
@@ -855,63 +811,60 @@ input:focus, select:focus, textarea:focus{
   overscroll-behavior: contain;
   padding-bottom: calc(10px + var(--safe-bot));
 }
-
 .modal-body{
   display:flex;
   flex-direction:column;
   gap:10px;
 }
-
 .modal-actions{
   display:flex;
   align-items:center;
   gap:10px;
-  margin-top: 12px;
+  margin-top:12px;
 }
 .spacer{ flex:1; }
 
-/* Details modal */
 .modal--details .modal-scroll{
-  padding: 2px 2px calc(12px + var(--safe-bot));
+  padding:2px 2px calc(12px + var(--safe-bot));
 }
 .details-hero{
-  padding: 10px 10px 6px;
-  border: 1px solid rgba(255,255,255,.10);
+  padding:10px 10px 6px;
+  border:1px solid rgba(255,255,255,.10);
   background: rgba(0,0,0,.16);
-  border-radius: 18px;
+  border-radius:18px;
 }
 .details-title{
   font-family: var(--font-display);
-  font-weight: 950;
-  font-size: 18px;
-  letter-spacing: .2px;
-  margin-top: 8px;
-  margin-bottom: 4px;
+  font-weight:950;
+  font-size:18px;
+  letter-spacing:.2px;
+  margin-top:8px;
+  margin-bottom:4px;
 }
 .details-grid{
-  margin-top: 10px;
+  margin-top:10px;
   display:flex;
   flex-direction:column;
   gap:10px;
 }
 .details-row{
-  padding: 10px 10px;
-  border: 1px solid rgba(255,255,255,.10);
+  padding:10px 10px;
+  border:1px solid rgba(255,255,255,.10);
   background: rgba(0,0,0,.14);
-  border-radius: 18px;
+  border-radius:18px;
 }
 .details-label{
-  font-size: 12px;
-  font-weight: 950;
+  font-size:12px;
+  font-weight:950;
   color: rgba(238,241,247,.72);
-  margin-bottom: 6px;
+  margin-bottom:6px;
 }
 .details-value{
-  font-size: 14px;
-  font-weight: 850;
+  font-size:14px;
+  font-weight:850;
   color: rgba(238,241,247,.92);
-  line-height: 1.3;
-  white-space: pre-wrap;
+  line-height:1.3;
+  white-space:pre-wrap;
 }
 
 /* ---------- Checklist ---------- */
@@ -922,14 +875,20 @@ input:focus, select:focus, textarea:focus{
 }
 .checkitem{
   display:grid;
-  grid-template-columns: 22px 1fr 46px;
+  grid-template-columns:22px 1fr 46px;
   gap:8px;
   align-items:center;
 }
-.checkitem input[type="checkbox"]{ width:18px; height:18px; }
+.checkitem input[type="checkbox"]{
+  width:18px;
+  height:18px;
+}
 
 /* ---------- Hint ---------- */
-.hint{ margin-top:10px; opacity:.92; }
+.hint{
+  margin-top:10px;
+  opacity:.92;
+}
 
 /* ---------- Gate ---------- */
 .gate{
@@ -945,23 +904,23 @@ input:focus, select:focus, textarea:focus{
   z-index:9999;
 }
 .gate-card{
-  width: min(520px, 100%);
+  width:min(520px, 100%);
   background: var(--card);
-  border: 1px solid var(--border);
+  border:1px solid var(--border);
   border-radius: var(--radius);
   padding:18px;
   box-shadow: var(--shadow);
 }
 .gate-title{
   font-family: var(--font-display);
-  font-weight: 950;
-  font-size: 22px;
+  font-weight:950;
+  font-size:22px;
   margin-bottom:4px;
 }
 .gate-sub{
   color: rgba(238,241,247,.76);
   margin-bottom:12px;
-  font-weight: 850;
+  font-weight:850;
 }
 .gate-form{ display:flex; gap:10px; }
 .gate-input{ -webkit-text-security: disc; }
@@ -975,23 +934,23 @@ input:focus, select:focus, textarea:focus{
   display:flex;
   gap:10px;
   align-items:center;
-  font-weight: 900;
+  font-weight:900;
   color: rgba(238,241,247,.75);
 }
 .gate-remember input{ width:auto; }
 
 /* ---------- Cat mode ambient layer ---------- */
 .cat-layer{
-  position: fixed;
-  inset: 0;
-  pointer-events: none;
-  overflow: hidden;
-  display: none;
-  z-index: 5;
-  opacity: 1;
+  position:fixed;
+  inset:0;
+  pointer-events:none;
+  overflow:hidden;
+  display:none;
+  z-index:5;
+  opacity:1;
 }
 html.cat-mode .cat-layer{
-  display: block !important;
+  display:block !important;
 }
 html.cat-mode .sparkle-badge{
   animation: sparkleWiggle 1.8s ease-in-out infinite;
@@ -1001,16 +960,15 @@ html.cat-mode .sparkle-badge{
   50%{ transform: rotate(10deg); }
 }
 
-/* ---------- Theme variants (dice sets data-theme) ---------- */
+/* ---------- Theme variants ---------- */
 :root[data-theme="aurora"]{
   --accent:#7aa2ff;
   --blob1: rgba(122,162,255,.45);
   --blob2: rgba(255,107,107,.28);
   --blob3: rgba(116,217,155,.25);
-
   --coat-bg: rgba(10,18,38,.60);
-  --coat-stripe1: rgba(122,162,255,.62);   /* cool blue */
-  --coat-stripe2: rgba(116,217,155,.22);   /* mint hint */
+  --coat-stripe1: rgba(122,162,255,.62);
+  --coat-stripe2: rgba(116,217,155,.22);
   --coat-outline: rgba(122,162,255,.30);
 }
 :root[data-theme="sunset"]{
@@ -1018,10 +976,9 @@ html.cat-mode .sparkle-badge{
   --blob1: rgba(255,107,107,.38);
   --blob2: rgba(255,194,107,.26);
   --blob3: rgba(122,162,255,.20);
-
   --coat-bg: rgba(40,12,10,.52);
-  --coat-stripe1: rgba(255,107,107,.62);   /* warm red */
-  --coat-stripe2: rgba(255,194,107,.30);   /* amber */
+  --coat-stripe1: rgba(255,107,107,.62);
+  --coat-stripe2: rgba(255,194,107,.30);
   --coat-outline: rgba(255,194,107,.26);
 }
 :root[data-theme="mint"]{
@@ -1029,7 +986,6 @@ html.cat-mode .sparkle-badge{
   --blob1: rgba(116,217,155,.32);
   --blob2: rgba(122,162,255,.22);
   --blob3: rgba(255,107,107,.18);
-
   --coat-bg: rgba(10,28,22,.54);
   --coat-stripe1: rgba(116,217,155,.58);
   --coat-stripe2: rgba(122,162,255,.22);
@@ -1040,7 +996,6 @@ html.cat-mode .sparkle-badge{
   --blob1: rgba(187,134,252,.30);
   --blob2: rgba(122,162,255,.22);
   --blob3: rgba(116,217,155,.16);
-
   --coat-bg: rgba(22,10,34,.54);
   --coat-stripe1: rgba(187,134,252,.60);
   --coat-stripe2: rgba(122,162,255,.20);
@@ -1052,7 +1007,6 @@ html.cat-mode .sparkle-badge{
   --blob2: rgba(255,255,255,.10);
   --blob3: rgba(255,255,255,.08);
   --card: rgba(22, 24, 30, .70);
-
   --coat-bg: rgba(0,0,0,.20);
   --coat-stripe1: rgba(255,255,255,.16);
   --coat-stripe2: rgba(255,255,255,.06);
@@ -1062,145 +1016,46 @@ html.cat-mode .sparkle-badge{
 /* ---------- Mobile tweaks ---------- */
 @media (max-width:720px){
   .search-row{ align-items:stretch; }
-  .search-shell{ min-width: 0; }
+  .search-shell{ min-width:0; }
 
-  /* Make Dates button full-height-ish */
-  .search-filters-wrap{ width: 100%; }
-  .search-filters-btn{ width: 100%; }
+  .search-filters-wrap{ width:100%; }
+  .search-filters-btn{ width:100%; }
 
-  /* Popover centers under button and uses full width if needed */
   .search-filters{
-    left: 50%;
+    left:50%;
     transform: translateX(-50%);
-    width: min(520px, 94vw);
+    width:min(520px, 94vw);
     max-width: calc(100vw - 24px);
   }
-  .search-filters .row{ grid-template-columns: 1fr; }
+  .search-filters .row{ grid-template-columns:1fr; }
 
-  .fc .fc-button{ padding: 7px 9px; border-radius: 13px; }
-  .fc .fc-toolbar-title{ font-size: 17px; }
+  .fc .fc-button{
+    padding:7px 9px;
+    border-radius:13px;
+  }
+  .fc .fc-toolbar-title{ font-size:17px; }
 
-  /* Tools row stacks nicely */
   .tools-left{
-    grid-template-columns: 1fr;
+    grid-template-columns:1fr;
     gap:10px;
   }
-  .nav-arrows{ justify-content: space-between; }
+  .nav-arrows{ justify-content:space-between; }
   .mini-label{ gap:12px; }
 
-  /* iOS: bottom sheet style for modals */
   .modal-backdrop{ align-items:flex-end; }
   .modal{
     width:100%;
     border-bottom-left-radius:0;
     border-bottom-right-radius:0;
-    max-height: 86vh;
+    max-height:86vh;
   }
   .row{ grid-template-columns:1fr; }
 }
 
-/* Reduced motion */
+/* ---------- Reduced motion ---------- */
 @media (prefers-reduced-motion: reduce){
-  .btn, .fc-event, .cat-tail, .sparkle-badge{ transition:none !important; animation:none !important; }
+  .btn, .fc-event, .cat-tail, .sparkle-badge{
+    transition:none !important;
+    animation:none !important;
+  }
 }
-
-/* ---------- Month view: iOS-style event pills ---------- */
-
-
-
-/* ---------- Month view event styling ---------- */
-
-/* common chip look */
-.fc-dayGridMonth-view .fc-event{
-  border-radius: 12px !important;
-  padding: 2px 6px !important;
-  margin: 2px 2px !important;
-  text-align: left !important;
-  overflow: hidden !important;
-  box-shadow: 0 3px 6px rgba(0,0,0,.25);
-  backdrop-filter: blur(6px);
-}
-
-/* timed events: dot + time on top row, title below */
-.fc-dayGridMonth-view .fc-daygrid-dot-event{
-  display: block !important;
-}
-
-.fc-dayGridMonth-view .fc-daygrid-dot-event .fc-event-main{
-  display: grid !important;
-  grid-template-columns: auto auto 1fr !important;
-  grid-template-rows: auto auto !important;
-  column-gap: 4px !important;
-  row-gap: 1px !important;
-  align-items: start !important;
-  min-width: 0 !important;
-}
-
-.fc-dayGridMonth-view .fc-daygrid-dot-event .fc-event-dot{
-  grid-column: 1;
-  grid-row: 1;
-  margin: 3px 0 0 0 !important;
-}
-
-.fc-dayGridMonth-view .fc-daygrid-dot-event .fc-event-time{
-  grid-column: 2;
-  grid-row: 1;
-  font-size: 9px !important;
-  line-height: 1.05 !important;
-  font-weight: 800 !important;
-  white-space: nowrap !important;
-  margin: 0 !important;
-  padding: 0 !important;
-}
-
-.fc-dayGridMonth-view .fc-daygrid-dot-event .fc-event-title{
-  grid-column: 2 / 4;
-  grid-row: 2;
-  font-size: 10px !important;
-  line-height: 1.05 !important;
-  font-weight: 800 !important;
-  white-space: nowrap !important;
-  overflow: hidden !important;
-  text-overflow: clip !important;
-  position: relative !important;
-  min-width: 0 !important;
-}
-
-.fc-dayGridMonth-view .fc-daygrid-dot-event .fc-event-title::after{
-  content: "";
-  position: absolute;
-  right: 0;
-  top: 0;
-  width: 14px;
-  height: 100%;
-  pointer-events: none;
-  background: linear-gradient(to right, rgba(10,14,28,0), rgba(10,14,28,1));
-}
-
-/* all-day events: keep pill but fade title instead of ... */
-.fc-dayGridMonth-view .fc-daygrid-block-event .fc-event-main{
-  display: block !important;
-  position: relative;
-  min-width: 0;
-}
-
-.fc-dayGridMonth-view .fc-daygrid-block-event .fc-event-title{
-  display: block !important;
-  white-space: nowrap !important;
-  overflow: hidden !important;
-  text-overflow: clip !important;
-  position: relative !important;
-  min-width: 0 !important;
-}
-
-.fc-dayGridMonth-view .fc-daygrid-block-event .fc-event-title::after{
-  content: "";
-  position: absolute;
-  right: 0;
-  top: 0;
-  width: 14px;
-  height: 100%;
-  pointer-events: none;
-  background: linear-gradient(to right, rgba(10,14,28,0), rgba(10,14,28,1));
-}
-
