@@ -560,48 +560,37 @@ html.cat-mode .cat-tail{ animation-duration:4.6s; }
   backdrop-filter: blur(6px);
 }
 
-/* TIMED EVENTS (dot + time first row, title full-width second row) */
+/* TIMED EVENTS (dot + time on row 1, title full-width on row 2) */
 .fc-dayGridMonth-view .fc-daygrid-dot-event{
   display: grid !important;
-  grid-template-columns: auto 1fr !important;
+  grid-template-columns: auto auto 1fr !important;
+  grid-template-rows: auto auto !important;
   column-gap: 4px !important;
+  row-gap: 0 !important;
   align-items: start !important;
   padding: 2px 4px !important;
   margin: 2px 2px !important;
   overflow: hidden !important;
 }
 
-/* dot on the left */
+/* kill wrapper layout constraints */
+.fc-dayGridMonth-view .fc-daygrid-dot-event .fc-event-main,
+.fc-dayGridMonth-view .fc-daygrid-dot-event .fc-event-main-frame{
+  display: contents !important;
+}
+
+/* dot = first row, first col */
 .fc-dayGridMonth-view .fc-daygrid-dot-event .fc-event-dot{
   grid-column: 1 !important;
   grid-row: 1 !important;
   margin: 3px 0 0 0 !important;
 }
 
-/* right-side wrapper takes all remaining width */
-.fc-dayGridMonth-view .fc-daygrid-dot-event .fc-event-main{
+/* time = first row, second col */
+.fc-dayGridMonth-view .fc-daygrid-dot-event .fc-event-time{
   grid-column: 2 !important;
   grid-row: 1 !important;
-  width: 100% !important;
-  min-width: 0 !important;
   display: block !important;
-}
-
-/* stack time over title */
-.fc-dayGridMonth-view .fc-daygrid-dot-event .fc-event-main-frame{
-  display: grid !important;
-  grid-template-columns: 1fr !important;
-  grid-template-rows: auto auto !important;
-  row-gap: 0 !important;
-  width: 100% !important;
-  min-width: 0 !important;
-}
-
-/* time row */
-.fc-dayGridMonth-view .fc-daygrid-dot-event .fc-event-time{
-  grid-row: 1 !important;
-  display: block !important;
-  width: 100% !important;
   font-size: 8px !important;
   line-height: 1 !important;
   font-weight: 800 !important;
@@ -610,8 +599,9 @@ html.cat-mode .cat-tail{ animation-duration:4.6s; }
   padding: 0 !important;
 }
 
-/* title wrapper must also take full width */
+/* title wrapper = full second row */
 .fc-dayGridMonth-view .fc-daygrid-dot-event .fc-event-title-container{
+  grid-column: 1 / 4 !important;
   grid-row: 2 !important;
   display: block !important;
   width: 100% !important;
@@ -633,7 +623,7 @@ html.cat-mode .cat-tail{ animation-duration:4.6s; }
   position: relative !important;
 }
 
-/* subtle fade */
+/* fade */
 .fc-dayGridMonth-view .fc-daygrid-dot-event .fc-event-title::after{
   content: "";
   position: absolute;
