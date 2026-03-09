@@ -505,6 +505,8 @@ html.cat-mode .cat-tail{
 
 /* ---------- Month view: compact 2-line timed events ---------- */
 
+/* ---------- Month view: timed + all-day event layout ---------- */
+
 /* Base month-view event chip */
 .fc-dayGridMonth-view .fc-event{
   border-radius: 10px !important;
@@ -514,37 +516,46 @@ html.cat-mode .cat-tail{
   overflow: hidden;
 }
 
-/* All-day events keep the current compact pill look */
-.fc-dayGridMonth-view .fc-daygrid-block-event .fc-event-main{
-  display: block;
-}
-
-/* Month view: timed events on one compact line */
+/* TIMED events: dot + time on first row, title below */
 .fc-dayGridMonth-view .fc-daygrid-dot-event{
   display: block !important;
   padding: 2px 6px !important;
 }
 
 .fc-dayGridMonth-view .fc-daygrid-dot-event .fc-event-main{
-  display: flex;
-  align-items: center;
-  gap: 4px;
+  display: grid;
+  grid-template-columns: auto 1fr;
+  grid-template-areas:
+    "meta meta"
+    "title title";
+  row-gap: 1px;
   min-width: 0;
 }
 
-/* Time: compact and small */
+/* top row = dot + time together */
 .fc-dayGridMonth-view .fc-daygrid-dot-event .fc-event-time{
-  display: inline-block !important;
-  flex: 0 0 auto;
+  grid-area: meta;
+  display: flex !important;
+  align-items: center;
+  gap: 4px;
+  min-width: 0;
   font-size: 9px;
   line-height: 1.05;
   font-weight: 800;
-  opacity: 0.92;
+  opacity: 0.95;
   white-space: nowrap;
 }
 
-/* Title: takes remaining width */
+/* keep the real dot visible and nudge left */
+.fc-dayGridMonth-view .fc-daygrid-dot-event .fc-event-dot{
+  display: inline-block !important;
+  margin: 0 2px 0 0 !important;
+  flex: 0 0 auto;
+}
+
+/* second row = title */
 .fc-dayGridMonth-view .fc-daygrid-dot-event .fc-event-title{
+  grid-area: title;
   display: block;
   min-width: 0;
   font-size: 10px;
@@ -556,12 +567,39 @@ html.cat-mode .cat-tail{
   position: relative;
 }
 
-/* Hide the colored dot */
-.fc-dayGridMonth-view .fc-event-dot{
-  display: none !important;
+/* fade title instead of ... */
+.fc-dayGridMonth-view .fc-daygrid-dot-event .fc-event-title::after{
+  content: "";
+  position: absolute;
+  right: 0;
+  top: 0;
+  width: 14px;
+  height: 100%;
+  pointer-events: none;
+  background: linear-gradient(
+    to right,
+    rgba(10,14,28,0),
+    rgba(10,14,28,1)
+  );
 }
 
-.fc-dayGridMonth-view .fc-daygrid-dot-event .fc-event-title::after{
+/* ALL-DAY events: no ... , use fade */
+.fc-dayGridMonth-view .fc-daygrid-block-event .fc-event-main{
+  display: block;
+  position: relative;
+  min-width: 0;
+}
+
+.fc-dayGridMonth-view .fc-daygrid-block-event .fc-event-title{
+  display: block;
+  min-width: 0;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: clip !important;
+  position: relative;
+}
+
+.fc-dayGridMonth-view .fc-daygrid-block-event .fc-event-title::after{
   content: "";
   position: absolute;
   right: 0;
@@ -1119,10 +1157,10 @@ html.cat-mode .sparkle-badge{
 
 /* Title formatting */
 .fc-dayGridMonth-view .fc-event-title{
-  white-space:nowrap;
-  overflow:hidden;
-  text-overflow:ellipsis;
-  display:block;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: clip;
+  display: block;
 }
 
 /* Make events fill width nicely */
