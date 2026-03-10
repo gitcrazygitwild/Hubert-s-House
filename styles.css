@@ -680,11 +680,13 @@ html.cat-mode .cat-tail{ animation-duration:4.6s; }
   row-gap: 0 !important;
   align-items: start !important;
 
-  padding: 2px 4px !important;
-  margin: 2px 2px !important;
+  padding: 2px 5px !important;
+  margin: 2px auto !important;
   overflow: hidden !important;
-  width: 100% !important;
+  width: calc(100% - 10px) !important;
+  max-width: calc(100% - 10px) !important;
   min-width: 0 !important;
+  box-sizing: border-box !important;
 }
 
 /* dot */
