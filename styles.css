@@ -275,6 +275,83 @@ html.cat-mode .cat-tail{ animation-duration:4.6s; }
   padding:8px 0;
 }
 
+
+.fc-custom-event{
+  display:block;
+  width:100%;
+  min-width:0;
+}
+
+.fc-row1{
+  display:flex;
+  align-items:center;
+  gap:4px;
+  margin-bottom:1px;
+}
+
+.fc-dot{
+  width:8px;
+  height:8px;
+  border-radius:50%;
+  display:inline-block;
+  flex:0 0 auto;
+}
+
+.fc-time{
+  font-size:8px;
+  line-height:1;
+  font-weight:700;
+  opacity:.78;
+  white-space:nowrap;
+}
+
+.fc-title{
+  display:flex;
+  align-items:center;
+  gap:4px;
+  min-width:0;
+  width:100%;
+  font-size:9px;
+  line-height:1.05;
+  font-weight:800;
+  white-space:nowrap;
+  overflow:hidden;
+}
+
+.fc-type-icon{
+  flex:0 0 auto;
+  font-size:9px;
+  line-height:1;
+}
+
+.fc-title-text{
+  min-width:0;
+  overflow:hidden;
+  white-space:nowrap;
+  text-overflow:clip;
+  position:relative;
+  display:block;
+  width:100%;
+}
+
+.fc-title-text::after{
+  content:"";
+  position:absolute;
+  right:0;
+  top:0;
+  width:6px;
+  height:100%;
+  pointer-events:none;
+  background:linear-gradient(to right, rgba(10,14,28,0), rgba(10,14,28,1));
+}
+
+/* tiny multi-day cleanup */
+.fc-multiday{
+  box-shadow: inset 3px 0 0 rgba(255,255,255,.18);
+}
+
+
+
 /* ---------- Search ---------- */
 .search-row-wrap{
   margin-top:8px;
