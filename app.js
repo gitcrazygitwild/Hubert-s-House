@@ -516,6 +516,16 @@ async function initApp() {
   db = getFirestore(app);
   eventsCol = collection(db, "events");
 
+function getTypeIcon(type) {
+  switch ((type || "").toLowerCase()) {
+    case "trip": return "✈️";
+    case "wedding": return "💍";
+    case "appointment": return "📅";
+    case "party": return "🎉";
+    default: return "•";
+  }
+}
+
   initCalendarUI();
   initUIHooks();
 
@@ -689,40 +699,85 @@ calendar = new FullCalendar.Calendar(calendarEl, {
     right: "dayGridMonth,timeGridWeek,timeGridDay,listCustom"
   },
   
-  eventContent: function(arg) {
-  if (arg.event.allDay) {
-    const title = document.createElement("div")
-    title.className = "fc-title"
-    title.innerText = arg.event.title
+eventContent: function(arg) {
+  function formatMonthTime(date) {
+    if (!date) return "";
 
-    const wrapper = document.createElement("div")
-    wrapper.className = "fc-custom-event fc-custom-event-allday"
-    wrapper.append(title)
+    const mins = date.getMinutes();
+    const opts = {
+      hour: "numeric",
+      minute: mins === 0 ? undefined : "2-digit"
+    };
 
-    return { domNodes: [wrapper] }
+    let s = date.toLocaleTimeString([], opts).toLowerCase();
+    s = s.replace(" am", "a").replace(" pm", "p").replace(":00", "");
+    return s;
   }
 
-  const dot = document.createElement("span")
-  dot.className = "fc-dot"
-  dot.style.backgroundColor = arg.event.borderColor || arg.event.backgroundColor || "#fff"
+  function getTypeIcon(type) {
+    switch ((type || "").toLowerCase()) {
+      case "trip": return "✈️";
+      case "wedding": return "💍";
+      case "appointment": return "📅";
+      case "party": return "🎉";
+      default: return "•";
+    }
+  }
 
-  const time = document.createElement("span")
-  time.className = "fc-time"
-  time.innerText = arg.timeText
+  const wrapper = document.createElement("div");
+  wrapper.className = "fc-custom-event";
 
-  const title = document.createElement("div")
-  title.className = "fc-title"
-  title.innerText = arg.event.title
+  const isAllDay = arg.event.allDay;
 
-  const row1 = document.createElement("div")
-  row1.className = "fc-row1"
-  row1.append(dot, time)
+  if (!isAllDay) {
+    const dot = document.createElement("span");
+    dot.className = "fc-dot";
 
-  const wrapper = document.createElement("div")
-  wrapper.className = "fc-custom-event"
-  wrapper.append(row1, title)
+    const bg =
+      arg.event.backgroundColor ||
+      arg.event.extendedProps?.backgroundColor ||
+      "#7aa2ff";
 
-  return { domNodes: [wrapper] }
+    dot.style.background = bg;
+
+    const time = document.createElement("span");
+    time.className = "fc-time";
+    time.innerText = formatMonthTime(arg.event.start);
+
+    const row1 = document.createElement("div");
+    row1.className = "fc-row1";
+    row1.append(dot, time);
+
+    wrapper.append(row1);
+  }
+
+  const icon = document.createElement("span");
+  icon.className = "fc-type-icon";
+  icon.innerText = getTypeIcon(arg.event.extendedProps?.type);
+
+  const titleText = document.createElement("span");
+  titleText.className = "fc-title-text";
+  titleText.innerText = arg.event.title;
+
+  const title = document.createElement("div");
+  title.className = "fc-title";
+  title.append(icon, titleText);
+
+  wrapper.append(title);
+
+  const start = arg.event.start;
+  const end = arg.event.end;
+  const isMultiDay =
+    isAllDay &&
+    start &&
+    end &&
+    (new Date(end).getTime() - new Date(start).getTime()) > 24 * 60 * 60 * 1000;
+
+  if (isMultiDay) {
+    wrapper.classList.add("fc-multiday");
+  }
+
+  return { domNodes: [wrapper] };
 },
 
 views: {
