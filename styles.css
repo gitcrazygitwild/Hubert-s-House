@@ -294,21 +294,61 @@ html.cat-mode .cat-tail{ animation-duration:4.6s; }
   border-bottom-left-radius: 0 !important;
 }
 
-/* outer custom wrapper */
 .fc-custom-event{
-  display: grid;
-  grid-template-rows: auto auto;
-  width: 100%;
-  min-width: 0;
+  display:grid;
+  grid-template-rows:auto auto;
+  width:100%;
+  max-width:100%;
+  min-width:0;
+  overflow:hidden;
 }
 
-/* first row: dot + time */
 .fc-row1{
-  display: flex;
-  align-items: center;
-  gap: 4px;
-  min-width: 0;
-  margin-bottom: 1px;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  gap:4px;
+  min-width:0;
+  max-width:100%;
+  margin-bottom:1px;
+  overflow:hidden;
+}
+
+.fc-time{
+  font-size:8px;
+  line-height:1;
+  font-weight:800;
+  white-space:nowrap;
+  flex:0 0 auto;
+  opacity:.95;
+}
+
+.fc-title{
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  gap:4px;
+  width:100%;
+  max-width:100%;
+  min-width:0;
+  font-size:9px;
+  line-height:1.05;
+  font-weight:800;
+  white-space:nowrap;
+  overflow:hidden;
+  text-align:center;
+}
+
+.fc-title-text{
+  display:block;
+  flex:1 1 auto;
+  min-width:0;
+  max-width:100%;
+  white-space:nowrap;
+  overflow:hidden;
+  text-overflow:clip;
+  position:relative;
+  text-align:center;
 }
 
 /* timed-event dot */
@@ -320,29 +360,6 @@ html.cat-mode .cat-tail{ animation-duration:4.6s; }
   flex: 0 0 auto;
 }
 
-/* time text */
-.fc-time{
-  font-size: 8px;
-  line-height: 1;
-  font-weight: 800;
-  white-space: nowrap;
-  flex: 0 0 auto;
-  opacity: .95;
-}
-
-/* second row: icon + title */
-.fc-title{
-  display: flex;
-  align-items: center;
-  gap: 4px;
-  width: 100%;
-  min-width: 0;
-  font-size: 9px;
-  line-height: 1.05;
-  font-weight: 800;
-  white-space: nowrap;
-  overflow: hidden;
-}
 
 /* event type icon */
 .fc-type-icon{
@@ -355,17 +372,6 @@ html.cat-mode .cat-tail{ animation-duration:4.6s; }
   display: none;
 }
 
-/* actual title text */
-.fc-title-text{
-  display: block;
-  flex: 1 1 auto;
-  min-width: 0;
-  width: auto;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: clip;
-  position: relative;
-}
 
 /* subtle fade on title only */
 .fc-title-text::after{
@@ -373,7 +379,7 @@ html.cat-mode .cat-tail{ animation-duration:4.6s; }
   position: absolute;
   top: 0;
   right: 0;
-  width: 6px;
+  width: 4px;
   height: 100%;
   pointer-events: none;
   background: linear-gradient(to right, rgba(10,14,28,0), rgba(10,14,28,1));
