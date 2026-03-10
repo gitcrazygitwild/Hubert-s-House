@@ -765,8 +765,10 @@ eventContent: function(arg) {
 
   wrapper.append(title);
 
-  const start = arg.event.start;
+    const start = arg.event.start;
   const end = arg.event.end;
+  const date = arg.date;
+
   const isMultiDay =
     isAllDay &&
     start &&
@@ -776,12 +778,8 @@ eventContent: function(arg) {
   if (isMultiDay) {
     wrapper.classList.add("fc-multiday");
   }
-const view = arg.view;
-const date = arg.date;
-const start = arg.event.start;
-const end = arg.event.end;
 
-if (start && end && arg.event.allDay) {
+  if (start && end && arg.event.allDay) {
 
   const startDay = new Date(start);
   startDay.setHours(0,0,0,0);
