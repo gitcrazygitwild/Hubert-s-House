@@ -290,8 +290,8 @@ html.cat-mode .cat-tail{ animation-duration:4.6s; }
 }
 
 .fc-dot{
-  width:8px;
-  height:8px;
+  width:4px;
+  height:4px;
   border-radius:50%;
   display:inline-block;
   flex:0 0 auto;
