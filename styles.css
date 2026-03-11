@@ -304,19 +304,16 @@ html.cat-mode .cat-tail{ animation-duration:4.6s; }
   overflow:hidden;
 }
 
-/* first row: dot + time */
 .fc-row1{
   display:flex;
   align-items:center;
-  gap:4px;
+  gap:2px; /* moved time closer to dot */
   width:100%;
   min-width:0;
-  max-width:100%;
   margin-bottom:1px;
   overflow:hidden;
 }
 
-/* timed-event dot */
 .fc-dot{
   width:7px;
   height:7px;
@@ -325,25 +322,23 @@ html.cat-mode .cat-tail{ animation-duration:4.6s; }
   flex:0 0 auto;
 }
 
-/* time text */
 .fc-time{
   font-size:8px;
   line-height:1;
   font-weight:800;
   white-space:nowrap;
   flex:0 0 auto;
-  opacity:.92;
+  opacity:.95;
   letter-spacing:-0.1px;
 }
 
-/* second row: icon + title */
 .fc-title{
-  display:flex;
+  display:grid;
+  grid-template-columns:auto minmax(0,1fr);
   align-items:center;
-  gap:3px;
+  column-gap:4px;
   width:100%;
   min-width:0;
-  max-width:none;
   font-size:9px;
   line-height:1.08;
   font-weight:800;
@@ -351,9 +346,7 @@ html.cat-mode .cat-tail{ animation-duration:4.6s; }
   overflow:hidden;
 }
 
-/* event type icon */
 .fc-type-icon{
-  flex:0 0 auto;
   font-size:9px;
   line-height:1;
 }
@@ -362,13 +355,10 @@ html.cat-mode .cat-tail{ animation-duration:4.6s; }
   display:none;
 }
 
-/* actual title text */
 .fc-title-text{
   display:block;
-  flex:1 1 0;
-  width:100%;
   min-width:0;
-  max-width:none;
+  width:100%;
   white-space:nowrap;
   overflow:hidden;
   text-overflow:clip;
