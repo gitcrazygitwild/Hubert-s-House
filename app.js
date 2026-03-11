@@ -156,6 +156,7 @@ const detailsClose = document.getElementById("detailsClose");
 const detailsEditBtn = document.getElementById("detailsEditBtn");
 const detailsDeleteBtn = document.getElementById("detailsDeleteBtn");
 const detailsScroll = document.getElementById("detailsScroll");
+const detailsChecklistBtn = document.getElementById("detailsChecklistBtn");
 
 const detailsOwnerPill = document.getElementById("detailsOwnerPill");
 const detailsTitle = document.getElementById("detailsTitle");
@@ -207,6 +208,17 @@ detailsClose?.addEventListener("click", closeDetailsModal);
 detailsBackdrop?.addEventListener("click", (e) => {
   if (e.target === detailsBackdrop) closeDetailsModal();
 });
+
+detailsChecklistBtn?.addEventListener("click", () => {
+  if (!detailsDocId) return;
+  const docData = rawDocs.find(d => d.id === detailsDocId);
+  if (!docData) return;
+
+  closeDetailsModal();
+  openTaskModal(docData, detailsOccurrenceStart);
+});
+
+
 
 // ---------- Modal: event editor ----------
 const backdrop = document.getElementById("modalBackdrop");
