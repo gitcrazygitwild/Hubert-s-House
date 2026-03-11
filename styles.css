@@ -277,11 +277,11 @@ html.cat-mode .cat-tail{ animation-duration:4.6s; }
 }
 
 /* =========================
-   CUSTOM MONTH EVENT UI
+   MONTH EVENT UI
    single source of truth
    ========================= */
 
-/* shape cleanup for multi-day all-day events */
+/* multi-day all-day shapes */
 .multi-start{
   border-top-right-radius: 0 !important;
   border-bottom-right-radius: 0 !important;
@@ -294,194 +294,126 @@ html.cat-mode .cat-tail{ animation-duration:4.6s; }
   border-bottom-left-radius: 0 !important;
 }
 
-/* outer custom wrapper */
-.fc-custom-event{
-  display:grid;
-  grid-template-rows:auto auto;
-  width:100%;
-  min-width:0;
-  max-width:100%;
-  overflow:hidden;
+/* general month event shell */
+.fc-dayGridMonth-view .fc-event{
+  border-radius: 9px !important;
+  padding: 3px 6px !important;
+  margin: 2px 2px !important;
+  text-align: left !important;
+  overflow: hidden !important;
+  box-shadow: 0 3px 6px rgba(0,0,0,.25);
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
 }
 
+/* timed event pill */
+.fc-dayGridMonth-view .fc-daygrid-dot-event{
+  padding: 3px 5px !important;
+  margin: 2px 2px !important;
+  width: 100% !important;
+  max-width: 100% !important;
+  min-width: 0 !important;
+  box-sizing: border-box !important;
+  border-radius: 9px !important;
+  overflow: hidden !important;
+}
+
+/* all-day event pill */
+.fc-dayGridMonth-view .fc-daygrid-block-event{
+  padding: 3px 6px !important;
+  margin: 2px 2px !important;
+  width: 100% !important;
+  max-width: 100% !important;
+  min-width: 0 !important;
+  box-sizing: border-box !important;
+  overflow: hidden !important;
+}
+
+/* let FC wrappers stop fighting width */
+.fc-dayGridMonth-view .fc-event-main,
+.fc-dayGridMonth-view .fc-event-main-frame,
+.fc-dayGridMonth-view .fc-custom-event{
+  display: block !important;
+  width: 100% !important;
+  max-width: 100% !important;
+  min-width: 0 !important;
+  overflow: hidden !important;
+}
+
+/* custom event wrapper */
+.fc-custom-event{
+  width: 100%;
+  max-width: 100%;
+  min-width: 0;
+  overflow: hidden;
+}
+
+/* first row for timed events: dot + time */
 .fc-row1{
-  display:flex;
-  align-items:center;
-  gap:2px; /* moved time closer to dot */
-  width:100%;
-  min-width:0;
-  margin-bottom:1px;
-  overflow:hidden;
+  display: flex;
+  align-items: center;
+  gap: 3px;
+  width: 100%;
+  max-width: 100%;
+  min-width: 0;
+  margin-bottom: 1px;
+  overflow: hidden;
 }
 
 .fc-dot{
-  width:7px;
-  height:7px;
-  border-radius:999px;
-  display:inline-block;
-  flex:0 0 auto;
+  width: 7px;
+  height: 7px;
+  border-radius: 999px;
+  display: inline-block;
+  flex: 0 0 auto;
 }
 
 .fc-time{
-  font-size:8px;
-  line-height:1;
-  font-weight:800;
-  white-space:nowrap;
-  flex:0 0 auto;
-  opacity:.95;
-  letter-spacing:-0.1px;
+  font-size: 8px;
+  line-height: 1;
+  font-weight: 800;
+  white-space: nowrap;
+  flex: 0 0 auto;
+  opacity: .95;
 }
 
+/* second row: icon + title */
 .fc-title{
-  display:grid;
-  grid-template-columns:auto minmax(0,1fr);
-  align-items:center;
-  column-gap:4px;
-  width:100%;
-  min-width:0;
-  font-size:9px;
-  line-height:1.08;
-  font-weight:800;
-  white-space:nowrap;
-  overflow:hidden;
+  display: flex !important;
+  align-items: center;
+  gap: 4px;
+  width: 100% !important;
+  max-width: 100% !important;
+  min-width: 0 !important;
+  overflow: hidden !important;
+  font-size: 9px;
+  line-height: 1.08;
+  font-weight: 800;
+  white-space: nowrap;
 }
 
 .fc-type-icon{
-  font-size:9px;
-  line-height:1;
+  flex: 0 0 auto;
+  font-size: 9px;
+  line-height: 1;
 }
 
 .fc-type-icon:empty{
-  display:none;
+  display: none;
 }
 
 .fc-title-text{
-  display:block;
-  min-width:0;
-  width:100%;
-  white-space:nowrap;
-  overflow:hidden;
-  text-overflow:clip;
-}
-
-/* Common chip look */
-.fc-dayGridMonth-view .fc-event{
-  border-radius:9px !important;
-  padding:3px 7px !important;
-  margin:2px 0 !important;
-  text-align:left !important;
-  overflow:hidden !important;
-  box-shadow:0 3px 6px rgba(0,0,0,.25);
-  backdrop-filter:blur(6px);
-}
-
-.fc-dayGridMonth-view .fc-daygrid-dot-event{
-  display: grid !important;
-  grid-template-columns: auto auto 1fr !important;
-  grid-template-rows: auto auto !important;
-  column-gap: 4px !important;
-  row-gap: 1px !important;
-  align-items: start !important;
-
-  padding: 4px 7px !important;
-  margin: 2px auto !important;
-  overflow: hidden !important;
-  width: calc(100% - 10px) !important;
-  max-width: calc(100% - 10px) !important;
+  display: block;
+  flex: 1 1 auto !important;
+  width: auto !important;
+  max-width: none !important;
   min-width: 0 !important;
-  box-sizing: border-box !important;
-  border-radius: 11px !important;
-
-  /* visual upgrade */
-  box-shadow:
-    inset 0 1px 0 rgba(255,255,255,.10),
-    0 6px 14px rgba(0,0,0,.18) !important;
+  overflow: hidden !important;
+  white-space: nowrap !important;
+  text-overflow: clip !important;
 }
 
-/* TIMED EVENTS */
-.fc-dayGridMonth-view .fc-daygrid-dot-event{
-  display:grid !important;
-  grid-template-columns:auto auto 1fr !important;
-  grid-template-rows:auto auto !important;
-  column-gap:4px !important;
-  row-gap:1px !important;
-  align-items:start !important;
-
-  position:relative !important;
-  padding:4px 6px !important;
-  margin:2px 0 !important;
-  overflow:hidden !important;
-  width:100% !important;
-  max-width:100% !important;
-  min-width:0 !important;
-  box-sizing:border-box !important;
-  border-radius:8px !important;
-}
-
-/* subtle glossy highlight */
-.fc-dayGridMonth-view .fc-daygrid-dot-event::before{
-  content:"";
-  position:absolute;
-  inset:0;
-  pointer-events:none;
-  border-radius:inherit;
-  background:linear-gradient(to bottom, rgba(255,255,255,.10), rgba(255,255,255,0) 42%);
-}
-
-/* FullCalendar's native dot/time layout should not interfere */
-.fc-dayGridMonth-view .fc-daygrid-dot-event .fc-event-dot{
-  display:none !important;
-}
-
-.fc-dayGridMonth-view .fc-daygrid-dot-event .fc-event-time{
-  display:none !important;
-}
-
-.fc-dayGridMonth-view .fc-daygrid-dot-event .fc-event-main{
-  display:block !important;
-  width:100% !important;
-  min-width:0 !important;
-}
-
-.fc-dayGridMonth-view .fc-daygrid-dot-event .fc-event-main-frame{
-  display:block !important;
-  width:100% !important;
-  min-width:0 !important;
-}
-
-.fc-dayGridMonth-view .fc-daygrid-dot-event .fc-event-title-container{
-  display:block !important;
-  width:100% !important;
-  min-width:0 !important;
-  overflow:hidden !important;
-}
-
-.fc-dayGridMonth-view .fc-daygrid-dot-event .fc-event-title{
-  display:block !important;
-  width:100% !important;
-  min-width:0 !important;
-  white-space:nowrap !important;
-  overflow:hidden !important;
-  text-overflow:clip !important;
-}
-
-/* ALL-DAY EVENTS */
-.fc-dayGridMonth-view .fc-daygrid-block-event .fc-event-main{
-  display:block !important;
-  min-width:0 !important;
-}
-
-.fc-dayGridMonth-view .fc-daygrid-block-event .fc-event-title{
-  display:block !important;
-  width:100% !important;
-  max-width:100% !important;
-  min-width:0 !important;
-  white-space:nowrap !important;
-  overflow:hidden !important;
-  text-overflow:clip !important;
-}
-
-/* optional small styling boost for multi-day events */
+/* subtle multi-day styling */
 .fc-multiday{
   box-shadow: inset 3px 0 0 rgba(255,255,255,.18);
 }
