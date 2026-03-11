@@ -741,12 +741,13 @@ html.cat-mode .cat-tail{ animation-duration:4.6s; }
 }
 
 .fc-dayGridMonth-view .fc-daygrid-block-event .fc-event-title{
-  display: block !important;
-  white-space: nowrap !important;
-  overflow: hidden !important;
-  text-overflow: clip !important;
-  position: relative !important;
-  min-width: 0 !important;
+  display:block !important;
+  width:100% !important;
+  max-width:100% !important;
+  min-width:0 !important;
+  white-space:nowrap !important;
+  overflow:hidden !important;
+  text-overflow:clip !important;
 }
 
 
