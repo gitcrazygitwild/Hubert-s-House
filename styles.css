@@ -705,25 +705,23 @@ html.cat-mode .cat-tail{ animation-duration:4.6s; }
   backdrop-filter: blur(6px);
 }
 
-/* TIMED EVENTS — dot + time row 1, title full-width row 2 */
 .fc-dayGridMonth-view .fc-daygrid-dot-event{
   display: grid !important;
   grid-template-columns: auto auto 1fr !important;
   grid-template-rows: auto auto !important;
-  column-gap: 4px !important;
+  column-gap: 2px !important;
   row-gap: 1px !important;
   align-items: start !important;
 
-  padding: 4px 7px !important;
-  margin: 2px auto !important;
+  padding: 4px 6px !important;
+  margin: 2px 1px !important;
   overflow: hidden !important;
-  width: calc(100% - 10px) !important;
-  max-width: calc(100% - 10px) !important;
+  width: calc(100% - 2px) !important;
+  max-width: calc(100% - 2px) !important;
   min-width: 0 !important;
   box-sizing: border-box !important;
   border-radius: 11px !important;
 
-  /* visual upgrade */
   box-shadow:
     inset 0 1px 0 rgba(255,255,255,.10),
     0 6px 14px rgba(0,0,0,.18) !important;
@@ -766,7 +764,10 @@ html.cat-mode .cat-tail{ animation-duration:4.6s; }
   grid-row: 2 !important;
   display: block !important;
   width: 100% !important;
+  max-width: 100% !important;
   min-width: 0 !important;
+  padding-right: 0 !important;
+  margin-right: 0 !important;
   overflow: hidden !important;
 }
 
@@ -774,6 +775,7 @@ html.cat-mode .cat-tail{ animation-duration:4.6s; }
 .fc-dayGridMonth-view .fc-daygrid-dot-event .fc-event-title{
   display: block !important;
   width: 100% !important;
+  max-width: 100% !important;
   min-width: 0 !important;
   font-size: 9px !important;
   line-height: 1.02 !important;
@@ -781,6 +783,8 @@ html.cat-mode .cat-tail{ animation-duration:4.6s; }
   white-space: nowrap !important;
   overflow: hidden !important;
   text-overflow: clip !important;
+  padding-right: 0 !important;
+  margin-right: 0 !important;
   position: relative !important;
 }
 
