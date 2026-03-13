@@ -1472,16 +1472,21 @@ function preserveDatesOnAllDayToggle(isAllDayNow) {
 
 detailsEditBtn?.addEventListener("click", () => {
   if (!detailsDocId) return;
-  const docData = rawDocs.find(d => d.id === detailsDocId);
+
+  const currentId = detailsDocId;
+  const currentOccurrenceStart = detailsOccurrenceStart;
+
+  const docData = rawDocs.find(d => d.id === currentId);
   if (!docData) return;
 
   closeDetailsModal();
+
   openEventModal({
     mode: "edit",
-    id: detailsDocId,
-    occurrenceStart: detailsOccurrenceStart,
+    id: currentId,
+    occurrenceStart: currentOccurrenceStart,
     title: docData.title || "",
-    start: docData.start ? new Date(docData.start) : detailsOccurrenceStart,
+    start: docData.start ? new Date(docData.start) : currentOccurrenceStart,
     end: docData.end ? new Date(docData.end) : null,
     allDay: !!docData.allDay,
     owner: normalizeOwner(docData.owner),
